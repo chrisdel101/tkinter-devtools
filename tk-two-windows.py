@@ -6,9 +6,12 @@ import sys
 widget_store = {}
 
 
-def build_widget_tree(parent_widget, tree, parent_node=""):
-    node_id = tree.insert(parent_node, "end", text=parent_widget.winfo_class())
-    widget_store[node_id] = parent_widget
+def build_widget_tree(parent_widget, tree, parent_node_id=""):
+    if not parent_node_id:
+        parent_widget_id = tree.insert("", "end", text=parent_widget.winfo_class())
+        widget_store[parent_widget_id] = parent_widget
+    else:
+        parent_widget_id = parent_node_id
     for child in parent_widget.winfo_children():
         if getattr(child, "is_devtools", False):
             continue  # Skip devtools window itself
@@ -16,12 +19,12 @@ def build_widget_tree(parent_widget, tree, parent_node=""):
         if isinstance(child, tk.Toplevel):
             continue
         
-        node_id = tree.insert(parent_node, "end", text=child.winfo_class())
-        widget_store[node_id] = child  # Store widget reference
-        build_widget_tree(child, tree, node_id)
+        child_widget_id = tree.insert(parent_widget_id, "end", text=child.winfo_class())
+        widget_store[child_widget_id] = child  # Store widget reference
+        build_widget_tree(child, tree, child_widget_id)
         # else:
         #     #INNER COLUMNS text= name left column, values= right col
-        #     node_id = tree.insert(parent_node, "end", text=child.winfo_class(), values=(str(child)))
+        #     node_id = tree.insert(parent_node_id, "end", text=child.winfo_class(), values=(str(child)))
         #     build_widget_tree(child, tree, node_id)
 
 def show_widget_properties(widget, text_widget):
