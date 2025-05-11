@@ -3,10 +3,12 @@ from tkinter import ttk
 import tkinter as tk
 import sys
 
+# track widgets by tree insert ID
 widget_store = {}
 
 
 def build_widget_tree(parent_widget, tree, parent_node_id=""):
+    # check if it's a parent node - parent tree node has ID
     if not parent_node_id:
         parent_widget_id = tree.insert("", "end", text=parent_widget.winfo_class())
         widget_store[parent_widget_id] = parent_widget
@@ -18,20 +20,17 @@ def build_widget_tree(parent_widget, tree, parent_node_id=""):
         # Exclude any Toplevel windows (like the dev tool)
         if isinstance(child, tk.Toplevel):
             continue
-        
+        # ID of place in tree
         child_widget_id = tree.insert(parent_widget_id, "end", text=child.winfo_class())
-        widget_store[child_widget_id] = child  # Store widget reference
+        widget_store[child_widget_id] = child  
         build_widget_tree(child, tree, child_widget_id)
-        # else:
-        #     #INNER COLUMNS text= name left column, values= right col
-        #     node_id = tree.insert(parent_node_id, "end", text=child.winfo_class(), values=(str(child)))
-        #     build_widget_tree(child, tree, node_id)
+        
 
 def show_widget_properties(widget, text_widget):
     text_widget.delete("1.0", tk.END)
-    config = widget.configure()
-    for key in config:
-        text_widget.insert(tk.END, f"{key}: {config[key][-1]}\n")
+    # config = widget.configure()
+    # for key in config:
+    #     text_widget.insert(tk.END, f"{key}: {config[key][-1]}\n")
 
 
 
@@ -51,7 +50,7 @@ class TextRedirector:
     def flush(self):
         pass
 
-def on_select(event, tree, props):
+def on_select(_, tree, props):
     selected = tree.selection()
     if selected:
         item_id = selected[0]
@@ -60,7 +59,9 @@ def on_select(event, tree, props):
             try:
                 props.delete("1.0", tk.END)
                 config = widget.configure()
+                # loop over config dict
                 for key in config:
+                    # insert selected node into props window
                     props.insert(tk.END, f"{key}: {config[key][-1]}\n")
                 show_widget_properties(widget, props)
             except Exception as e:
@@ -74,10 +75,10 @@ def open_dev_tools(main_root):
     tree = ttk.Treeview(dev_window)
     tree.pack(side="left", fill="y")
 
-    props = tk.Text(dev_window, width=50, name="text")
-    props.pack(side="left", fill="both", expand=True)
+    de = tk.Text(dev_window, width=50, name="text")
+    de.pack(side="left", fill="both", expand=True)
 
-    tree.bind("<<TreeviewSelect>>", lambda e: on_select(e, tree, props))
+    tree.bind("<<TreeviewSelect>>", lambda e: on_select(e, tree, de))
     build_widget_tree(main_root, tree)
 
 
