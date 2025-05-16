@@ -28,9 +28,9 @@ def build_widget_tree(parent_widget, tree, parent_node_id=""):
 
 def show_widget_properties(widget, text_widget):
     text_widget.delete("1.0", tk.END)
-    # config = widget.configure()
-    # for key in config:
-    #     text_widget.insert(tk.END, f"{key}: {config[key][-1]}\n")
+    config = widget.configure()
+    for key in config:
+        text_widget.insert(tk.END, f"{key}: {config[key][-1]}\n")
 
 
 
@@ -50,36 +50,62 @@ class TextRedirector:
     def flush(self):
         pass
 
-def on_select(_, tree, props):
+def insert_selected_styles(styles_window: Widget, config_dict: dict):
+    for key in config_dict:
+        # insert selected node into styles_window window
+        styles_window.insert(tk.END, f"{key}: {config_dict[key][-1]}\n")
+    # set bind listener
+    styles_window.bind("<ButtonRelease-1>", handle_styles_select)
+
+def handle_styles_select(e):
+    print("Clicked on styles window")
+    
+def handle_tree_select(_, tree, styles_window):
+    # get selected tree item 
     selected = tree.selection()
     if selected:
         item_id = selected[0]
         widget = widget_store.get(item_id)
         if widget:
             try:
-                props.delete("1.0", tk.END)
+                styles_window.delete("1.0", tk.END)
                 config = widget.configure()
-                # loop over config dict
-                for key in config:
-                    # insert selected node into props window
-                    props.insert(tk.END, f"{key}: {config[key][-1]}\n")
-                show_widget_properties(widget, props)
+                # display config in left window
+                insert_selected_styles(styles_window, config)                
             except Exception as e:
-                props.delete("1.0", tk.END)
-                props.insert(tk.END, f"Error: {e}")
+                styles_window.delete("1.0", tk.END)
+                styles_window.insert(tk.END, f"Error: {e}")
+
+def manual_select(selected_widget, styles_window):
+    
+    if not selected_widget:
+        return
+    
+    try:
+        styles_window.delete("1.0", tk.END)
+        config = selected_widget.configure()
+        # display config in left window
+        insert_selected_styles(styles_window, config)                
+        # show_widget_properties(widget, styles_window)
+    except Exception as e:
+        styles_window.delete("1.0", tk.END)
+        styles_window.insert(tk.END, f"Error: {e}")
 
 def open_dev_tools(main_root):
+    # main devtools window
     dev_window = tk.Toplevel(main_root)
     dev_window.title("DevTools")
-
+    # tree struct inside tool
     tree = ttk.Treeview(dev_window)
     tree.pack(side="left", fill="y")
+    # added window to left to hold styles
+    styles_window = tk.Text(dev_window, width=50, name="text")
+    styles_window.pack(side="left", fill="both", expand=True)
 
-    de = tk.Text(dev_window, width=50, name="text")
-    de.pack(side="left", fill="both", expand=True)
-
-    tree.bind("<<TreeviewSelect>>", lambda e: on_select(e, tree, de))
+    tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_select(e, tree, styles_window))
     build_widget_tree(main_root, tree)
+    # select top layer on load
+    tree.selection_set(tree.get_children()[0])  # Select the first item by default
 
 
 
