@@ -4,14 +4,14 @@ import tkinter as tk
 import sys
 
 # track widgets by tree insert ID
-widget_store = {}
+tree_items_store = {}
 
 
 def build_widget_tree(parent_widget, tree, parent_node_id=""):
     # check if it's a parent node - parent tree node has ID
     if not parent_node_id:
         parent_widget_id = tree.insert("", "end", text=parent_widget.winfo_class())
-        widget_store[parent_widget_id] = parent_widget
+        tree_items_store[parent_widget_id] = parent_widget
     else:
         parent_widget_id = parent_node_id
     for child in parent_widget.winfo_children():
@@ -22,7 +22,7 @@ def build_widget_tree(parent_widget, tree, parent_node_id=""):
             continue
         # ID of place in tree
         child_widget_id = tree.insert(parent_widget_id, "end", text=child.winfo_class())
-        widget_store[child_widget_id] = child  
+        tree_items_store[child_widget_id] = child  
         build_widget_tree(child, tree, child_widget_id)
         
 
@@ -50,46 +50,76 @@ class TextRedirector:
     def flush(self):
         pass
 
-def insert_selected_styles(styles_window: Widget, config_dict: dict):
+def insert_selected_styles(styles_window_listbox: Widget, config_dict: dict):
     for key in config_dict:
-        # insert selected node into styles_window window
-        styles_window.insert(tk.END, f"{key}: {config_dict[key][-1]}\n")
-    # set bind listener
-    styles_window.bind("<ButtonRelease-1>", handle_styles_select)
+        # insert selected node into styles_window_listbox window
+        styles_window_listbox.insert(tk.END, f"{key}: {config_dict[key][-1]}\n")
 
-def handle_styles_select(e):
-    print("Clicked on styles window")
+def update_tree_item(tree_item):
+    tree_item.config(text="New Text")
+
+
+def handle_styles_listbox_click(e, callback, tree_item):
+    clicked_listbox_item: tuple = e.widget.curselection()
+    if clicked_listbox_item:
+        # get the index of the selected listbox item
+        index = clicked_listbox_item[0]
+        # get   the widget from the event
+        widget = e.widget
+        # get the value of the selected item
+        list_item_str = widget.get(index)
+        split_list_items: list = list_item_str.split(":")
+        key = split_list_items[0]
+        value = split_list_items[1]
+        # print the list_item_str
+        if len(split_list_items) >= 2 and split_list_items[1].strip() == "Hello World!":
+            # get the value of the selected item
+            print("Selected item:", value.strip())
+            # remove and update the listbox
+            e.widget.delete(index)
+            e.widget.insert(index, f"{key}: New Text")
+            # update tree item
+            callback(tree_item)
+
+    else:
+            # no item selected
+        print("Error in selecting")
     
-def handle_tree_select(_, tree, styles_window):
+def handle_tree_select(_, tree, styles_window_listbox):
     # get selected tree item 
     selected = tree.selection()
     if selected:
+        # .selection give tree item ID
         item_id = selected[0]
-        widget = widget_store.get(item_id)
-        if widget:
+        # get widget info from store
+        tree_item = tree_items_store.get(item_id)
+        if tree_item:
             try:
-                styles_window.delete("1.0", tk.END)
-                config = widget.configure()
-                # display config in left window
-                insert_selected_styles(styles_window, config)                
-            except Exception as e:
-                styles_window.delete("1.0", tk.END)
-                styles_window.insert(tk.END, f"Error: {e}")
+                # delete prev content in window
+                styles_window_listbox.delete(0, tk.END)
+                config = tree_item.configure()
+                # display selected tree item's config in style window
+                insert_selected_styles(styles_window_listbox, config) 
+                # add listener to styles listbox
+                styles_window_listbox.bind("<ButtonRelease-1>", lambda e: handle_styles_listbox_click(e, update_tree_item, tree_item))                      
+            except Exception as e:  
+                styles_window_listbox.delete(0, tk.END)
+                styles_window_listbox.insert(tk.END, f"Error: {e}")
 
-def manual_select(selected_widget, styles_window):
+def manual_select(selected_widget, styles_window_listbox):
     
     if not selected_widget:
         return
     
     try:
-        styles_window.delete("1.0", tk.END)
+        styles_window_listbox.delete("1.0", tk.END)
         config = selected_widget.configure()
         # display config in left window
-        insert_selected_styles(styles_window, config)                
-        # show_widget_properties(widget, styles_window)
+        insert_selected_styles(styles_window_listbox, config)                
+        # show_widget_properties(widget, styles_window_listbox)
     except Exception as e:
-        styles_window.delete("1.0", tk.END)
-        styles_window.insert(tk.END, f"Error: {e}")
+        styles_window_listbox.delete("1.0", tk.END)
+        styles_window_listbox.insert(tk.END, f"Error: {e}")
 
 def open_dev_tools(main_root):
     # main devtools window
@@ -99,12 +129,13 @@ def open_dev_tools(main_root):
     tree = ttk.Treeview(dev_window)
     tree.pack(side="left", fill="y")
     # added window to left to hold styles
-    styles_window = tk.Text(dev_window, width=50, name="text")
-    styles_window.pack(side="left", fill="both", expand=True)
+    styles_window_listbox = tk.Listbox(dev_window, width=50, name="text")
+    styles_window_listbox.pack(side="left", fill="both", expand=True)
 
-    tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_select(e, tree, styles_window))
+    tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_select(e, tree, styles_window_listbox))
+    
     build_widget_tree(main_root, tree)
-    # select top layer on load
+    # select top layer on load - this runs the TreeviewSelect listener  
     tree.selection_set(tree.get_children()[0])  # Select the first item by default
 
 
