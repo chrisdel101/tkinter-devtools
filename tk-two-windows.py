@@ -3,6 +3,8 @@ from tkinter import ttk
 import tkinter as tk
 import sys
 
+from Devtools import DevtoolsWindow
+
 # track widgets by tree insert ID
 tree_items_store = {}
 
@@ -58,8 +60,14 @@ def insert_selected_styles(styles_window_listbox: Widget, config_dict: dict):
 def update_tree_item(tree_item):
     tree_item.config(text="New Text")
 
+def update_listbox_item(widget, index, key, value):
+    # remove old item
+    widget.delete(index)
+    # add new item
+    widget.insert(index, f"{key}: {value}")
 
-def handle_styles_listbox_click(e, callback, tree_item):
+
+def handle_listbox_click(e, callback, tree_item):
     clicked_listbox_item: tuple = e.widget.curselection()
     if clicked_listbox_item:
         # get the index of the selected listbox item
@@ -75,9 +83,7 @@ def handle_styles_listbox_click(e, callback, tree_item):
         if len(split_list_items) >= 2 and split_list_items[1].strip() == "Hello World!":
             # get the value of the selected item
             print("Selected item:", value.strip())
-            # remove and update the listbox
-            e.widget.delete(index)
-            e.widget.insert(index, f"{key}: New Text")
+            update_listbox_item(widget, index, key, value)
             # update tree item
             callback(tree_item)
 
@@ -101,7 +107,7 @@ def handle_tree_select(_, tree, styles_window_listbox):
                 # display selected tree item's config in style window
                 insert_selected_styles(styles_window_listbox, config) 
                 # add listener to styles listbox
-                styles_window_listbox.bind("<ButtonRelease-1>", lambda e: handle_styles_listbox_click(e, update_tree_item, tree_item))                      
+                styles_window_listbox.bind("<ButtonRelease-1>", lambda e: handle_listbox_click(e, update_tree_item, tree_item))                      
             except Exception as e:  
                 styles_window_listbox.delete(0, tk.END)
                 styles_window_listbox.insert(tk.END, f"Error: {e}")
@@ -122,21 +128,24 @@ def manual_select(selected_widget, styles_window_listbox):
         styles_window_listbox.insert(tk.END, f"Error: {e}")
 
 def open_dev_tools(main_root):
-    # main devtools window
-    dev_window = tk.Toplevel(main_root)
-    dev_window.title("DevTools")
-    # tree struct inside tool
-    tree = ttk.Treeview(dev_window)
-    tree.pack(side="left", fill="y")
+    # # main devtools window
+    # dev_window = tk.Toplevel(main_root)
+    # dev_window.title("DevTools")
+    # # tree struct inside tool
+    # tree = ttk.Treeview(dev_window)
+    # tree.pack(side="left", fill="y")
+    dev_window = DevtoolsWindow(main_root)
+    dev_window.attach_tree_select()
+    dev_window.build_tree(root)
     # added window to left to hold styles
-    styles_window_listbox = tk.Listbox(dev_window, width=50, name="text")
-    styles_window_listbox.pack(side="left", fill="both", expand=True)
+    # styles_window_listbox = tk.Listbox(dev_window, width=50, name="text")
+    # styles_window_listbox.pack(side="left", fill="both", expand=True)
 
-    tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_select(e, tree, styles_window_listbox))
+    # tree.bind("<<TreeviewSelect>>", lambda e: handle_tree_select(e, tree, styles_window_listbox))
     
-    build_widget_tree(main_root, tree)
+    # build_widget_tree(main_root, tree)
     # select top layer on load - this runs the TreeviewSelect listener  
-    tree.selection_set(tree.get_children()[0])  # Select the first item by default
+    dev_window.select_tree_item(dev_window.tree.get_children()[0])  # Select the first item by default
 
 
 
