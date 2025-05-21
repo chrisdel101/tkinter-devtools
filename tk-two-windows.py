@@ -1,7 +1,6 @@
 from tkinter import *
 from tkinter import ttk
 import tkinter as tk
-import sys
 
 from Devtools import DevtoolsWindow
 
@@ -33,24 +32,6 @@ def show_widget_properties(widget, text_widget):
     config = widget.configure()
     for key in config:
         text_widget.insert(tk.END, f"{key}: {config[key][-1]}\n")
-
-
-
-def run_code(input_widget, output_widget, context):
-    code = input_widget.get("1.0", tk.END)
-    try:
-        exec(code, context)
-    except Exception as e:
-        output_widget.insert(tk.END, f"Error: {e}\n")
-
-class TextRedirector:
-    def __init__(self, text_widget):
-        self.text_widget = text_widget
-    def write(self, s):
-        self.text_widget.insert(tk.END, s)
-        self.text_widget.see(tk.END)
-    def flush(self):
-        pass
 
 def insert_selected_styles(styles_window_listbox: Widget, config_dict: dict):
     for key in config_dict:
