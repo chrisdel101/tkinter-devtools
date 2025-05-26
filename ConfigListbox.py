@@ -8,23 +8,22 @@ class ConfigListbox(tk.Listbox):
 
     """
 
-    def __init__(self, master, width): 
+    def __init__(self, master, width, callback=None): 
         tk.Listbox.__init__(self, master=master, width=width)
         self.edit_item = None
-        self.bind("<Double-1>", self._start_edit)
-    
-    
-    def _start_edit(self, event):
+        self.bind("<Double-1>", lambda e: self._start_edit(e, callback))
+
+    def _start_edit(self, event, callback):
         index = self.index(f"@{event.x},{event.y}")
-        self.start_edit(index)
+        self.start_edit(index, callback)
         return "break"
 
-    def start_edit(self, index):
+    def start_edit(self, index, callback):
         self.edit_item = index
         text = self.get(index)
         y0 = self.bbox(index)[1]
         entry = tk.Entry(self, borderwidth=0, highlightthickness=1)
-        entry.bind("<Return>", self.accept_edit)
+        entry.bind("<Return>", lambda e: self.accept_edit(e, index, callback))
         entry.bind("<Escape>", self.cancel_edit)
 
         # TODO add focus off reject edit
@@ -39,12 +38,14 @@ class ConfigListbox(tk.Listbox):
     def cancel_edit(self, event):
         event.widget.destroy()
 
-    def accept_edit(self, event):
+    def accept_edit(self, event, index, callback):
         new_data = event.widget.get()
         self.delete(self.edit_item)
-        self.insert(self.edit_item, new_data)
+        self.insert(self.edit_item, new_data)   
+        callback(event)
         event.widget.destroy()
 
+    
     def delete_contents(self):
         self.delete(0, tk.END)
 

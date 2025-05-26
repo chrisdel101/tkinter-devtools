@@ -13,16 +13,16 @@ class DevtoolsWindow:
         self.tree = ttk.Treeview(self.top_level)
         self.tree.pack(side="left", fill="y")
         # left window - list of tree config
-        self.styles_window_listbox = ConfigListbox(self.top_level, width=50)
+        self.tree_item = None
+        self.styles_window_listbox = ConfigListbox(self.top_level, width=50, callback=self.get_editted_value)
         self.styles_window_listbox.pack(side="left", fill="both", expand=True)
-
-        self.tree_items_store = {}
+        self.store_tree_by_id = {}
         
     def build_tree(self, parent_widget, parent_node_id=""):
         # check if it's a parent node - parent tree node has ID
         if not parent_node_id:
             parent_widget_id = self.tree.insert("", "end", text=parent_widget.winfo_class())
-            self.tree_items_store[parent_widget_id] = parent_widget
+            self.store_tree_by_id[parent_widget_id] = parent_widget
         else:
             parent_widget_id = parent_node_id
         for child in parent_widget.winfo_children():
@@ -31,26 +31,31 @@ class DevtoolsWindow:
                 continue
             # ID of place in tree
             child_widget_id = self.tree.insert(parent_widget_id, "end", text=child.winfo_class())
-            self.tree_items_store[child_widget_id] = child  
+            self.store_tree_by_id[child_widget_id] = child  
             self.build_tree(child, child_widget_id)
 
     def handle_tree_select(self, _):
             # get selected tree item 
             selected = self.tree.selection()
-            if selected:
+            if selected and selected != self.tree_item:
                 # .selection give tree item ID
                 item_id = selected[0]
                 # get widget info from store
-                tree_item = self.tree_items_store.get(item_id)
-                if tree_item:
+                self.tree_item = self.store_tree_by_id.get(item_id)
+                # TODO check if current select is already selected
+                
+                if self.tree_item:
                     try:
                         # delete prev content in listbox
-                        self.styles_window_listbox.delete(0, tk.END)
-                        config = tree_item.configure()
+                        self.styles_window_listbox.delete_contents()
+                        config = self.tree_item.configure()
                         # display selected tree item's config in listbox win
                         self.styles_window_listbox.insert_all(config) 
+        
+                                    
                         # add listener to listbox - when clicked callback will fire
-                        self.styles_window_listbox.bind("<ButtonRelease-1>", lambda e: self.handle_item_click(e, self.update_tree_item, tree_item))                      
+                        # self.styles_window_listbox.bind("<Double-1>", self.styles_window_listbox._start_edit)
+                        # delete_contentshandle_item_click(e, self.update_tree_item, tree_item)                      
                     except Exception as e:  
                         self.styles_window_listbox.delete_contents()
                         self.styles_window_listbox.insert_item(tk.END, f"Error: {e}")
@@ -96,4 +101,6 @@ class DevtoolsWindow:
                 # no item selected
             print("Error in selecting")
             
-        
+    def get_editted_value(self, e):
+        print(self.tree_item)
+        print("TESTSTIN", str(e), str(self.tree_item))   
