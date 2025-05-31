@@ -8,7 +8,7 @@ class DevtoolsWindow:
         # Toplevel is wrapper for two inner windows - does not pack
         self.top_level = tk.Toplevel(root)
         self.top_level.title(title)
-
+        self.root = root
         # right window - tree struct inside tool
         self.tree = ttk.Treeview(self.top_level)
         self.tree.pack(side="left", fill="y")
@@ -51,11 +51,7 @@ class DevtoolsWindow:
                         config = self.tree_item.configure()
                         # display selected tree item's config in listbox win
                         self.styles_window_listbox.insert_all(config) 
-        
                                     
-                        # add listener to listbox - when clicked callback will fire
-                        # self.styles_window_listbox.bind("<Double-1>", self.styles_window_listbox._start_edit)
-                        # delete_contentshandle_item_click(e, self.update_tree_item, tree_item)                      
                     except Exception as e:  
                         self.styles_window_listbox.delete_contents()
                         self.styles_window_listbox.insert_item(tk.END, f"Error: {e}")
@@ -67,8 +63,14 @@ class DevtoolsWindow:
     def select_tree_item(self, item):
         self.tree.selection_set(item)  
 
-    def update_tree_item(self,tree_item):
-        tree_item.config(text="New Text")
+    def update_tree_item(self, changes_dict):
+        # check if it's root item
+        if self.tree_item == self.root:
+            # update the root and the root inner frame 
+            self.tree_item.config(**{changes_dict['key']: changes_dict['value']})
+            self.tree_item.children.get('!frame').config(**{changes_dict['key']: changes_dict['value']})
+        else:
+            self.tree_item.config(**{changes_dict['key']: changes_dict['value']})
 
     def update_listbox_item(self, widget, index, key, value):
         # remove old item
@@ -76,31 +78,7 @@ class DevtoolsWindow:
         # add new item
         widget.insert(index, f"{key}: {value}")
     
-    
-    def handle_item_click(self, e, callback, tree_item):
-        clicked_listbox_item: tuple = e.widget.curselection()
-        if clicked_listbox_item:
-            # get the index of the selected listbox item
-            index = clicked_listbox_item[0]
-            # get   the widget from the event
-            widget = e.widget
-            # get the value of the selected item
-            list_item_str = widget.get(index)
-            split_list_items: list = list_item_str.split(":")
-            key = split_list_items[0]
-            value = split_list_items[1]
-            # print the list_item_str
-            if len(split_list_items) >= 2 and split_list_items[1].strip() == "Hello World!":
-                # get the value of the selected item
-                print("Selected item:", value.strip())
-                self.update_listbox_item(widget, index, key, value)
-                # update tree item
-                callback(tree_item)
 
-        else:
-                # no item selected
-            print("Error in selecting")
             
-    def get_editted_value(self, e):
-        print(self.tree_item)
-        print("TESTSTIN", str(e), str(self.tree_item))   
+    def get_editted_value(self, e, changes_dict):
+        self.update_tree_item(changes_dict)   

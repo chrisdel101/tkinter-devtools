@@ -23,6 +23,7 @@ class ConfigListbox(tk.Listbox):
         text = self.get(index)
         y0 = self.bbox(index)[1]
         entry = tk.Entry(self, borderwidth=0, highlightthickness=1)
+        # on enter new value fire callback
         entry.bind("<Return>", lambda e: self.accept_edit(e, index, callback))
         entry.bind("<Escape>", self.cancel_edit)
 
@@ -40,9 +41,17 @@ class ConfigListbox(tk.Listbox):
 
     def accept_edit(self, event, index, callback):
         new_data = event.widget.get()
+        # get the value of the selected item
+        split_list_items: list = new_data.split(":")
+        key = split_list_items[0]
+        value = split_list_items[1]
+        changes_dict  = {
+            'key': key,
+            'value': value.strip(),
+        }
         self.delete(self.edit_item)
         self.insert(self.edit_item, new_data)   
-        callback(event)
+        callback(event,changes_dict)
         event.widget.destroy()
 
     
