@@ -15,10 +15,12 @@ def open_dev_tools(main_root):
 
 
 root = Tk()
-frm = tk.Frame(root, padx=10)
-frm.grid()
-tk.Label(frm, text="Hello World!").grid(column=0, row=0)
-tk.Label(frm, text="Hello World2!").grid(column=0, row=1)
-tk.Button(frm, text="Quit").grid(column=1, row=0)
+root_inner_frame = tk.Frame(root, padx=10, width=300, height=200)
+tk.Label(root_inner_frame, text="Hello World!").grid(column=0, row=0)
+tk.Label(root_inner_frame, text="Hello World2!").grid(column=0, row=1)
+tk.Button(root_inner_frame, text="Quit").grid(column=1, row=0)
+root_inner_frame.grid()
+# force geometry live changes 
+root_inner_frame.grid_propagate(False)
 open_dev_tools(root)
 root.mainloop()

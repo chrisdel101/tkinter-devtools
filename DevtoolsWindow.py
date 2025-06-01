@@ -49,12 +49,15 @@ class DevtoolsWindow:
                         # delete prev content in listbox
                         self.styles_window_listbox.delete_contents()
                         config = self.tree_item.configure()
+                        # filter out unwanted config values
+                        config = self.filter_config_values(config)
                         # display selected tree item's config in listbox win
                         self.styles_window_listbox.insert_all(config) 
                                     
                     except Exception as e:  
                         self.styles_window_listbox.delete_contents()
                         self.styles_window_listbox.insert_item(tk.END, f"Error: {e}")
+
     # main listener for tree item selects
     def attach_tree_select(self):
         self.tree.bind("<<TreeviewSelect>>", lambda e:
@@ -64,21 +67,57 @@ class DevtoolsWindow:
         self.tree.selection_set(item)  
 
     def update_tree_item(self, changes_dict):
-        # check if it's root item
-        if self.tree_item == self.root:
-            # update the root and the root inner frame 
-            self.tree_item.config(**{changes_dict['key']: changes_dict['value']})
-            self.tree_item.children.get('!frame').config(**{changes_dict['key']: changes_dict['value']})
-        else:
-            self.tree_item.config(**{changes_dict['key']: changes_dict['value']})
-
-    def update_listbox_item(self, widget, index, key, value):
-        # remove old item
-        widget.delete(index)
-        # add new item
-        widget.insert(index, f"{key}: {value}")
+        self.tree_item.config(**{changes_dict['key']: changes_dict['value']})
     
-
-            
     def get_editted_value(self, e, changes_dict):
         self.update_tree_item(changes_dict)   
+
+    def config_value_helper(self, value):
+        # Convert to string for simple checks
+        val_str = str(value).strip().lower()
+
+        # Skip empty or zero-like values
+        if val_str in ('', '0', 'none', 'false'):
+            return False
+
+        # Skip values starting with dash (like '-borderwidth', '-background')
+        if val_str.startswith('-'):
+            return False
+        
+
+        # Skip system placeholders or common "default" words (case-insensitive)
+        system_defaults = [
+            'systemwindowbackgroundcolor',
+            'systemtextcolor',
+            'systemhighlightcolor',
+            'systemhighlightbackground',
+            'systembuttonface',
+            'systembuttontext',
+            'systemwindowtext',
+            'systembuttonshadow',
+            'systempressedbuttontextcolor',
+            'tkdefaultfont'
+        ]
+        if val_str in system_defaults:
+            return False
+
+        return True
+
+    def config_key_helper(self, key):
+        # filter out class - cannot be changed
+        if key != "class":
+            return True
+        return False
+    
+    def filter_config_values(self, config):
+        filtered = {}
+        for key, values in config.items():
+            # The "actual value" may be the last element? Or you pick which?
+            # From your example, the last element seems to be the current value
+            current_value = values[-1]
+            if not self.config_key_helper(key):
+                continue
+            if self.config_value_helper(current_value):
+                filtered[key] = current_value
+        return filtered
+

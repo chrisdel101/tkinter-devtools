@@ -9,9 +9,11 @@ class ConfigListbox(tk.Listbox):
     """
 
     def __init__(self, master, width, callback=None): 
-        tk.Listbox.__init__(self, master=master, width=width)
+        self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
+        tk.Listbox.__init__(self, master=master, width=width,  yscrollcommand = self.scroll_bar.set )
         self.edit_item = None
         self.bind("<Double-1>", lambda e: self._start_edit(e, callback))
+        self.scroll_bar.pack( side = tk.RIGHT, fill = tk.Y )
 
     def _start_edit(self, event, callback):
         index = self.index(f"@{event.x},{event.y}")
@@ -61,7 +63,7 @@ class ConfigListbox(tk.Listbox):
     def insert_all(self, config_dict):
          for key in config_dict:
             # insert selected node into styles_window_listbox window
-            self.insert(tk.END, f"{key}: {config_dict[key][-1]}\n")
+            self.insert(tk.END, f"{key}: {config_dict[key]}\n")
 
     def insert_item(self, index=tk.END, value=None):
         if value is None:
