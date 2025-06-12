@@ -16,7 +16,6 @@ class TreeView(ttk.Treeview):
         self.stored_tree_widgets_by_id[item_id] = widget
 
     def get_tree_widget_by_id(self, item_id):
-        """Store the widget in the dictionary with its ID."""
         return self.stored_tree_widgets_by_id.get(item_id)
     
     def build_tree(self, parent_widget, parent_node_id=""):
