@@ -21,7 +21,7 @@ class DevtoolsWindow:
 
         
     def get_editted_value(self, e, changes_dict):
-        self.tree.update_tree_item(changes_dict)   
+        self.left_window.tree.update_tree_item(changes_dict)   
     
     
 

@@ -10,17 +10,17 @@ class ConfigListbox(tk.Listbox):
 
     def __init__(self, master, width, callback=None): 
         self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
-        tk.Listbox.__init__(self, master=master, width=width,  yscrollcommand = self.scroll_bar.set )
+        tk.Listbox.__init__(self, master=master, width=width,  yscrollcommand = self.scroll_bar.set, bg="red")
         self.edit_item = None
-        self.bind("<Double-1>", lambda e: self._start_edit(e, callback))
+        self.bind("<Double-1>", lambda e: self.start_edit(e, callback))
         self.scroll_bar.pack( side = tk.RIGHT, fill = tk.Y )
 
-    def _start_edit(self, event, callback):
+    def start_edit(self, event, callback):
         index = self.index(f"@{event.x},{event.y}")
-        self.start_edit(index, callback)
+        self.handle_entry(index, callback)
         return "break"
 
-    def start_edit(self, index, callback):
+    def handle_entry(self, index, callback):
         self.edit_item = index
         text = self.get(index)
         y0 = self.bbox(index)[1]
@@ -43,6 +43,12 @@ class ConfigListbox(tk.Listbox):
 
     def accept_edit(self, event, index, callback):
         new_data = event.widget.get()
+        # delete empty entry
+        if not new_data:
+            print("No data entered, cancelling edit.")
+            self.delete(index)
+            self.cancel_edit(event)
+            return
         # get the value of the selected item
         split_list_items: list = new_data.split(":")
         key = split_list_items[0]
