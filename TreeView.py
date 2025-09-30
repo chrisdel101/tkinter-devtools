@@ -8,7 +8,7 @@ class TreeView(ttk.Treeview):
     def __init__(self, master, listbox_widget): 
         super().__init__(master, show="tree")
         self.selected_item = None
-        self.listbox_widget = listbox_widget
+        self._listbox_widget = listbox_widget
         self.stored_tree_widgets_by_id = {}
 
     def set_tree_widget_by_id(self, item_id, widget):
@@ -36,11 +36,12 @@ class TreeView(ttk.Treeview):
             self.build_tree(child, child_widget_id)
     
     # main listener for tree item selects
-    def bind_tree_select(self):
+    def bind_tree_select(self, callback):
+        # call func when tree item is selected
         self.bind("<<TreeviewSelect>>", lambda e:
-        self.handle_tree_select(e))
+        self.handle_tree_select(e, callback))
 
-    def handle_tree_select(self, _):
+    def handle_tree_select(self, _, callback):
             # get selected tree item 
             selected = self.selection()
             if selected and selected != self.selected_item:
@@ -52,17 +53,18 @@ class TreeView(ttk.Treeview):
                 if self.selected_item:
                     try:
                         # delete prev content in listbox
-                        self.listbox_widget.delete_contents()
+                        self._listbox_widget.delete_contents()
                         # get config of selected
                         config = self.selected_item.configure()
                         # filter out unwanted config values
-                        config = Utils.filter_config_values(config)
+                        filtered_config = Utils.filter_config_values(config)
                         # display selected tree item's config in listbox win
-                        self.listbox_widget.insert_all(config) 
-                                    
-                    except Exception as e:  
-                        self.listbox_widget.delete_contents()
-                        self.listbox_widget.insert_item(tk.END, f"Error: {e}")
+                        self._listbox_widget.insert_all(filtered_config)
+                        callback(self.selected_item)
+
+                    except Exception as e:
+                        self._listbox_widget.delete_contents()
+                        self._listbox_widget.insert_item(tk.END, f"Error: {e}")
 
     # select a tree item programatically
     def select_tree_item(self, item):
