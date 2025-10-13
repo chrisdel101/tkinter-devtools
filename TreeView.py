@@ -60,7 +60,7 @@ class TreeView(ttk.Treeview):
                         filtered_config = Utils.filter_config_values(config)
                         # display selected tree item's config in listbox win
                         self._listbox_widget.insert_all(filtered_config)
-                        callback(self.selected_item)
+                        callback(selected_item=self.selected_item)
 
                     except Exception as e:
                         self._listbox_widget.delete_contents()

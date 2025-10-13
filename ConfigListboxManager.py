@@ -9,20 +9,21 @@ class ConfigListboxManager(tk.Listbox):
 
     """
 
-    def __init__(self, master, width, set_tree_item_callback=None): 
+    def __init__(self, master, width, set_node_selected_callback): 
         self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         tk.Listbox.__init__(self, master=master, width=width,  yscrollcommand = self.scroll_bar.set, bg="red")
         self.edit_item = None
+        self._set_node_selected_callback = set_node_selected_callback
         # listener - for editing an entry using dbl click - not used in creating init val
-        self.bind("<Double-1>", lambda e: self.start_edit(e, set_tree_item_callback))
+        self.bind("<Double-1>", self.start_update)
         self.scroll_bar.pack( side = tk.RIGHT, fill = tk.Y)
 
-    def start_edit(self, event, callback):
+    def start_update(self, event):
         index = self.index(f"@{event.x},{event.y}")
-        self.handle_entry(index, callback)
+        self.handle_entry_input(index, self._set_node_selected_callback)
         return "break"
 
-    def handle_entry(self, index, callback):
+    def handle_entry_input(self, index, callback):
         self.edit_item = index
         text = self.get(index)
         # coords of y1 inside bb rect
@@ -31,7 +32,7 @@ class ConfigListboxManager(tk.Listbox):
         # listener - fire callback to handle entry value
         entry.bind("<Return>", lambda e: self.accept_edit(e, index, callback))
         # listener - fire callback to cancel and exit entry 
-        entry.bind("<Escape>", self.cancel_edit)
+        entry.bind("<Escape>", self.cancel_update)
 
         # TODO add focus off reject edit
         entry.insert(0, text)
@@ -40,17 +41,18 @@ class ConfigListboxManager(tk.Listbox):
         entry.place(relx=0, y=y0, relwidth=1, width=-1)
         entry.focus_set()
         entry.grab_set()
-
-    def cancel_edit(self, event):
+    @staticmethod
+    def cancel_update(event):
         event.widget.destroy()
     # handle entry within an entry inside listbox
+    # - pass in callback - used in multiple places w diff callbacks
     def accept_edit(self, event, index, callback):
         new_data = event.widget.get()
         # delete empty entry
         if not new_data:
             print("No data entered, cancelling edit.")
             self.delete(index)
-            self.cancel_edit(event)
+            self.cancel_update(event)
             return
         # get the value of the selected items - it's string currently
         split_list_items: list = new_data.split(":")
@@ -64,8 +66,10 @@ class ConfigListboxManager(tk.Listbox):
         self.delete(self.edit_item)
         self.insert(self.edit_item, new_data) 
         # send callback to update widget inside treeview  
-        callback(event,changes_dict)
+        # - options: set_tree_item_from_entry_value 
+        callback(event, changes_dict)
         event.widget.destroy()
+        return changes_dict
 
     
     def delete_contents(self):
