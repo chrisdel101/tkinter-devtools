@@ -12,7 +12,7 @@ class DevtoolsWindow:
         # listbox for the config entries - sends dict of config values up when updated
         self.config_listbox_mngr = ConfigListboxManager(master=self.top_level, width=50, set_node_selected_callback=self.set_current_node_selected)
         # left window - sends currenltly selected node up when changed
-        self.left_window = LeftWindowFrame(root=root, master=self.top_level, listbox_widget=self.config_listbox_mngr, callback=self.set_current_node_selected)
+        self.left_window = LeftWindowFrame(root=root, master=self.top_level, listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.set_current_node_selected)
         # right window
         self.right_window = RightWindowFrame(master=self.top_level, config_listbox_mngr=self.config_listbox_mngr,
         get_tree_item_callback=self.get_current_node_selected, set_tree_item_callback=self.set_tree_item_from_entry_value)
@@ -25,7 +25,7 @@ class DevtoolsWindow:
         
     def set_tree_item_from_entry_value(self, _, changes_dict):
         self.left_window.tree.update_tree_item(changes_dict)
-    # on treeview select call and store the node
+    # on treeview select item call and store the selected node
     def set_current_node_selected(self, _, selected_item):
         self.selected_item = selected_item
 

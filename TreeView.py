@@ -36,12 +36,12 @@ class TreeView(ttk.Treeview):
             self.build_tree(child, child_widget_id)
     
     # main listener for tree item selects
-    def bind_tree_select(self, callback):
+    def bind_tree_select(self, set_current_node_selected_callback):
         # call func when tree item is selected
         self.bind("<<TreeviewSelect>>", lambda e:
-        self.handle_tree_select(e, callback))
+        self.handle_tree_select(e, set_current_node_selected_callback))
 
-    def handle_tree_select(self, _, callback):
+    def handle_tree_select(self, _, set_current_node_selected_callback):
             # get selected tree item 
             selected = self.selection()
             if selected and selected != self.selected_item:
@@ -60,7 +60,7 @@ class TreeView(ttk.Treeview):
                         filtered_config = Utils.filter_config_values(config)
                         # display selected tree item's config in listbox win
                         self._listbox_widget.insert_all(filtered_config)
-                        callback(selected_item=self.selected_item)
+                        set_current_node_selected_callback(_, selected_item=self.selected_item)
 
                     except Exception as e:
                         self._listbox_widget.delete_contents()

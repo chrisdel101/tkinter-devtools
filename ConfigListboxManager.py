@@ -20,17 +20,17 @@ class ConfigListboxManager(tk.Listbox):
 
     def start_update(self, event):
         index = self.index(f"@{event.x},{event.y}")
-        self.handle_entry_input(index, self._set_node_selected_callback)
+        self.handle_entry_input(index=index, set_node_selected_callback=self._set_node_selected_callback)
         return "break"
 
-    def handle_entry_input(self, index, callback):
+    def handle_entry_input(self, index, set_node_selected_callback):
         self.edit_item = index
         text = self.get(index)
         # coords of y1 inside bb rect
         y0 = self.bbox(index)[1]
         entry = tk.Entry(self, borderwidth=0, highlightthickness=1)
         # listener - fire callback to handle entry value
-        entry.bind("<Return>", lambda e: self.accept_edit(e, index, callback))
+        entry.bind("<Return>", lambda e: self.accept_edit(e, index, set_node_selected_callback))
         # listener - fire callback to cancel and exit entry 
         entry.bind("<Escape>", self.cancel_update)
 
@@ -46,7 +46,7 @@ class ConfigListboxManager(tk.Listbox):
         event.widget.destroy()
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
-    def accept_edit(self, event, index, callback):
+    def accept_edit(self, event, index, set_node_selected_callback):
         new_data = event.widget.get()
         # delete empty entry
         if not new_data:
@@ -65,9 +65,9 @@ class ConfigListboxManager(tk.Listbox):
         # delete data at current index and insert new data there
         self.delete(self.edit_item)
         self.insert(self.edit_item, new_data) 
-        # send callback to update widget inside treeview  
-        # - options: set_tree_item_from_entry_value 
-        callback(event, changes_dict)
+        # send callback to update widget inside treeview
+        # - options: set_tree_item_from_entry_value
+        set_node_selected_callback(event, changes_dict)
         event.widget.destroy()
         return changes_dict
 
