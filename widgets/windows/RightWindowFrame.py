@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 class RightWindowFrame(WindowFrame):
-    def __init__(self, config_listbox_mngr: ConfigListboxManager, master: tk.Toplevel, get_tree_item_callback, set_tree_item_callback):
+    def __init__(self, config_listbox_mngr, master, get_tree_item_callback, set_tree_item_callback):
         super().__init__(master)
         # button header
         self.header_frame = tk.Frame(self, height=30, bg="lightgrey")
@@ -12,7 +12,7 @@ class RightWindowFrame(WindowFrame):
         self._set_tree_item_callback = set_tree_item_callback
         self._get_tree_item_callback = get_tree_item_callback
         # callback - send changes in right window to left window treeview
-        self._config_listbox_mngr = config_listbox_mngr
+        self._config_listbox_mngr: ConfigListboxManager = config_listbox_mngr
         
         self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
         self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
