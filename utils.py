@@ -1,4 +1,22 @@
+import logging
+
+
 class Utils:
+    @staticmethod
+    # split a key value str and return key/val dict
+    def build_split_str_pairs_dict(new_data, separator=":"):
+        try:
+            split_list_items: list = new_data.split(separator)
+            key = split_list_items[0]
+            value = split_list_items[1]
+            changes_dict  = {
+                'key': key,
+                'value': value.strip(),
+            }
+            return changes_dict
+        except Exception as e:
+            logging.error(f"Error splitting string at colon: {e}", exc_info=True)
+            raise e
     @staticmethod
     def config_key_helper(key):
         # filter out class - cannot be changed

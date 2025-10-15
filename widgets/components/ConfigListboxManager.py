@@ -1,4 +1,7 @@
+import logging
 import tkinter as tk
+
+from utils import Utils
 
 """
 
@@ -27,49 +30,52 @@ class ConfigListboxManager(tk.Listbox):
     def handle_entry_input(self, index, update_current_selected_item_node_callback):
         self.editting_item_index = index
         text = self.get(index)
+        changes_dict  = Utils.build_split_str_pairs_dict(text, ":")
         # coords of y1 inside bb rect
         y0 = self.bbox(index)[1]
         # add an entry box on top of listbox item
-        entry = tk.Entry(self, borderwidth=0, highlightthickness=1)
-        # listener - fire callback to handle entry value
-        entry.bind("<Return>", lambda e: self.accept_edit(e, index, update_current_selected_item_node_callback))
-        # listener - fire callback to cancel and exit entry 
-        entry.bind("<Escape>", self.cancel_update)
+        key_entry = tk.Entry(self, borderwidth=0, highlightthickness=1)
+        # listener - fire callback to handle key_entry value
+        key_entry.bind("<Return>", lambda e: self.accept_edit(e, index, update_current_selected_item_node_callback))
+        # listener - fire callback to cancel and exit key_entry 
+        key_entry.bind("<Escape>", self.cancel_update)
         # TODO add focus off reject edit
-        # add the text from the item into the entry
-        entry.insert(0, text)
-        # set the points to hightlight the entry text
-        entry.selection_from(0)
-        entry.selection_to("end")
-        entry.place(relx=0, y=y0, relwidth=1, width=-1)
-        # not hightlight the entry text
-        entry.focus_set()
+        # add the text from the item into the key_entry
+        key_entry.insert(0, changes_dict.get('key'))
+        # set the points to hightlight the key_entry text
+        key_entry.selection_from(0)
+        key_entry.selection_to("end")
+        key_entry.place(relx=0, y=y0, relwidth=1, width=-1)
+    
+        # --- VALUE ENTRY ---
+        value_entry = tk.Entry(self, borderwidth=0, highlightthickness=1)
+        value_entry.insert(0, changes_dict.get('value'))
+        value_entry.selection_from(0)
+        value_entry.selection_to("end")
+        value_entry.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
+        # not hightlight the key_entry text
+        value_entry.focus_set()
         # sets to grab all inputs - does not allow other inputs while this is active
-        entry.grab_set()
+        value_entry.grab_set()
+
     @staticmethod
     def cancel_update(event):
         event.widget.destroy()
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
     def accept_edit(self, event, index, update_current_selected_item_node_callback):
-        new_data = event.widget.get()
+        input_data = event.widget.get()
         # delete empty entry
-        if not new_data:
+        if not input_data:
             print("No data entered, cancelling edit.")
             self.delete(index)
             self.cancel_update(event)
             return
-        # get the value of the selected items - it's string currently
-        split_list_items: list = new_data.split(":")
-        key = split_list_items[0]
-        value = split_list_items[1]
-        changes_dict  = {
-            'key': key,
-            'value': value.strip(),
-        }
+        # get the value of the selected items - it's string currently   
+        changes_dict  = Utils.build_split_str_pairs_dict(input_data, ":")
         # delete data at current index and insert new data there
         self.delete(self.editting_item_index)
-        self.insert(self.editting_item_index, new_data) 
+        self.insert(self.editting_item_index, input_data) 
         # send callback to update widget inside treeview
         # - options: set_tree_item_from_entry_value
         update_current_selected_item_node_callback(event, changes_dict)
@@ -87,7 +93,7 @@ class ConfigListboxManager(tk.Listbox):
 
     def insert_item(self, index=tk.END, value=None):
         if value is None:
-            print("listbox value is None.")
+            logging.info("listbox value is None.")
         self.insert(index, value)
 
         

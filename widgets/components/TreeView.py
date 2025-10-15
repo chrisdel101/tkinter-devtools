@@ -42,29 +42,29 @@ class TreeView(ttk.Treeview):
         self.handle_tree_select(e, set_current_node_selected_callback))
 
     def handle_tree_select(self, _, set_current_node_selected_callback):
-            # get selected tree item 
-            selected = self.selection()
-            if selected and selected != self.selected_item:
-                # .selection give tree item ID
-                item_id = selected[0]
-                # get widget info from store
-                self.selected_item = self.get_tree_widget_by_id(item_id)
-                # TODO check if current select is already selected
-                if self.selected_item:
-                    try:
-                        # delete prev content in listbox
-                        self._listbox_widget.delete_contents()
-                        # get config of selected
-                        config = self.selected_item.configure()
-                        # filter out unwanted config values
-                        filtered_config = Utils.filter_config_values(config)
-                        # display selected tree item's config in listbox win
-                        self._listbox_widget.insert_all(filtered_config)
-                        set_current_node_selected_callback(_, selected_item=self.selected_item)
+        # get selected tree item 
+        selected = self.selection()
+        if selected and selected != self.selected_item:
+            # .selection give tree item ID
+            item_id = selected[0]
+            # get widget info from store
+            self.selected_item = self.get_tree_widget_by_id(item_id)
+            # TODO check if current select is already selected
+            if self.selected_item:
+                try:
+                    # delete prev content in listbox
+                    self._listbox_widget.delete_contents()
+                    # get config of selected
+                    config = self.selected_item.configure()
+                    # filter out unwanted config values
+                    filtered_config = Utils.filter_config_values(config)
+                    # display selected tree item's config in listbox win
+                    self._listbox_widget.insert_all(filtered_config)
+                    set_current_node_selected_callback(_, selected_item=self.selected_item)
 
-                    except Exception as e:
-                        self._listbox_widget.delete_contents()
-                        self._listbox_widget.insert_item(tk.END, f"Error: {e}")
+                except Exception as e:
+                    self._listbox_widget.delete_contents()
+                    self._listbox_widget.insert_item(tk.END, f"Error: {e}")
 
     # select a tree item programatically
     def select_tree_item(self, item):
