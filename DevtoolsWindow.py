@@ -9,13 +9,14 @@ class DevtoolsWindow:
         self.top_level = tk.Toplevel(root, background='red')
         self.top_level.title(title)
         self.root = root
+        self.selected_item_tree_item: tk.Widget | None = None
         # listbox for the config entries - sends dict of config values up when updated
-        self.config_listbox_mngr = ConfigListboxManager(master=self.top_level, width=50, set_node_selected_callback=self.set_current_treeview_node_selected)
+        self.config_listbox_mngr = ConfigListboxManager(master=self.top_level, width=50, update_current_selected_item_node_callback=self.update_current_selected_item_node)
         # left window - sends currenltly selected node up when changed
-        self.left_window = LeftWindowFrame(root=root, master=self.top_level, listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.set_current_treeview_node_selected)
-        # right window
+        self.left_window = LeftWindowFrame(root=root, master=self.top_level, listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
+         # right window
         self.right_window = RightWindowFrame(master=self.top_level, config_listbox_mngr=self.config_listbox_mngr,
-        get_tree_item_callback=self.get_current_treeview_node_selected, set_tree_item_callback=self.set_tree_item_from_entry_value)
+        get_tree_item_callback=self.get_current_selected_item_node, set_tree_item_callback=self.update_current_selected_item_node)
 
         # pack left window
         self.left_window.tree.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
@@ -23,12 +24,12 @@ class DevtoolsWindow:
         self.right_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
 
         
-    def set_tree_item_from_entry_value(self, _, changes_dict):
+    def update_current_selected_item_node(self, _, changes_dict):
         self.left_window.tree.update_tree_item(changes_dict)
-    # on treeview select item call and store the selected node
-    def set_current_treeview_node_selected(self, _, selected_item):
-        self.selected_item = selected_item
+    # when treeview is selected store the selected app node
+    def store_current_selected_item_node(self, _, selected_item):
+        self.selected_item_tree_item: tk.Widget | None = selected_item
 
-    def get_current_treeview_node_selected(self):
-        return self.selected_item
+    def get_current_selected_item_node(self):
+        return self.selected_item_tree_item
 
