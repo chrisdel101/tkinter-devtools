@@ -1,4 +1,3 @@
-from widgets.components.ConfigListboxManager import ConfigListboxManager
 from widgets.components.TreeView import TreeView
 from widgets.windows.WindowFrame import WindowFrame
 

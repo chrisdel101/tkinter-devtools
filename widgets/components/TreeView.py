@@ -11,7 +11,7 @@ class TreeView(ttk.Treeview):
         self._listbox_widget = listbox_widget
         self.stored_tree_widgets_by_id = {}
 
-    def set_tree_widget_by_id(self, item_id, widget):
+    def add_tree_item_to_store_dict(self, item_id, widget):
         """Store the widget in the dictionary with its ID."""
         self.stored_tree_widgets_by_id[item_id] = widget
 
@@ -19,20 +19,21 @@ class TreeView(ttk.Treeview):
         return self.stored_tree_widgets_by_id.get(item_id)
     
     def build_tree(self, parent_widget, parent_node_id=""):
-    # check if it's a parent node - parent tree node has ID
+    # check if it's a parent node - parent tree node has ID, first call was no ID yet
         if not parent_node_id:
             parent_widget_id = self.insert("", "end", text=parent_widget.winfo_class())
-            self.set_tree_widget_by_id(parent_widget_id, parent_widget)
+            self.add_tree_item_to_store_dict(parent_widget_id, parent_widget) 
         else:
             parent_widget_id = parent_node_id
+        # method gives all child widgets of tk obj
         for child in parent_widget.winfo_children():
-            # Exclude any Toplevel windows (like the dev tool)
+            # Skip any Toplevel windows - this is dev tool window
             if isinstance(child, tk.Toplevel):
                 continue
-            # ID of place in tree
+            # ID of place in tree - insert returns ID of inserted widget
             child_widget_id = self.insert(parent_widget_id, "end", text=child.winfo_class())
-            self.stored_tree_widgets_by_id[child_widget_id] = child  
-            self.set_tree_widget_by_id(child_widget_id, child)
+            # dict store id: widget 
+            self.add_tree_item_to_store_dict(child_widget_id, child)
             self.build_tree(child, child_widget_id)
     
     # main listener for tree item selects

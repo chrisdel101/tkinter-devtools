@@ -1,6 +1,8 @@
 import logging
 import tkinter as tk
 
+from constants import MAX_KEY_WIDTH
+from style import Style
 from utils import Utils
 
 """
@@ -12,9 +14,9 @@ https://stackoverflow.com/a/64611569/5972531
 """
 class ConfigListboxManager(tk.Listbox):
 
-    def __init__(self, master, width, update_current_selected_item_node_callback): 
+    def __init__(self, master, update_current_selected_item_node_callback): 
         self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
-        tk.Listbox.__init__(self, master=master, width=width,  yscrollcommand = self.scroll_bar.set, bg="red")
+        tk.Listbox.__init__(self, master=master, width=width,  yscrollcommand = self.scroll_bar.set, bg=bg, font=font)
         self.editting_item_indext:int | None = None
         self._update_current_selected_item_node_callback = update_current_selected_item_node_callback
         # listener - for editing an entry using dbl click - not used in creating init val
@@ -89,7 +91,10 @@ class ConfigListboxManager(tk.Listbox):
     def insert_all(self, config_dict):
          for key in config_dict:
             # insert selected node into styles_window_listbox window
-            self.insert(tk.END, f"{key}: {config_dict[key]}\n")
+            display = f"{key.ljust(Style.config_listbox_manager['inserted_item_width'])} : {config_dict[key]}"
+            self.insert(tk.END, display)
+
+            # self.insert(tk.END, f"{key}: {config_dict[key]}\n")
 
     def insert_item(self, index=tk.END, value=None):
         if value is None:

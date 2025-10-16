@@ -1,4 +1,6 @@
 import tkinter as tk
+from style import Style
+from utils import Utils
 from widgets.components.ConfigListboxManager import ConfigListboxManager
 from widgets.windows.LeftWindowFrame import LeftWindowFrame
 from widgets.windows.RightWindowFrame import RightWindowFrame
@@ -11,7 +13,8 @@ class DevtoolsWindow:
         self.root = root
         self.selected_item_tree_item: tk.Widget | None = None
         # listbox for the config entries - sends dict of config values up when updated
-        self.config_listbox_mngr = ConfigListboxManager(master=self.top_level, width=50, update_current_selected_item_node_callback=self.update_current_selected_item_node)
+        k_wargs = Utils.match_safe_kwargs(widget_cls=ConfigListboxManager, master=self.top_level, **Style.config_listbox_manager)
+        self.config_listbox_mngr = ConfigListboxManager(master=self.top_level, **k_wargs)
         # left window - sends currenltly selected node up when changed
         self.left_window = LeftWindowFrame(root=root, master=self.top_level, listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
          # right window
@@ -26,7 +29,7 @@ class DevtoolsWindow:
         
     def update_current_selected_item_node(self, _, changes_dict):
         self.left_window.tree.update_tree_item(changes_dict)
-    # when treeview is selected store the selected app node
+    # when treeview is selected store the matching app node widget 
     def store_current_selected_item_node(self, _, selected_item):
         self.selected_item_tree_item: tk.Widget | None = selected_item
 

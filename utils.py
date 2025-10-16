@@ -3,6 +3,17 @@ import logging
 
 class Utils:
     @staticmethod
+    # loops over widget config options and applies any matches - skips invalid options
+    def match_safe_kwargs(widget_cls, master, **kwargs):
+        '''
+        @param widget_cls: The Tkinter widget class (e.g., tk.Button, tk.Label), not instance.
+        @param master: The parent widget.
+        @param kwargs: The keyword arguments to filter and apply - mainly a Styles dict.
+        '''
+        valid = widget_cls(master).keys()  # valid Tk options
+        return {k: v for k, v in kwargs.items() if k in valid}
+
+    @staticmethod
     # split a key value str and return key/val dict
     def build_split_str_pairs_dict(new_data, separator=":"):
         try:
