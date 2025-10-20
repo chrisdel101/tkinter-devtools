@@ -33,13 +33,13 @@ class RightWindowFrame(WindowFrame):
         # if none selected insert at top
         if len(current_listbox_selection) == 0:
             self._config_listbox_mngr.insert(0, "")
-            self._config_listbox_mngr.handle_entry_input(0, self._set_tree_item_callback)
+            self._config_listbox_mngr.handle_create_entry_input(0, self._set_tree_item_callback)
         # insert after selected_item
         else:
             #  get selected tuple 
             current_selection_index = current_listbox_selection[0]
             self._config_listbox_mngr.insert(current_selection_index + 1, "")
-            self._config_listbox_mngr.handle_entry_input(current_selection_index + 1, self._set_tree_item_callback)
+            self._config_listbox_mngr.handle_create_entry_input(current_selection_index + 1, self._set_tree_item_callback)
 
     def handle_subract(self):
         current_selection = self._config_listbox_mngr.curselection()

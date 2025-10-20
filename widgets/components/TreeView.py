@@ -70,6 +70,6 @@ class TreeView(ttk.Treeview):
     # select a tree item programatically
     def select_tree_item(self, item):
         self.selection_set(item) 
-
+    # takes a dict and applies it to widget config
     def update_tree_item(self, changes_dict):
             self.selected_item.config(**{changes_dict['key']: changes_dict['value']})
