@@ -1,7 +1,8 @@
 import logging
 import tkinter as tk
+from tkinter import ttk
 
-from constants import MAX_KEY_WIDTH
+from maps import OPTIONS
 from utils import Utils
 
 """
@@ -54,17 +55,31 @@ class ConfigListboxManager(tk.Listbox):
         key_entry.selection_to("end")
         key_entry.place(relx=0, y=y0, relwidth=1, width=-1)
     
-        # --- VALUE ENTRY ---
-        value_entry = tk.Entry(self, **self.styles['entry'])
-        value_entry.insert(0, changes_dict.get('value'))
-        value_entry.selection_from(0)
-        value_entry.selection_to("end")
-        value_entry.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
-        value_entry.focus_set()
+        # # --- VALUE ENTRY ---
+        # value_entry = tk.Entry(self, **self.styles['entry'])
+        # value_entry.insert(0, changes_dict.get('value'))
+        # value_entry.selection_from(0)
+        # value_entry.selection_to("end")
+        # value_entry.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
+        # value_entry.focus_set()
+
+        # --- DROP DOWN ENTRY ---
+        combo_box = ttk.Combobox(self, values=self.populate_box_options(key_entry.get()),state="readonly")
+        # set first item to show up
+        combo_box.set(changes_dict.get('value'))
+        combo_box.bind('<<ComboboxSelected>>', lambda e: self.accept_edit_to_page_widget(e, index, update_current_selected_item_node_callback, key_entry))
+        combo_box.bind("<Escape>", lambda e: self.cancel_update(e, key_entry))
+        combo_box.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
+        combo_box.focus_set()
         
-        value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget(e, index, update_current_selected_item_node_callback, key_entry))
-        for ev in ["<Escape>", "<FocusOut>"]:
-            value_entry.bind(ev, lambda e: self.cancel_update(e, key_entry))
+        # for ev in ["<Escape>", "<FocusOut>"]:
+        #     value_entry.bind(ev, lambda e: self.cancel_update(e, key_entry))
+    def populate_box_options(self,key_str_value):
+        options_list = OPTIONS.get(key_str_value, [])
+        if not options_list:
+            logging.error(f"No options found for key: {key_str_value}")
+        
+        return options_list
 
     @staticmethod
     def cancel_update(event, *args):
