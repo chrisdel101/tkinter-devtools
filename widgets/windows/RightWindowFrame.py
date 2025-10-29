@@ -3,27 +3,29 @@ from widgets.windows.WindowFrame import WindowFrame
 import tkinter as tk
 from tkinter import ttk
 
-class RightWindowFrame(WindowFrame):
+class RightWindowFrame(tk.Frame):
     def __init__(self, config_listbox_mngr, master, get_tree_item_callback, set_tree_item_callback):
-        super().__init__(master)
+        super().__init__(master, width=300, height=500, bg="red")
         # button header
-        self.header_frame = tk.Frame(self, height=30, bg="lightgrey")
+        self.header_frame = tk.Frame(self, height=50, bg="lightgrey")
+        # self.header_frame.bind("<Button-1>", lambda e: print("Click"))
         # sets value on 
         self._set_tree_item_callback = set_tree_item_callback
         self._get_tree_item_callback = get_tree_item_callback
         # callback - send changes in right window to left window treeview
         self._config_listbox_mngr: ConfigListboxManager = config_listbox_mngr
         
-        self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
-        self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
+        # self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
+        # self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
         # # pack add button
-        self.add_config_button.pack(side="left", padx=5, pady=5)
+        # self.add_config_button.pack(side="left", padx=5, pady=5)
         # # pack subtract button
-        self.subtract_config_button.pack(side="left", padx=5, pady=5)
+        # self.subtract_config_button.pack(side="left", padx=5, pady=5)
          # pack header
-        self.header_frame.pack(side="top", fill="x", expand=False, padx=0, pady=0, ipady=0, ipadx=0)
+        self.header_frame.pack(fill="x", expand=True)
          # pack listbox
-        config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+        # config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+        # self.pack(fill="both", expand=True)
 
 
     def handle_add(self):
