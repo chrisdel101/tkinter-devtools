@@ -4,7 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 class RightWindowFrame(tk.Frame):
-    def __init__(self, config_listbox_mngr, master, get_tree_item_callback, set_tree_item_callback):
+    def __init__(self, master, get_tree_item_callback, set_tree_item_callback):
         super().__init__(master, width=300, height=500, bg="red")
         # button header
         self.header_frame = tk.Frame(self, height=50, bg="lightgrey")
@@ -13,7 +13,7 @@ class RightWindowFrame(tk.Frame):
         self._set_tree_item_callback = set_tree_item_callback
         self._get_tree_item_callback = get_tree_item_callback
         # callback - send changes in right window to left window treeview
-        self._config_listbox_mngr: ConfigListboxManager = config_listbox_mngr
+        self._config_listbox_mngr: ConfigListboxManager = None
         
         # self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
         # self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
@@ -27,7 +27,9 @@ class RightWindowFrame(tk.Frame):
         # config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
         # self.pack(fill="both", expand=True)
 
-
+    def set_listbox_manager(self, config_listbox_mngr):
+        setattr(self, '_config_listbox_mngr', config_listbox_mngr)
+        self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
     def handle_add(self):
         current_listbox_selection = self._config_listbox_mngr.curselection()
         current_treeview_item = self._get_tree_item_callback()

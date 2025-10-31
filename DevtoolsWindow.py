@@ -11,20 +11,25 @@ class DevtoolsWindow(tk.Toplevel):
         self.title(title)
         self.root = root
         self.selected_item_tree_item: tk.Widget | None = None
-        # listbox for the config entries - sends dict of config values up when updated
-        self.config_listbox_mngr = ConfigListboxManager(master=self, update_current_selected_item_node_callback=self.update_current_selected_item_node, **Style.config_listbox_manager)
-        # left window - sends currenltly selected node up when changed
-        self.left_window = LeftWindowFrame(root=root, master=self, listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
-         # right window
-        self.right_window = RightWindowFrame(master=self, config_listbox_mngr=self.config_listbox_mngr,
+       
+        # right window - create first it can be passed to listbox manager as owner
+        self.right_window = RightWindowFrame(master=self,
         get_tree_item_callback=self.get_current_selected_item_node, set_tree_item_callback=self.update_current_selected_item_node)
 
+        # listbox for the config entries - sends dict of config values up when updated
+        self.config_listbox_mngr = ConfigListboxManager(master=self.right_window, update_current_selected_item_node_callback=self.update_current_selected_item_node, **Style.config_listbox_manager)
+
+        self.right_window.set_listbox_manager(self.config_listbox_mngr)
+
+        # left window - sends currently selected node up when changed - pass down listbox to apply updates
+        self.left_window = LeftWindowFrame(root=root, master=self, listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
+
         # pack left window
-        # self.left_window.tree.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
+        self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
         # pack right window
         self.right_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
-        self.right_window.pack_propagate(False)
-        self.bind("<FocusOut>", lambda e: print(self.tk.call('focus')))
+        # self.right_window.pack_propagate(False)
+        # self.bind("<FocusOut>", lambda e: print(self.tk.call('focus')))
 
         
     def update_current_selected_item_node(self, _, changes_dict):
