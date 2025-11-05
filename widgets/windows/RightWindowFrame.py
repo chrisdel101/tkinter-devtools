@@ -9,6 +9,7 @@ class RightWindowFrame(tk.Frame):
         # button header
         self.header_frame = tk.Frame(self, height=50, bg="lightgrey")
         # self.header_frame.bind("<Button-1>", lambda e: print("Click"))
+        # self.header_frame.bind("<Button-1>", lambda e: print("Click"))
         # sets value on 
         self._set_tree_item_callback = set_tree_item_callback
         self._get_tree_item_callback = get_tree_item_callback
@@ -16,6 +17,8 @@ class RightWindowFrame(tk.Frame):
         self._config_listbox_mngr: ConfigListboxManager = None
         
         # self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
+        # self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
+        # self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
         # self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
         # # pack add button
         # self.add_config_button.pack(side="left", padx=5, pady=5)
@@ -23,6 +26,7 @@ class RightWindowFrame(tk.Frame):
         # self.subtract_config_button.pack(side="left", padx=5, pady=5)
          # pack header
         self.header_frame.pack(fill="x", expand=True)
+        # self.header_frame.bind("<Button-1>", self._config_listbox_mngr.cancel_update)
          # pack listbox
         # config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
         # self.pack(fill="both", expand=True)

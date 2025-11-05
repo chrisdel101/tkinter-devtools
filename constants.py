@@ -8,3 +8,7 @@ KEYS_TO_REMOVE = ['class']
 class ComboBoxState(Enum):
     NORMAL = "normal"
     READONLY = "readonly"
+
+class OptionBoxState(Enum):
+    OPEN = "open"
+    CLOSED = "closed"

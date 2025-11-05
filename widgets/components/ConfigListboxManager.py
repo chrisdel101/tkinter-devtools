@@ -1,8 +1,8 @@
 import logging
 import tkinter as tk
-from tkinter import ttk
+from tkinter import Spinbox
 
-from constants import ComboBoxState
+from constants import ComboBoxState, OptionBoxState
 from maps import OPTIONS
 from utils import Utils
 
@@ -15,15 +15,17 @@ https://stackoverflow.com/a/64611569/5972531
 """
 class ConfigListboxManager(tk.Listbox):
 
-    def __init__(self, master, update_current_selected_item_node_callback, **styles): 
+    def __init__(self, master, update_current_selected_item_node_callback, toggle_option_box_state_callback, **styles): 
         self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         tk.Listbox.__init__(self, master=master, width=styles.get('width'),  yscrollcommand = self.scroll_bar.set, font=styles.get('font'))
         self.styles = styles
         self.editting_item_index:int | None = None
         self._update_current_selected_item_node_callback = update_current_selected_item_node_callback
         # listener on listbox - for editing an entry using dbl click - not used in creating init val
+        self._toggle_option_box_state_callback = toggle_option_box_state_callback
         self.bind("<Double-1>", self.start_update)
         self.scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.option_box_state = OptionBoxState.CLOSED.value
        
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
@@ -61,26 +63,27 @@ class ConfigListboxManager(tk.Listbox):
         item_mapped_values: list[str] | str = self._get_config_value_options(key_entry.get())
         # if vals are list use dropdown
         if isinstance(item_mapped_values, list):
-            logging.debug(f"Mapped values for key {key_entry.get()}: {item_mapped_values}")
+            # logging.debug(f"Mapped values for key {key_entry.get()}: {item_mapped_values}")
             # --- DROP DOWN ENTRY ---
-            combo_box = ttk.Combobox(self, 
-                values=item_mapped_values, 
-                state=self._get_config_option_state(key_entry.get())
-            )
-            # set first item to show up
-            combo_box.set(changes_dict.get('value'))
-            # combo_box.bind('<<ComboboxSelected>>', lambda e: self.accept_edit_to_page_widget(e, index, update_current_selected_item_node_callback, key_entry))
-            # if state is not read only allow return event
-            combo_box.bind('<Return>', lambda e: None
-            if str(combo_box.cget("state")) == ComboBoxState.READONLY.value
-            else self.accept_edit_to_page_widget(e, index, update_current_selected_item_node_callback, key_entry))
-            # combo_box.bind("<FocusOut>", lambda e: self.cancel_update(e, key_entry))
-            # combo_box.bind("<FocusOut>", lambda e: self.on_focus_out(e, key_entry))
-            combo_box.bind("<Escape>", lambda e: self.cancel_update(e, key_entry))
-            combo_box.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
-            combo_box.focus_set()
+            value_inside = tk.StringVar(self)
+            value_inside.set(item_mapped_values[0])
+            # get selected value from drop down
+            value_inside.trace_add('write', lambda *args:print('TEST TRACE', value_inside.get()))
+            option_box = tk.OptionMenu(self,
+                value_inside,
+                *item_mapped_values,
+               )
+                        # if state is not read only allow return event
+            option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget(e, index, update_current_selected_item_node_callback, key_entry))
+            option_box.bind("<Escape>", lambda e: self.cancel_update(e, key_entry))
+            option_box.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
+            option_box.focus_set()
+            # get menu btn parent - only way to detect bind 
+            btn = option_box.children['menu'].master
+            # btn.bind("<ButtonPress-1>", self._toggle_option_box_state_callback)
+            btn.bind("<FocusOut>", lambda e: self.cancel_update(e, key_entry))
+            # btn.bind("<FocusOut>",  self.set_box_state_on_open)
         # if vals are str use entry
-
         elif isinstance(item_mapped_values, str) or item_mapped_values is None:
              # --- VALUE ENTRY ---
             value_entry = tk.Entry(self, **self.styles['entry'])
@@ -182,3 +185,13 @@ class ConfigListboxManager(tk.Listbox):
         if not str(focused).startswith(str(combo)):
             pass
             # self.cancel_update(event, key_entry)
+    # set to open on click - only handles open since close is not detectable
+    def set_box_state_on_open(self, event):
+        # logging.debug(f"state: {self.option_box_state}")
+        # if open set to closed - else set to open
+        if self.option_box_state == OptionBoxState.CLOSED.value:
+            self.option_box_state = OptionBoxState.OPEN.value
+            # logging.debug("Option box opened.")
+        else:
+            self.option_box_state = OptionBoxState.CLOSED.value
+            # logging.debug("Option box closed.")
