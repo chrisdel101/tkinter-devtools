@@ -60,28 +60,28 @@ class ConfigListboxManager(tk.Listbox):
         key_entry.selection_to("end")
         key_entry.place(relx=0, y=y0, relwidth=1, width=-1)
         # get value from dict map
-        item_mapped_values: list[str] | str = self._get_config_value_options(key_entry.get())
+        item_mapped_values: list[str] | None = self._get_config_value_options(key_entry.get())
         # if vals are list use dropdown
         if isinstance(item_mapped_values, list):
             # logging.debug(f"Mapped values for key {key_entry.get()}: {item_mapped_values}")
             # --- DROP DOWN ENTRY ---
             value_inside = tk.StringVar(self)
             value_inside.set(item_mapped_values[0])
-            # get selected value from drop down
-            value_inside.trace_add('write', lambda *args:print('TEST TRACE', value_inside.get()))
+            # like bind - get selected value from drop down
             option_box = tk.OptionMenu(self,
                 value_inside,
                 *item_mapped_values,
                )
+            value_inside.trace_add('write', lambda *args:self.accept_edit_to_page_widget(option_box, index, value_entry_widget=value_inside, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
                         # if state is not read only allow return event
-            option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget(e, index, update_current_selected_item_node_callback, key_entry))
-            option_box.bind("<Escape>", lambda e: self.cancel_update(e, key_entry))
+            option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget(widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+            option_box.bind("<Escape>", lambda e: self.cancel_update(option_box, key_entry))
             option_box.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
             option_box.focus_set()
             # get menu btn parent - only way to detect bind 
             btn = option_box.children['menu'].master
             # btn.bind("<ButtonPress-1>", self._toggle_option_box_state_callback)
-            btn.bind("<FocusOut>", lambda e: self.cancel_update(e, key_entry))
+            btn.bind("<FocusOut>", lambda e: self.cancel_update(option_box, key_entry))
             # btn.bind("<FocusOut>",  self.set_box_state_on_open)
         # if vals are str use entry
         elif isinstance(item_mapped_values, str) or item_mapped_values is None:
@@ -92,18 +92,19 @@ class ConfigListboxManager(tk.Listbox):
             value_entry.selection_to("end")
             value_entry.place(relx=0.3, y=y0, relwidth=0.58, width=-1)
             value_entry.focus_set()
-            value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget(e, index, update_current_selected_item_node_callback, key_entry))
+            value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget(widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
             for ev in ["<Escape>", "<FocusOut>"]:
-                value_entry.bind(ev, lambda e: self.cancel_update(e, key_entry))
+                value_entry.bind(ev, lambda e: self.cancel_update(e.widget, key_entry))
         
-    # get options of config properties to use in dropdown
+    # get options of config properties to use in dropdown - if they exist
     @staticmethod
     def _get_config_value_options(key_str_value=None) -> list| str:
         if not key_str_value:
             return 
+        # check for options in map
         options_list = (OPTIONS.get(key_str_value) or {}).get('values')
         if options_list is None:
-            logging.error(f"No options found for key: {key_str_value}")
+            logging.debug(f"{key_str_value} not mapped. Using Entry.")
         return options_list
     # get get state from mapped config vals - for set vals make readonly else normal
     @staticmethod
@@ -116,36 +117,41 @@ class ConfigListboxManager(tk.Listbox):
         return state
 
     @staticmethod
-    def cancel_update(event, *args):
-        event.widget.destroy()
+    def cancel_update(widget, *args):
+        widget.destroy()
         for arg in args:
             arg.destroy()
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
-    def accept_edit_to_page_widget(self, event, index, update_current_selected_item_node_callback, key_entry):
-
-        # value from the entries
-        input_data = event.widget.get()
-        key_entry_value = key_entry.get()
+    def accept_edit_to_page_widget(self, 
+            widget: tk.Widget, index: int, value_entry_widget: str, key_entry_widget: str, update_current_selected_item_node_callback: callable):
+        
         # delete empty entry
-        if not input_data:
-            print("No data entered, cancelling edit.")
+        is_val_widget = isinstance(value_entry_widget, tk.Widget) or isinstance(value_entry_widget, tk.StringVar)
+        is_key_widget = isinstance(key_entry_widget, tk.Widget)
+        if not is_val_widget or not is_key_widget:
+            fn = lambda val_type: logging.error(f"No data received for {val_type}. Cancelling edit.")
+            fn("value_entry_widget") if not is_val_widget else fn("key_entry_widget")
+
+
             self.delete(index)
-            self.cancel_update(event)
+            self.cancel_update(value_entry_widget, key_entry_widget)
             return
 
         # delete data at current index and insert new data there
         self.delete(self.editting_item_index)
-        self.insert(self.editting_item_index, Utils.build_full_input_str(key_entry_value, input_data))
+        self.insert(self.editting_item_index, Utils.build_full_input_str(key_entry_widget.get(), value_entry_widget.get()))
         # send callback to update widget inside treeview
         # - options: set_tree_item_from_entry_value
-        update_current_selected_item_node_callback(event, {
-            'key': key_entry_value,
-            'value': input_data
+        k = key_entry_widget.get()
+        v = value_entry_widget.get()
+        update_current_selected_item_node_callback({
+            'key': k,
+            'value': v
         })
     
-        self.cancel_update(event, key_entry)
-        return input_data
+        self.cancel_update(widget, key_entry_widget)
+        return v
 
     def delete_contents(self):
         self.delete(0, tk.END)
@@ -162,29 +168,6 @@ class ConfigListboxManager(tk.Listbox):
             logging.info("listbox value is None.")
         self.insert(index, value)
 
-    def _on_combobox_focus_out(self, event, key_entry): 
-        combo = event.widget
-        # If the user actually made a selection, ignore this FocusOut
-        if getattr(combo, "_was_selected", False):
-            combo._was_selected = False  # reset flag
-            return
-        # Otherwise, they really left the field — cancel
-        self.cancel_update(event, key_entry)
-
-    def on_focus_out(self, event, key_entry):
-        combo = event.widget
-        self._handle_real_focus_out(combo, event, key_entry)
-
-    def _handle_real_focus_out(self, combo, event, key_entry):
-        try:
-            focused = combo.focus_get()
-        except Exception:
-            focused = None
-        # Only cancel if the combobox (and its dropdown) truly lost focus
-        print(f"Focused widget: {focused}, Combo widget: {combo}")
-        if not str(focused).startswith(str(combo)):
-            pass
-            # self.cancel_update(event, key_entry)
     # set to open on click - only handles open since close is not detectable
     def set_box_state_on_open(self, event):
         # logging.debug(f"state: {self.option_box_state}")

@@ -26,14 +26,6 @@ OPTIONS = {
         'values': ["0","1","2","3","4","5","6","7","8","9","10"],
         'state': ComboBoxState.READONLY.value
     },
-    "width": {
-        'values': ["50","100","150","200","250","300"],
-        'state': ComboBoxState.NORMAL.value
-    },
-    "height": {
-        'values': ["20","40","60","80","100","120"],
-        'state': ComboBoxState.NORMAL.value
-    },
     "bg":{
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
         'state': ComboBoxState.NORMAL.value

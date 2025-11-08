@@ -37,7 +37,7 @@ class DevtoolsWindow(tk.Toplevel):
         # self.bind("<FocusOut>", lambda e: print(self.tk.call('focus')))
 
         
-    def update_current_selected_item_node(self, _, changes_dict):
+    def update_current_selected_item_node(self, changes_dict: dict[str, str]):
         self.left_window.tree.update_tree_item(changes_dict)
     # when treeview is selected store the matching app node widget 
     def store_current_selected_item_node(self, _, selected_item):
