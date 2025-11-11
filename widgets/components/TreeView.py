@@ -59,7 +59,7 @@ class TreeView(ttk.Treeview):
                     config = self.selected_item.configure()
                     # filter out unwanted config values
                     filtered_config = Utils.filter_config_values(config)
-                    # display selected tree item's config in listbox win
+                    # send to listbox - display selected tree item's config options
                     self._listbox_widget.insert_all(filtered_config)
                     set_current_node_selected_callback(_, selected_item=self.selected_item)
 

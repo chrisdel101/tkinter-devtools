@@ -12,3 +12,7 @@ class ComboBoxState(Enum):
 class OptionBoxState(Enum):
     OPEN = "open"
     CLOSED = "closed"
+# create used when adding and no val is being input
+class ListBoxEntryInputAction(Enum):
+    CREATE = "create"
+    UPDATE = "update"
