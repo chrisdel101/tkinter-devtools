@@ -51,7 +51,6 @@ class ConfigListboxManager(tk.Listbox):
         self.handle_entry_input_update(
             index=updating_item_index, 
             changes_dict=changes_dict,
-            entry_input_action=ListBoxEntryInputAction.UPDATE.value,
             update_current_selected_item_node_callback=self._update_current_selected_item_node_callback
         )
         return "break"
@@ -74,10 +73,8 @@ class ConfigListboxManager(tk.Listbox):
     def handle_entry_input_update(
         self, 
         index: int, 
-        entry_input_action: ListBoxEntryInputAction,
         update_current_selected_item_node_callback,
         changes_dict: dict = {}, 
-        current_treeview_widget: tk.Widget = None
     ):
         self.editting_item_index = index
         y_coord = self.bbox(index)[1]
@@ -92,7 +89,8 @@ class ConfigListboxManager(tk.Listbox):
         if item_option_vals_list:
             option_box = self.build_value_option_box(
             index=index,
-            key_entry=key_entry,
+            key_entry_widget=key_entry,
+            key_entry_value=changes_dict.get('key'),
             item_option_vals_list=item_option_vals_list,
             update_current_selected_item_node_callback=update_current_selected_item_node_callback
             )
@@ -108,10 +106,10 @@ class ConfigListboxManager(tk.Listbox):
                 value_entry.focus_set()
             value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget
                 (
-                widget=e.widget, 
+                current_widget=e.widget, 
                 index=index, 
-                value_entry_widget=e.widget, 
-                key_entry_widget=key_entry,
+                value_widget_to_destroy=e.widget, 
+                key_widget_to_destroy=key_entry,
                 key_entry_value=changes_dict.get('key'),
                 value_entry_value=changes_dict.get('value'),
                 update_current_selected_item_node_callback=update_current_selected_item_node_callback
@@ -151,7 +149,8 @@ class ConfigListboxManager(tk.Listbox):
         key_entry_widget: tk.Entry | tk.OptionMenu,
         key_entry_value: str,
         item_option_vals_list: list[str],
-        update_current_selected_item_node_callback):
+        update_current_selected_item_node_callback
+    ):
         value_inside = tk.StringVar()
         # set default top value
         value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
@@ -162,18 +161,18 @@ class ConfigListboxManager(tk.Listbox):
             value_inside,
             *self.list_var.get(),
             )
-        # on option_boxvalue_ select
+        # on option_box value_ select
         value_inside.trace_add('write', lambda *args:self.accept_edit_to_page_widget
-            (value_option_box, 
+            (current_widget=value_option_box, 
              index=index,
-             value_entry_widget=value_option_box, 
-             key_entry_widget=key_entry_widget,
+             value_widget_to_destroy=value_option_box, 
+             key_widget_to_destroy=key_entry_widget,
              key_entry_value=key_entry_value,
              value_entry_value=value_inside.get(), 
              update_current_selected_item_node_callback=update_current_selected_item_node_callback))
         # option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget
         #     (widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-        # option_box.bind("<Escape>", lambda e: self.cancel_update(option_box, key_entry))
+        value_option_box.bind("<Escape>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
         # get menu btn parent - only way to detect bind 
         btn = value_option_box.children['menu'].master
         btn.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
@@ -229,7 +228,7 @@ class ConfigListboxManager(tk.Listbox):
     # - pass in callback - used in multiple places w diff callbacks
     def accept_edit_to_page_widget(
             self, 
-            widget: tk.Widget, 
+            current_widget: tk.Widget, 
             index: int, 
             value_widget_to_destroy: tk.Widget, 
             key_widget_to_destroy: tk.Widget, 
