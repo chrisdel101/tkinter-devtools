@@ -42,10 +42,8 @@ class RightWindowFrame(tk.Frame):
             insert_at_index = current_selection_index + 1
        
         self._config_listbox_mngr.insert(insert_at_index, "")
-        self._config_listbox_mngr.handle_create_entry_input(
+        self._config_listbox_mngr.handle_entry_input_create(
             index=insert_at_index,
-            entry_input_action=ListBoxEntryInputAction.CREATE.value,
-            changes_dict={},
             update_current_selected_item_node_callback=self._set_tree_item_callback
         )
         

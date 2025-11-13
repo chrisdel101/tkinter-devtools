@@ -46,14 +46,12 @@ class ConfigListboxManager(tk.Listbox):
         updating_item_index: int = self._get_index_from_event_coords(event)
         
         full_txt_str = self.get(updating_item_index)
-        # when val is blank it's using add btn
-        entry_input_action: ListBoxEntryInputAction = ListBoxEntryInputAction.CREATE.value if full_txt_str == "" else ListBoxEntryInputAction.UPDATE.value
-
+    
         changes_dict  = Utils.build_split_str_pairs_dict(full_txt_str, ":")
-        self.handle_create_entry_input(
+        self.handle_entry_input_update(
             index=updating_item_index, 
             changes_dict=changes_dict,
-            entry_input_action=entry_input_action,
+            entry_input_action=ListBoxEntryInputAction.UPDATE.value,
             update_current_selected_item_node_callback=self._update_current_selected_item_node_callback
         )
         return "break"
@@ -62,23 +60,18 @@ class ConfigListboxManager(tk.Listbox):
                 self.key_var.set(e.widget.get())
                 if not self.key_var.get():
                     return
-                item_mapped_list: list[str] | None = self._get_config_value_options(self.key_var.get())
-                if item_mapped_list:
-                    option_box = self._handle_value_option_box(
+                item_option_vals_list: list[str] | None = self._get_config_value_options(self.key_var.get())
+                if item_option_vals_list:
+                    option_box = self.build_value_option_box(
                     index=self.editting_item_index,
-                    y_coord=self.bbox(self.editting_item_index)[1],
-                    key_entry=e.widget,
-                    item_mapped_list=item_mapped_list,
+                    key_entry_widget=e.widget,
+                    item_option_vals_list=item_option_vals_list,
                     update_current_selected_item_node_callback=self._update_current_selected_item_node_callback
                     )
                     option_box.place(relx=0.3, y=self.bbox(self.editting_item_index)[1], relwidth=0.5, width=-1)
                     option_box.focus_set()
-
-    # update listbox item
-    # - fires on clicks
-    # - as  single entry or dropdown for edits
-    # - as  two sep entries for adding new
-    def handle_create_entry_input(
+    
+    def handle_entry_input_update(
         self, 
         index: int, 
         entry_input_action: ListBoxEntryInputAction,
@@ -86,132 +79,136 @@ class ConfigListboxManager(tk.Listbox):
         changes_dict: dict = {}, 
         current_treeview_widget: tk.Widget = None
     ):
-        item_mapped_list = None
+        self.editting_item_index = index
+        y_coord = self.bbox(index)[1]
+        key_entry = tk.Entry(self, **self.styles['entry'], **self.styles['key_entry'])
+        # add the text from the item into the key_entry - just place it but dont allow focus
+        key_entry.insert(0, changes_dict.get('key'))
+        key_entry.selection_from(0)
+        key_entry.selection_to("end")
+        key_entry.place(relx=0, y=y_coord, relwidth=0.5 or 1, width=-1)
+
+        item_option_vals_list: list[str] | None = self._get_config_value_options(changes_dict.get('key'))
+        if item_option_vals_list:
+            option_box = self.build_value_option_box(
+            index=index,
+            key_entry=key_entry,
+            item_option_vals_list=item_option_vals_list,
+            update_current_selected_item_node_callback=update_current_selected_item_node_callback
+            )
+            option_box.place(relx=0.3, y=y_coord, relwidth=0.5, width=-1)
+            option_box.focus_set()
+        else:
+            value_entry = tk.Entry(self, **self.styles['entry'])
+            value_entry.insert(0, changes_dict.get('value'))
+            value_entry.selection_from(0)
+            value_entry.selection_to("end")
+            value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
+            if changes_dict.get('value'):
+                value_entry.focus_set()
+            value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget
+                (
+                widget=e.widget, 
+                index=index, 
+                value_entry_widget=e.widget, 
+                key_entry_widget=key_entry,
+                key_entry_value=changes_dict.get('key'),
+                value_entry_value=changes_dict.get('value'),
+                update_current_selected_item_node_callback=update_current_selected_item_node_callback
+            ))
+            for ev in ["<Escape>", "<FocusOut>"]:
+                value_entry.bind(ev, lambda e: self.cancel_update(e.widget, key_entry))
+
+    def input_selected_key(self,e):
+        print("input selected key")
+    def handle_entry_input_create(
+        self, 
+        index: int, 
+        update_current_selected_item_node_callback: callable
+    ):
+        item_option_vals_list = None
         # store current editting index
         self.editting_item_index = index
         # coords of y1 inside bb rect- where to place entry inside listbox
         y_coord = self.bbox(index)[1]
-        # --- KEY ENTRY ---
-        # add an entry box on top of listbox item
-        # trace_add write fires on select 
-        # key_entry = tk.Entry(self, **self.styles['entry'], textvariable=self.key_var, **self.styles['key_entry'])
-        # key_entry.selection_from(0)
-        # key_entry.selection_to("end")
-        # # rel_width_key = None
-        # key_entry.place(relx=0, relwidth=0.5 or 1, width=-1)
-        # DETERMINE IF IT'S CREATE OR UPDATE
-
-        # when updating existing list item
-        if entry_input_action == ListBoxEntryInputAction.UPDATE.value:
-            key_entry = tk.Entry(self, **self.styles['entry'], **self.styles['key_entry'])
-             # add the text from the item into the key_entry - just place it but dont allow focus
-            key_entry.insert(0, changes_dict.get('key'))
-            key_entry.selection_from(0)
-            key_entry.selection_to("end")
-            key_entry.place(relx=0, y=y_coord, relwidth=0.5 or 1, width=-1)
-    
-            item_mapped_list: list[str] | None = self._get_config_value_options(changes_dict.get('key'))
-            if item_mapped_list:
-                option_box = self._handle_value_option_box(
-                index=index,
-                y_coord=y_coord,
-                key_entry=key_entry,
-                item_mapped_list=item_mapped_list,
-                update_current_selected_item_node_callback=update_current_selected_item_node_callback
-                )
-                option_box.place(relx=0.3, y=y_coord, relwidth=0.5, width=-1)
-                option_box.focus_set()
-            else:
-                value_entry = tk.Entry(self, **self.styles['entry'])
-                value_entry.insert(0, changes_dict.get('value'))
-                value_entry.selection_from(0)
-                value_entry.selection_to("end")
-                value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
-                if changes_dict.get('value'):
-                    value_entry.focus_set()
-                value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget(widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-                for ev in ["<Escape>", "<FocusOut>"]:
-                    value_entry.bind(ev, lambda e: self.cancel_update(e.widget, key_entry))
-        # when creating new list item w add
-        else:
-            current_treeview_item = self._get_tree_item_callback()
-            current_item_options_list = current_treeview_item.config().keys()
-            current_treeview_item = self._get_tree_item_callback()
-            current_item_options_list = current_treeview_item.config().keys()
-            self._handle_value_option_box(
-                index=index,
-                key_entry=None,
-                item_mapped_list=current_item_options_list,
-                update_current_selected_item_node_callback=update_current_selected_item_node_callback
-            )
-            # use textvariable for key entry 
-            key_entry = tk.Entry(self, **self.styles['entry'], **self.styles['key_entry'], textvariable=self.key_var)
-            key_entry.selection_from(0)
-            key_entry.selection_to("end")
-            key_entry.place(relx=0, relwidth=0.5 or 1, width=-1)
-            key_entry.focus_set()
-            # self.key_var.set(changes_dict.get('key'))
-            key_entry.bind("<Return>", self._on_return_create)
-            
-            # option_box = self._handle_value_option_box(
-            # index=index,
-            # y_coord=y_coord,
-            # key_entry=key_entry,
-            # item_mapped_list=item_mapped_list,
-            # update_current_selected_item_node_callback=update_current_selected_item_node_callback
-            # )
-            # option_box.place(relx=0.3, y=y_coord, relwidth=0.5, width=-1)
-            # option_box.focus_set()
-        # if vals are list use dropdown
-        # if self.key_var.get():
-        # --- DROP DOWN ENTRY ---
-       
+        current_treeview_item = self._get_tree_item_callback()
+        # get possible config for values 
+        current_item_options_list = current_treeview_item.config().keys()
+        current_treeview_item = self._get_tree_item_callback()
+        current_item_options_list = list(current_treeview_item.config().keys())
+        key_option_box = self.build_key_option_box(
+            index=index,
+            item_option_vals_list=current_item_options_list,
+            update_current_selected_item_node_callback=update_current_selected_item_node_callback
+        )
+        key_option_box.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
+        key_option_box.focus_set()
+        return
         
-        # # if no mapping use regular entry
-        # else:
-        #     print(f"ELSE")
-        #      # --- VALUE ENTRY ---
-        #     value_entry = tk.Entry(self, **self.styles['entry'], textvariable=self.val_var)
-        #     value_entry.insert(0, changes_dict.get('value'))
-        #     value_entry.selection_from(0)
-        #     value_entry.selection_to("end")
-        #     value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
-        #     if changes_dict.get('value'):
-        #         value_entry.focus_set()
-        #     value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget(widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-        #     for ev in ["<Escape>", "<FocusOut>"]:
-        #         value_entry.bind(ev, lambda e: self.cancel_update(e.widget, key_entry))
-    
-    def test(self, *args):
-        print(f"### TEST")
-        print(f"{self.list_var.get()}")
 
-    def _handle_value_option_box(self, 
-        index,
-        key_entry,
-        item_mapped_list,
+    def build_value_option_box(self, 
+        index: int,
+        key_entry_widget: tk.Entry | tk.OptionMenu,
+        key_entry_value: str,
+        item_option_vals_list: list[str],
         update_current_selected_item_node_callback):
         value_inside = tk.StringVar()
         # set default top value
-        value_inside.set(item_mapped_list[0] if item_mapped_list else "")
+        value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
         # set any list to list var - done to keep it the same across calls
-        self.list_var.set(item_mapped_list or [])
+        self.list_var.set(item_option_vals_list or [])
         # like bind - get selected value from drop down
-        option_box = tk.OptionMenu(self,
+        value_option_box = tk.OptionMenu(self,
             value_inside,
             *self.list_var.get(),
             )
-      
-        value_inside.trace_add('write', lambda *args:self.accept_edit_to_page_widget(option_box, index, value_entry_widget=value_inside, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-        # option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget(widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-        option_box.bind("<Escape>", lambda e: self.cancel_update(option_box, key_entry))
+        # on option_boxvalue_ select
+        value_inside.trace_add('write', lambda *args:self.accept_edit_to_page_widget
+            (value_option_box, 
+             index=index,
+             value_entry_widget=value_option_box, 
+             key_entry_widget=key_entry_widget,
+             key_entry_value=key_entry_value,
+             value_entry_value=value_inside.get(), 
+             update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+        # option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget
+        #     (widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+        # option_box.bind("<Escape>", lambda e: self.cancel_update(option_box, key_entry))
         # get menu btn parent - only way to detect bind 
-        btn = option_box.children['menu'].master
-        btn.bind("<FocusOut>", lambda e: self.cancel_update(option_box, key_entry))
+        btn = value_option_box.children['menu'].master
+        btn.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
 
-        return option_box
-        # option_box.place(relx=0.3, y=y_coord, relwidth=0.5, width=-1)
-        # option_box.focus_set()
+        return value_option_box
+
+    def build_key_option_box(self, 
+        index: int,
+        item_option_vals_list: list[str],
+        update_current_selected_item_node_callback):
+        value_inside = tk.StringVar()
+        # set default top value
+        value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
+        # set any list to list var - done to keep it the same across calls
+        self.list_var.set(item_option_vals_list or [])
+        # like bind - get selected value from drop down
+        key_option_box = tk.OptionMenu(self,
+            value_inside,
+            *self.list_var.get(),
+            )
+        # on option_box select
+        value_inside.trace_add('write', lambda *args: self.build_value_option_box(
+            index, 
+            key_entry_widget=key_option_box, 
+            key_entry_value=value_inside.get(),
+            item_option_vals_list=item_option_vals_list, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+        # option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget
+        #   (widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+        # option_box.bind("<Escape>", lambda e: self.cancel_update(option_box, key_entry))
+        # # get menu btn parent - only way to detect bind 
+        # btn = option_box.children['menu'].master
+        # btn.bind("<FocusOut>", lambda e: self.cancel_update(option_box, key_entry))
+
+        return key_option_box
+        
     # get options of config properties to use in dropdown - if they exist
     @staticmethod
     def _get_config_value_options(key_str_value:str=None) -> list| str:
@@ -226,39 +223,44 @@ class ConfigListboxManager(tk.Listbox):
     @staticmethod
     def cancel_update(widget, *args):
         widget.destroy()
-        for arg in args:
+        for arg in filter(None, args):
             arg.destroy()
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
-    def accept_edit_to_page_widget(self, 
-            widget: tk.Widget, index: int, value_entry_widget: str, key_entry_widget: str, update_current_selected_item_node_callback: callable):
+    def accept_edit_to_page_widget(
+            self, 
+            widget: tk.Widget, 
+            index: int, 
+            value_widget_to_destroy: tk.Widget, 
+            key_widget_to_destroy: tk.Widget, 
+            key_entry_value: str,
+            value_entry_value: str,
+            update_current_selected_item_node_callback: callable):
         
         # delete empty entry
-        is_val_widget = isinstance(value_entry_widget, tk.Widget) or isinstance(value_entry_widget, tk.StringVar)
-        is_key_widget = isinstance(key_entry_widget, tk.Widget)
+        is_val_widget = isinstance(value_widget_to_destroy, tk.Widget) or isinstance(value_widget_to_destroy, tk.StringVar)
+        is_key_widget = isinstance(key_widget_to_destroy, tk.Widget)
         if not is_val_widget or not is_key_widget:
             fn = lambda val_type: logging.error(f"No data received for {val_type}. Cancelling edit.")
-            fn("value_entry_widget") if not is_val_widget else fn("key_entry_widget")
+            fn("value_entry_widget") if not is_val_widget else fn("key_widget_to_destroy")
 
             self.delete(index)
-            self.cancel_update(value_entry_widget, key_entry_widget)
+            self.cancel_update(value_widget_to_destroy, key_widget_to_destroy)
             return
 
         # delete data at current index and insert new data there
         self.delete(self.editting_item_index)
-        self.insert(self.editting_item_index, Utils.build_full_input_str(key_entry_widget.get(), value_entry_widget.get()))
+        self.insert(self.editting_item_index, Utils.build_full_input_str(key_entry_value, value_entry_value))
         # send callback to update widget inside treeview
         # - options: set_tree_item_from_entry_value
-        k = key_entry_widget.get()
-        v = value_entry_widget.get()
+       
         update_current_selected_item_node_callback({
-            'key': k,
-            'value': v
+            'key': key_entry_value,
+            'value': value_entry_value
         })
     
-        self.cancel_update(widget, key_entry_widget)
-        return v
-
+        self.cancel_update(value_widget_to_destroy, key_widget_to_destroy)
+        return value_entry_value
     def delete_contents(self):
         self.delete(0, tk.END)
     # on init - load selected tree items attrs into listbox

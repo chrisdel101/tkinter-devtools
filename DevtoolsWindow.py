@@ -20,9 +20,9 @@ class DevtoolsWindow(tk.Toplevel):
         get_tree_item_callback=self.get_current_selected_item_node, set_tree_item_callback=self.update_current_selected_item_node)
 
         # listbox for the config entries - sends dict of config values up when updated
-        self.config_listbox_mngr = ConfigListboxManager(master=self.right_window, update_current_selected_item_node_callback=self.update_current_selected_item_node, 
-        toggle_option_box_state_callback=self.toggle_option_box_state,                   
-        **Style.config_listbox_manager)
+        self.config_listbox_mngr = ConfigListboxManager(
+            master=self.right_window, update_current_selected_item_node_callback=self.update_current_selected_item_node,toggle_option_box_state_callback=self.toggle_option_box_state,
+            get_tree_item_callback=self.get_current_selected_item_node, **Style.config_listbox_manager)
         # pack listbox inside right window after the fact
         self.right_window.set_listbox_manager(self.config_listbox_mngr)
 
