@@ -21,18 +21,15 @@ class RightWindowFrame(tk.Frame):
         self.subtract_config_button.pack(side="left", padx=5, pady=5)
         #  pack header
         self.header_frame.pack(fill="x", expand=True)
-        # self.header_frame.bind("<Button-1>", self._config_listbox_mngr.cancel_update)
-         # pack listbox
-        # config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
-        # self.pack(fill="both", expand=True)
-
+        
+    # add listbox manager after init - called on the parent window 
     def set_listbox_manager(self, config_listbox_mngr):
         setattr(self, '_config_listbox_mngr', config_listbox_mngr)
         self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+
     def handle_add(self):
         current_listbox_selection = self._config_listbox_mngr.curselection()
         current_treeview_item = self._get_tree_item_callback()
-        # cb = ttk.Combobox(self, values=a)
         if len(current_listbox_selection) == 0:
             # if none selected insert at top
             insert_at_index = 0
@@ -42,14 +39,16 @@ class RightWindowFrame(tk.Frame):
             insert_at_index = current_selection_index + 1
        
         self._config_listbox_mngr.insert(insert_at_index, "")
+        # called on the child listbox
         self._config_listbox_mngr.handle_entry_input_create(
             index=insert_at_index,
             update_current_selected_item_node_callback=self._set_tree_item_callback
         )
         
 
-    def handle_subract(self):
-        current_selection = self._config_listbox_mngr.curselection()
+    def handle_subract(self, _=None):
+        # this is tuple format (3,)
+        current_selection: tuple[int] = self._config_listbox_mngr.curselection()
         
         if len(current_selection) == 0:
             print("No item selected to remove.")

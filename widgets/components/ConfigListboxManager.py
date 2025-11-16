@@ -18,12 +18,15 @@ class ConfigListboxManager(tk.Listbox):
             master, update_current_selected_item_node_callback, 
             toggle_option_box_state_callback, 
             get_tree_item_callback,
+            handle_subtract_callback,
             **styles
         ): 
         self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         tk.Listbox.__init__(self, master=master, width=styles.get('width'),  yscrollcommand = self.scroll_bar.set, font=styles.get('font'))
         self.styles = styles
         self.editting_item_index:int | None = None
+        # saved callbacks
+        self._handle_subtract_callback = handle_subtract_callback
         self._update_current_selected_item_node_callback = update_current_selected_item_node_callback
         self._get_tree_item_callback = get_tree_item_callback
         # listener on listbox - for editing an entry using dbl click - not used in creating init val
@@ -34,8 +37,6 @@ class ConfigListboxManager(tk.Listbox):
         self.key_var = tk.StringVar()
         self.val_var = tk.StringVar()
         self.list_var = tk.Variable(value=[])
-          
-       
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
         selected_index: int = self.index(f"@{event.x},{event.y}")
@@ -44,7 +45,7 @@ class ConfigListboxManager(tk.Listbox):
     def start_update(self, event):
         # index of clicked item on list
         updating_item_index: int = self._get_index_from_event_coords(event)
-        
+        # extract starting values from list item
         full_txt_str = self.get(updating_item_index)
     
         changes_dict  = Utils.build_split_str_pairs_dict(full_txt_str, ":")
@@ -54,22 +55,51 @@ class ConfigListboxManager(tk.Listbox):
             update_current_selected_item_node_callback=self._update_current_selected_item_node_callback
         )
         return "break"
-    def _on_return_create(self, e):
-                # get key val asign to var
-                self.key_var.set(e.widget.get())
-                if not self.key_var.get():
-                    return
-                item_option_vals_list: list[str] | None = self._get_config_value_options(self.key_var.get())
-                if item_option_vals_list:
-                    option_box = self.build_value_option_box(
-                    index=self.editting_item_index,
-                    key_entry_widget=e.widget,
-                    item_option_vals_list=item_option_vals_list,
-                    update_current_selected_item_node_callback=self._update_current_selected_item_node_callback
-                    )
-                    option_box.place(relx=0.3, y=self.bbox(self.editting_item_index)[1], relwidth=0.5, width=-1)
-                    option_box.focus_set()
-    
+    # return and place value_option_box from key_option_box
+    def handle_build_value_option_box_from_key_option_box(self,index: int, key_option_box: tk.OptionMenu, value_inside: tk.StringVar, item_option_vals_list: list[str], update_current_selected_item_node_callback):
+        value_option_box = self.build_value_option_box(
+            index, 
+            key_entry_widget=key_option_box, 
+            key_entry_value=value_inside.get(),
+            item_option_vals_list=item_option_vals_list, update_current_selected_item_node_callback=update_current_selected_item_node_callback)
+        value_option_box.place(relx=0.3, y=self.bbox(self.editting_item_index)[1], relwidth=0.5, width=-1)
+        # value_option_box.focus_set()
+        self.set_selected_by_index(index)
+
+    def handle_build_value_entry_from_key_option_or_entry(
+            self,
+            index: int, 
+            key_entry_widget: tk.OptionMenu | tk.Entry, 
+            key_entry_value: str, 
+            value_entry_value: str,
+            y_coord: int,
+            update_current_selected_item_node_callback,
+            **kwargs):
+        value_entry = tk.Entry(self, **self.styles['entry'])
+        value_entry.insert(0, value_entry_value)
+        value_entry.selection_from(0)
+        value_entry.selection_to("end")
+        value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
+        # set focus to value entry
+        value_entry.focus_set()
+        # set manually so curselect can access it on subract
+        self.set_selected_by_index(index)
+        value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget
+            (
+            current_widget=e.widget, 
+            index=index, 
+            value_widget_to_destroy=e.widget, 
+            key_widget_to_destroy=key_entry_widget,
+            key_entry_value=key_entry_value,
+            value_entry_value=value_entry_value,
+            update_current_selected_item_node_callback=update_current_selected_item_node_callback
+        ))
+        for ev in ["<Escape>"]:
+            if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
+                value_entry.bind(ev, lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(e.widget, key_entry_widget)))
+            else:
+                value_entry.bind(ev, lambda e: self.cancel_update(e.widget, key_entry_widget))
+    # run funcs for entering row update - called from double click on row
     def handle_entry_input_update(
         self, 
         index: int, 
@@ -97,28 +127,15 @@ class ConfigListboxManager(tk.Listbox):
             option_box.place(relx=0.3, y=y_coord, relwidth=0.5, width=-1)
             option_box.focus_set()
         else:
-            value_entry = tk.Entry(self, **self.styles['entry'])
-            value_entry.insert(0, changes_dict.get('value'))
-            value_entry.selection_from(0)
-            value_entry.selection_to("end")
-            value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
-            if changes_dict.get('value'):
-                value_entry.focus_set()
-            value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget
-                (
-                current_widget=e.widget, 
-                index=index, 
-                value_widget_to_destroy=e.widget, 
-                key_widget_to_destroy=key_entry,
+            self.handle_build_value_entry_from_key_option_or_entry(
+                index=index,
+                key_entry_widget=key_entry,
                 key_entry_value=changes_dict.get('key'),
                 value_entry_value=changes_dict.get('value'),
+                y_coord=y_coord,
                 update_current_selected_item_node_callback=update_current_selected_item_node_callback
-            ))
-            for ev in ["<Escape>", "<FocusOut>"]:
-                value_entry.bind(ev, lambda e: self.cancel_update(e.widget, key_entry))
-
-    def input_selected_key(self,e):
-        print("input selected key")
+            )
+    # run funcs for entering row add - called fromcalled from parent when add button clicked parent when add button clicked
     def handle_entry_input_create(
         self, 
         index: int, 
@@ -141,7 +158,9 @@ class ConfigListboxManager(tk.Listbox):
         )
         key_option_box.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
         key_option_box.focus_set()
-        return
+        # set manually so curselect can access it on subract
+        self.set_selected_by_index(index)
+        return "break"
         
 
     def build_value_option_box(self, 
@@ -170,18 +189,18 @@ class ConfigListboxManager(tk.Listbox):
              key_entry_value=key_entry_value,
              value_entry_value=value_inside.get(), 
              update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-        # option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget
-        #     (widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+       
         value_option_box.bind("<Escape>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
         # get menu btn parent - only way to detect bind 
-        btn = value_option_box.children['menu'].master
-        btn.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
+        # btn = value_option_box.children['menu'].master
+        # value_option_box.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
 
         return value_option_box
 
     def build_key_option_box(self, 
         index: int,
         item_option_vals_list: list[str],
+        # update callback goes to value option box
         update_current_selected_item_node_callback):
         value_inside = tk.StringVar()
         # set default top value
@@ -193,15 +212,25 @@ class ConfigListboxManager(tk.Listbox):
             value_inside,
             *self.list_var.get(),
             )
-        # on option_box select
-        value_inside.trace_add('write', lambda *args: self.build_value_option_box(
-            index, 
-            key_entry_widget=key_option_box, 
+        # on option_box select - build and pack value option box if list values
+        value_inside.trace_add('write', lambda *args: self.handle_build_value_option_box_from_key_option_box(
+            index=index,
+            key_option_box=key_option_box,
+            value_inside=value_inside,
+            item_option_vals_list=self._get_config_value_options(value_inside.get()),
+            update_current_selected_item_node_callback=update_current_selected_item_node_callback   
+        # else build and pack value entry
+        ) if self._get_config_value_options(value_inside.get()) else self.handle_build_value_entry_from_key_option_or_entry(
+            index=index,
+            key_entry_widget=key_option_box,
             key_entry_value=value_inside.get(),
-            item_option_vals_list=item_option_vals_list, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-        # option_box.bind('<Return>', lambda e: self.accept_edit_to_page_widget
-        #   (widget=e.widget, index=index, value_entry_widget=e.widget, key_entry_widget=key_entry, update_current_selected_item_node_callback=update_current_selected_item_node_callback))
-        # option_box.bind("<Escape>", lambda e: self.cancel_update(option_box, key_entry))
+            value_entry_value="",
+            y_coord=self.bbox(self.editting_item_index)[1],
+            update_current_selected_item_node_callback=update_current_selected_item_node_callback,
+            **{'entry_input_action':ListBoxEntryInputAction.CREATE.value}
+        ))
+        # remove list item and cancel option box
+        key_option_box.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(key_option_box))) 
         # # get menu btn parent - only way to detect bind 
         # btn = option_box.children['menu'].master
         # btn.bind("<FocusOut>", lambda e: self.cancel_update(option_box, key_entry))
@@ -228,7 +257,7 @@ class ConfigListboxManager(tk.Listbox):
     # - pass in callback - used in multiple places w diff callbacks
     def accept_edit_to_page_widget(
             self, 
-            current_widget: tk.Widget, 
+            current_widget: tk.Entry | tk.OptionMenu, 
             index: int, 
             value_widget_to_destroy: tk.Widget, 
             key_widget_to_destroy: tk.Widget, 
@@ -246,13 +275,13 @@ class ConfigListboxManager(tk.Listbox):
             self.delete(index)
             self.cancel_update(value_widget_to_destroy, key_widget_to_destroy)
             return
-
-        # delete data at current index and insert new data there
+        # check for .get method  - use .get for new entry else val correct option box  
+        value_entry_value = current_widget.get() if getattr(current_widget, 'get', None) else value_entry_value
+         # delete data at current index and insert new data there
         self.delete(self.editting_item_index)
         self.insert(self.editting_item_index, Utils.build_full_input_str(key_entry_value, value_entry_value))
         # send callback to update widget inside treeview
         # - options: set_tree_item_from_entry_value
-       
         update_current_selected_item_node_callback({
             'key': key_entry_value,
             'value': value_entry_value
@@ -278,7 +307,6 @@ class ConfigListboxManager(tk.Listbox):
 
     # set to open on click - only handles open since close is not detectable
     def set_box_state_on_open(self, event):
-        # logging.debug(f"state: {self.option_box_state}")
         # if open set to closed - else set to open
         if self.option_box_state == OptionBoxState.CLOSED.value:
             self.option_box_state = OptionBoxState.OPEN.value
@@ -286,3 +314,11 @@ class ConfigListboxManager(tk.Listbox):
         else:
             self.option_box_state = OptionBoxState.CLOSED.value
             # logging.debug("Option box closed.")
+
+    def set_selected_by_index(self, index:int):
+        # clear other selections
+        self.selection_clear(0, "end")
+        # select row
+        self.selection_set(index)
+        # activate on keyboard
+        self.activate(index)
