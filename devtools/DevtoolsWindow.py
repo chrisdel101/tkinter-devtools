@@ -1,11 +1,12 @@
+from __future__ import annotations
 import logging
 import tkinter as tk
-from constants import OptionBoxState
-from style import Style
-from utils import Utils
-from widgets.components.ConfigListboxManager import ConfigListboxManager
-from widgets.windows.LeftWindowFrame import LeftWindowFrame
-from widgets.windows.RightWindowFrame import RightWindowFrame
+from devtools.constants import OptionBoxState
+from devtools.style import Style
+from devtools.utils import Utils
+from devtools.widgets.components.ConfigListboxManager import ConfigListboxManager
+from devtools.widgets.windows.LeftWindowFrame import LeftWindowFrame
+from devtools.widgets.windows.RightWindowFrame import RightWindowFrame
 
 logging.basicConfig(level = logging.DEBUG)
 class DevtoolsWindow(tk.Toplevel):

@@ -1,4 +1,4 @@
-from constants import ComboBoxState
+from devtools.constants import ComboBoxState
 
 
 OPTIONS = {

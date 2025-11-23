@@ -1,7 +1,9 @@
+from __future__ import annotations
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk 
+import logging
 
-from utils import Utils
+from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
     
@@ -18,23 +20,36 @@ class TreeView(ttk.Treeview):
     def get_tree_widget_by_id(self, item_id):
         return self.stored_tree_widgets_by_id.get(item_id)
     
+    def compare_for_changes(self, parent_widget, parent_node_id=""):
+         # Current children
+        current_children = [c for c in parent_widget.winfo_children() if not isinstance(c, tk.Toplevel)]
+    
+        # Previously stored children
+        stored_children = [w for tid, w in self.store_dict.items() if self.parent_node_id(tid) == parent_node_id]   
+        
+         
     def build_tree(self, parent_widget, parent_node_id=""):
     # check if it's a parent node - parent tree node has ID, first call was no ID yet
-        if not parent_node_id:
-            parent_widget_id = self.insert("", "end", text=parent_widget.winfo_class())
-            self.add_tree_item_to_store_dict(parent_widget_id, parent_widget) 
-        else:
-            parent_widget_id = parent_node_id
-        # method gives all child widgets of tk obj
-        for child in parent_widget.winfo_children():
-            # Skip any Toplevel windows - this is dev tool window
-            if isinstance(child, tk.Toplevel):
-                continue
-            # ID of place in tree - insert returns ID of inserted widget
-            child_widget_id = self.insert(parent_widget_id, "end", text=child.winfo_class())
-            # dict store id: widget 
-            self.add_tree_item_to_store_dict(child_widget_id, child)
-            self.build_tree(child, child_widget_id)
+        try:
+            if not parent_node_id:
+                self.insert("", "end", text=parent_widget.winfo_class())
+                parent_widget_id = id(parent_widget)
+                self.add_tree_item_to_store_dict(parent_widget_id, parent_widget) 
+            else:
+                parent_widget_id = parent_node_id
+            # method gives all child widgets of tk obj
+            for child in parent_widget.winfo_children():
+                # Skip any Toplevel windows - this is dev tool window
+                if isinstance(child, tk.Toplevel):
+                    continue
+                # ID of place in tree - insert returns ID of inserted widget
+                self.insert(parent_widget, "end", text=child.winfo_class())
+                child_widget_id = id(child)
+                # dict store id: widget 
+                self.add_tree_item_to_store_dict(child_widget_id, child)
+                self.build_tree(child, child_widget_id)
+        except Exception as e:
+            logging.error(f"Error building tree: {e}")
     
     # main listener for tree item selects
     def bind_tree_select(self, set_current_node_selected_callback):

@@ -1,5 +1,5 @@
-from constants import ListBoxEntryInputAction
-from widgets.components.ConfigListboxManager import ConfigListboxManager
+from __future__ import annotations
+from devtools.widgets.components.ConfigListboxManager import ConfigListboxManager
 import tkinter as tk
 
 class RightWindowFrame(tk.Frame):

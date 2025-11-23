@@ -1,3 +1,4 @@
+from __future__ import annotations
 import tkinter as tk
 
 # abstract class - do not init - inner window frames inside Toplevel window

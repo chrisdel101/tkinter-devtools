@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 
-from DevtoolsWindow import DevtoolsWindow
+from devtools.DevtoolsWindow import DevtoolsWindow
 
 def open_dev_tools(main_root):
     # # main devtools window

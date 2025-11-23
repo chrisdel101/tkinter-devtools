@@ -1,6 +1,7 @@
+from __future__ import annotations
 import logging
 
-from constants import KEYS_TO_REMOVE
+from devtools.constants import KEYS_TO_REMOVE
 
 
 class Utils:
@@ -40,7 +41,6 @@ class Utils:
         except Exception as e:
             logging.error(f"Error build_full_input_str string at colon: {e}", exc_info=True)
             raise e
-    @staticmethod
     # filter out unwanted values from widget.config
     @staticmethod
     def config_listbox_value_filter_helper(value):
