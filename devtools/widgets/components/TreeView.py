@@ -11,14 +11,25 @@ class TreeView(ttk.Treeview):
         super().__init__(master, show="tree")
         self.selected_item = None
         self._listbox_widget = listbox_widget
-        self.stored_tree_widgets_by_id = {}
+        # use Treeview.insert id like 'I001'
+        self.store_widget_by_tree_insert_id: dict[str, tk.Widget] = {}
+        # use obj mem id from id(obj)
+        self.store_widget_by_obj_mem_id: dict[int, tk.Widget] = {}
+    # store the ID and use to retrieve with self.selection()
+    def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
+        """Store the widget by Treeview.insert ID."""
+        self.store_widget_by_tree_insert_id[item_id] = widget
 
-    def add_tree_item_to_store_dict(self, item_id, widget):
-        """Store the widget in the dictionary with its ID."""
-        self.stored_tree_widgets_by_id[item_id] = widget
+    # store mem id()
+    def add_tree_item_to_obj_mem_id_store(self, item_id, widget):
+        """Store the widget by Treeview.insert ID."""
+        self.store_widget_by_obj_mem_id[item_id] = widget
 
-    def get_tree_widget_by_id(self, item_id):
-        return self.stored_tree_widgets_by_id.get(item_id)
+    def get_widget_by_tree_insert_id(self, item_id: str):
+        return self.store_widget_by_tree_insert_id.get(item_id)
+
+    def get_widget_by_obj_mem_id(self, item_id: int):
+        return self.store_widget_by_obj_mem_id.get(item_id)
     
     def compare_for_changes(self, parent_widget, parent_node_id=""):
          # Current children
@@ -28,26 +39,35 @@ class TreeView(ttk.Treeview):
         stored_children = [w for tid, w in self.store_dict.items() if self.parent_node_id(tid) == parent_node_id]   
         
          
-    def build_tree(self, parent_widget, parent_node_id=""):
-    # check if it's a parent node - parent tree node has ID, first call was no ID yet
+       
+    # on first call insert widget and get insert id - recurse
+    # on next calls used vals passed in 
+    def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str=""):
         try:
-            if not parent_node_id:
-                self.insert("", "end", text=parent_widget.winfo_class())
-                parent_widget_id = id(parent_widget)
-                self.add_tree_item_to_store_dict(parent_widget_id, parent_widget) 
+            # no parent node it's first call - no id to use yet
+            if not parent_widget_insert_id:
+                parent_memory_id = id(parent_widget)
+                self.add_tree_item_to_obj_mem_id_store(parent_memory_id, parent_widget)
+                # manual insert -get insert id
+                # set using blank str - used for first level tree node
+                insert_parent_memory_id = self.insert("", "end", text=parent_widget.winfo_class())
+                self.add_tree_item_to_tree_insert_id_store(insert_parent_memory_id, parent_widget) 
+               
             else:
-                parent_widget_id = parent_node_id
+            # parent node - so use id passed from prev call
+                insert_parent_memory_id = parent_widget_insert_id
             # method gives all child widgets of tk obj
             for child in parent_widget.winfo_children():
-                # Skip any Toplevel windows - this is dev tool window
+                # Skip any Toplevel windows - this is the dev tool window
                 if isinstance(child, tk.Toplevel):
                     continue
+                child_memory_id = id(child)
+                self.add_tree_item_to_obj_mem_id_store(child_memory_id, child)
                 # ID of place in tree - insert returns ID of inserted widget
-                self.insert(parent_widget, "end", text=child.winfo_class())
-                child_widget_id = id(child)
+                insert_child_memory_id = self.insert(insert_parent_memory_id, "end", text=child.winfo_class())
                 # dict store id: widget 
-                self.add_tree_item_to_store_dict(child_widget_id, child)
-                self.build_tree(child, child_widget_id)
+                self.add_tree_item_to_tree_insert_id_store(insert_child_memory_id, child)
+                self.build_tree(child, insert_child_memory_id)
         except Exception as e:
             logging.error(f"Error building tree: {e}")
     
@@ -64,7 +84,7 @@ class TreeView(ttk.Treeview):
             # .selection give tree item ID
             item_id = selected[0]
             # get widget info from store
-            self.selected_item = self.get_tree_widget_by_id(item_id)
+            self.selected_item = self.get_widget_by_tree_insert_id(item_id)
             # TODO check if current select is already selected
             if self.selected_item:
                 try:
