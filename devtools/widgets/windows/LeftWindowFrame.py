@@ -7,7 +7,7 @@ class LeftWindowFrame(WindowFrame):
         super().__init__(master)
 
        # pass the other window listbox down for updating it from left window
-        self.tree = TreeView(master=self, listbox_widget=listbox_widget)
+        self.tree = TreeView(root=root, master=self, listbox_widget=listbox_widget)
         self.tree.bind_tree_select(set_current_node_selected_callback=set_current_node_selected_callback)
         self.tree.build_tree(root)
 
