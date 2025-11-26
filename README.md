@@ -17,3 +17,9 @@ It took almost 2 weeks to get the dropdown working.
 - CB had nice selected bind that gave the value easily, but the inability to close it on focus out made the page unusable.
 - optionbox was almost just as bad. It finally allowed to detect an open on the box button, and with a bind on the window it could detect close.
 - it might be enough to just use the focus out alone which would be very simple. 
+
+Packaging in source
+rm -r dist && rm -r tk_devtools.egg-info && python3 -m build
+
+Importing in local target
+pip uninstall /Users/chrisdielschnieder/code_work/python/tk-devtools/dist/tk_devtools-0.1.0-py3-none-any.whl && pip install /Users/chrisdielschnieder/code_work/python/tk-devtools/dist/tk_devtools-0.1.0-py3-none-any.whl

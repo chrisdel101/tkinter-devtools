@@ -3,7 +3,6 @@ import logging
 import tkinter as tk
 from devtools.constants import OptionBoxState
 from devtools.style import Style
-from devtools.utils import Utils
 from devtools.widgets.components.ConfigListboxManager import ConfigListboxManager
 from devtools.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -15,7 +14,6 @@ class DevtoolsWindow(tk.Toplevel):
         self.title(title)
         self.root = root
         self.selected_item_tree_item: tk.Widget | None = None
-        # self.bind("<Button-1>", self.toggle_option_box_state)
         # right window - create first it can be passed to listbox manager as owner
         self.right_window = RightWindowFrame(master=self,
         get_tree_item_callback=self.get_current_selected_item_node, set_tree_item_callback=self.update_current_selected_item_node)
@@ -36,8 +34,8 @@ class DevtoolsWindow(tk.Toplevel):
         self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
         # pack right window
         self.right_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
-        # self.right_window.pack_propagate(False)
-        # self.bind("<FocusOut>", lambda e: print(self.tk.call('focus')))
+        
+        self.poll_for_changes()
 
         
     def update_current_selected_item_node(self, changes_dict: dict[str, str]):
@@ -61,3 +59,10 @@ class DevtoolsWindow(tk.Toplevel):
             self.config_listbox_mngr.option_box_state = OptionBoxState.CLOSED.value
             # logging.debug("Option box closed.")
         logging.debug(f"state: {self.config_listbox_mngr.option_box_state}")
+
+    def poll_for_changes(self):
+        # poll tree for changes
+        self.left_window.tree.collect_widgets(self.root)
+        # poll again after delay
+        self.after(1000, self.poll_for_changes)
+        logging.debug("Polling for changes...")
