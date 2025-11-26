@@ -1,64 +1,69 @@
-from devtools.constants import ComboBoxState
-
+from devtools.constants import CommonConfigAttr, ConfigValueType
 
 OPTIONS = {
-    "relief": {
+    # relief
+    CommonConfigAttr.RELIEF.value: {
         'values': ["flat","raised","sunken","groove","ridge","solid"],
-        'state': ComboBoxState.READONLY.value
+        'type': ConfigValueType.STRING.value,
     },
-    "anchor": {
+    CommonConfigAttr.ANCHOR.value: {
         'values': ["n","ne","e","se","s","sw","w","nw","center"],
-        'state': ComboBoxState.READONLY.value
+         'type': ConfigValueType.STRING.value,
     },
-    "justify": {
+    CommonConfigAttr.JUSTIFY.value: {
         'values': ["left","center","right"],
-        'state': ComboBoxState.READONLY.value
+        'type': ConfigValueType.STRING.value,
     },
-    "font": {
+    CommonConfigAttr.FONT.value: {
         'values': ["Arial","Helvetica","Times New Roman","Courier New","Verdana","Georgia","Comic Sans MS"],
-        'state': ComboBoxState.NORMAL.value
+        'type': ConfigValueType.STRING.value,
     },
-    "cursor": {
+    CommonConfigAttr.CURSOR.value: {
         'values': ["arrow","circle","clock","cross","dotbox","exchange","fleur","heart,pirate","plus","shuttle","sizing","spider","spraycan","star","target","tcross","trek","watch"],
-        'state': ComboBoxState.READONLY.value
+         'type': ConfigValueType.STRING.value,  
     },
-    "borderwidth": {
+    CommonConfigAttr.BORDERWIDTH.value: {
         'values': ["0","1","2","3","4","5","6","7","8","9","10"],
-        'state': ComboBoxState.READONLY.value
+        'type': ConfigValueType.INTEGER.value,
     },
-    "bg":{
+    CommonConfigAttr.BD.value: {
+        'values': ["0","1","2","3","4","5","6","7","8","9","10"],
+        'type': ConfigValueType.INTEGER.value,
+    },
+    CommonConfigAttr.BG.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
-        'state': ComboBoxState.NORMAL.value
+        'type': ConfigValueType.STRING.value,
     },
-    "fg": {
+    CommonConfigAttr.FG.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
-        'state': ComboBoxState.NORMAL.value
+        'type': ConfigValueType.STRING.value,   
     },
-    "highlightthickness": {
+    CommonConfigAttr.HIGHLIGHTTHICKNESS.value: {
         'values': ["0","1","2","3","4","5"],
-        'state': ComboBoxState.NORMAL.value
+        'type': ConfigValueType.INTEGER.value,
     },
-    "highlightbackground": {
+    CommonConfigAttr.HIGHLIGHTBACKGROUND.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
-        'state': ComboBoxState.NORMAL.value
+        'type': ConfigValueType.STRING.value,
     },
-    'state': {
+    CommonConfigAttr.STATE.value: {
         'values': ['active', 'disabled', 'normal'],
-        'state': ComboBoxState.READONLY.value
+        'type': ConfigValueType.STRING.value,
     },
-    "text": {
+    CommonConfigAttr.TEXT.value: {
         'values': "",
-        'state': ComboBoxState.NORMAL.value
+        'type': ConfigValueType.STRING.value,
     },
-    "padx": {
+    CommonConfigAttr.PADX.value: {
         'values': "",
-        'state': ComboBoxState.NORMAL.value
+        'type': ConfigValueType.INTEGER.value,
     },
-    "pady": {
+    CommonConfigAttr.PADY.value: {
         'values': "",
-        'state': ComboBoxState.NORMAL.value
-    },
+        'type': ConfigValueType.INTEGER.value,
+    }
 }
 # set any aliases
 OPTIONS['foreground'] = OPTIONS['fg']
 OPTIONS['background'] = OPTIONS['bg']
+OPTIONS['borderwidth'] = OPTIONS['bd']

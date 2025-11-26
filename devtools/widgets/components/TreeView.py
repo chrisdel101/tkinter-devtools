@@ -125,11 +125,13 @@ class TreeView(ttk.Treeview):
                         # delete prev content in listbox
                         self._listbox_widget.delete_contents()
                         # get config of selected
-                        config = self.selected_item.configure()
-                        # filter out unwanted config values
-                        filtered_config = Utils.filter_config_values(config)
+                        original_config = self.selected_item.configure()
+                        # filter out unwanted config values - keep original format
+                        filtered_config = Utils.remove_junk_config_items(original_config)
+                        # extract only useful values - will be single key values 
+                        key_value_config = Utils.extract_actual_config_values(filtered_config)
                         # send to listbox - display selected tree item's config options
-                        self._listbox_widget.insert_all(filtered_config)
+                        self._listbox_widget.insert_all(key_value_config)
                         set_current_node_selected_callback(_, selected_item=self.selected_item)
 
                     except Exception as e:

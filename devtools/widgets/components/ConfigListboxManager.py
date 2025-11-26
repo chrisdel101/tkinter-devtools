@@ -248,7 +248,7 @@ class ConfigListboxManager(tk.Listbox):
         # check for options in map
         options_list = (OPTIONS.get(key_str_value) or {}).get('values')
         if options_list is None:
-            logging.debug(f"{key_str_value} not mapped. Using Entry.")
+            logging.debug(f"_get_config_value_options: {key_str_value} not mapped. Either it's not a list value or it was missed in Utils.remove_junk_config_items.", exc_info=True)
         return options_list
     
     @staticmethod
