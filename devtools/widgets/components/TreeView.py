@@ -118,9 +118,6 @@ class TreeView(ttk.Treeview):
                 
                 # TODO check if current select is already selected
                 if self.selected_item:
-                    # if self.selected_item.winfo_name() == '!indexscreenmain':
-                    #     logging.debug("here")
-                    #     self.build_tree(self.root)
                     try:
                         # delete prev content in listbox
                         self._listbox_widget.delete_contents()

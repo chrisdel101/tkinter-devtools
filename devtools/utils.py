@@ -1,7 +1,6 @@
 from __future__ import annotations
 import logging
 
-from click import option
 from devtools.widgets.components.ConfigListboxManager import OPTIONS
 from devtools.constants import CommonConfigAttr
 
@@ -90,31 +89,24 @@ class Utils:
             logging.error(f"Error removing junk config items: {e}", exc_info=True)
             raise e
     @staticmethod
+    # find keys with valid values {'width':10}
     def extract_actual_config_values(config):
         try:
             key_val_config = {}
             for key, val in config.items():
                 if isinstance(val, tuple):
-                    # extract all values that do not match the key
+                    # extract all values that do not match the key - if key are the same as values
                     non_key_matches = [item for item in val if (isinstance(item, str) and (item or "").lower()) != (key or "").lower()]
-                    for non_match_val in non_key_matches:
+
+                    for non_key_match in non_key_matches:
                        if (option := OPTIONS.get(key)):
                            type_allowed = option.get('type')
-                           if (type(non_match_val).__name__ or "").lower() == type_allowed:
-                               key_val_config[key] = non_match_val
-                        #    if 
+                           if (type(non_key_match).__name__ or "").lower() == type_allowed:
+                               key_val_config[key] = non_key_match
                 if isinstance(val, (str, int, float)):
                     if OPTIONS.get(val):
                         key_val_config[key] = val
-            #     option_match = next((x for x in val if OPTIONS.get(x)), None)
-            # # value can be tuple or str/int
-            # for key, val in config.items():
-            #     matched = next((x for x in val if x in common_attributes), None)
-            #     if matched:
-            #         key_val_config[key] = matched
-    
-                
             return key_val_config
         except Exception as e:
             logging.error(f"Error extracting actual config values: {e}", exc_info=True)
-            raise e
+            raise e     

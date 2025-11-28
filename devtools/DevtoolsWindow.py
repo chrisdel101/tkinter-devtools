@@ -35,7 +35,7 @@ class DevtoolsWindow(tk.Toplevel):
         # pack right window
         self.right_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
         
-        self.poll_for_changes()
+        # self.poll_for_changes()
 
         
     def update_current_selected_item_node(self, changes_dict: dict[str, str]):
