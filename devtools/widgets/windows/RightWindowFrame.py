@@ -29,7 +29,7 @@ class RightWindowFrame(tk.Frame):
 
     def handle_add(self):
         current_listbox_selection = self._config_listbox_mngr.curselection()
-        current_treeview_item = self._get_tree_item_callback()
+        # current_treeview_item = self._get_tree_item_callback()
         if len(current_listbox_selection) == 0:
             # if none selected insert at top
             insert_at_index = 0

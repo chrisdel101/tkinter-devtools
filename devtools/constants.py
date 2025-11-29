@@ -4,14 +4,14 @@ from enum import Enum
 MAX_KEY_WIDTH = 30  # adjust as needed
 
 class ConfigValueType(Enum):
-    STRING = "string"
+    STRING = "str"
     INTEGER = "int"
     BOOLEAN = "boolean"
     FLOAT = "float"
     TUPLE = "tuple"
     LIST = "list"
 
-class CommonConfigAttr(Enum):
+class ValidConfigAttr(Enum):
     RELIEF = "relief"
     ANCHOR = "anchor"
     JUSTIFY = "justify"
@@ -19,16 +19,19 @@ class CommonConfigAttr(Enum):
     CURSOR = "cursor"
     BORDERWIDTH = "borderwidth"
     BD = "bd"
-    BG = "bg"
-    FG = "fg"
     HIGHLIGHTTHICKNESS = "highlightthickness"
     HIGHLIGHTBACKGROUND = "highlightbackground"
+    HIGHLIGHTCOLOR = "highlightcolor"  
     STATE = "state"
     TEXT = "text"
     PADX = "padx"
     PADY = "pady"
+
+    BG = "bg"
+    FG = "fg"
     BACKGROUND = "background"
     FOREGROUND = "foreground"
+    
     WIDTH = "width"
     HEIGHT = "height"
 

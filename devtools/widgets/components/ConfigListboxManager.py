@@ -3,8 +3,7 @@ import logging
 import tkinter as tk
 
 from devtools.constants import ListBoxEntryInputAction, OptionBoxState
-from devtools.maps import OPTIONS
-from devtools.maps import OPTIONS
+from devtools.maps import CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 import pdb
 
@@ -195,8 +194,8 @@ class ConfigListboxManager(tk.Listbox):
        
         value_option_box.bind("<Escape>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
         # get menu btn parent - only way to detect bind 
-        # btn = value_option_box.children['menu'].master
-        # value_option_box.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
+        btn = value_option_box.children['menu'].master
+        value_option_box.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
 
         return value_option_box
 
@@ -232,11 +231,12 @@ class ConfigListboxManager(tk.Listbox):
             update_current_selected_item_node_callback=update_current_selected_item_node_callback,
             **{'entry_input_action':ListBoxEntryInputAction.CREATE.value}
         ))
-        # remove list item and cancel option box
+        # this is when adding new line with new key item entry - subtract list item and cancel option box
         key_option_box.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(key_option_box))) 
-        # # get menu btn parent - only way to detect bind 
-        # btn = option_box.children['menu'].master
-        # btn.bind("<FocusOut>", lambda e: self.cancel_update(option_box, key_entry))
+        # # get menu btn parent - only way to detect bind on focus out
+        btn = key_option_box.children['menu'].master
+        # after adding new item - on focus out subracn the line and cancel
+        btn.bind("<FocusOut>", lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(key_option_box)))
 
         return key_option_box
         
@@ -246,9 +246,9 @@ class ConfigListboxManager(tk.Listbox):
         if not key_str_value:
             return 
         # check for options in map
-        options_list = (OPTIONS.get(key_str_value) or {}).get('values')
+        options_list = (CONFIG_SETTING_VALUES.get(key_str_value) or {}).get('values')
         if options_list is None:
-            logging.debug(f"_get_config_value_options: {key_str_value} not mapped. Either it's not a list value or it was missed in Utils.remove_junk_config_items.", exc_info=True)
+            logging.debug(f"_get_config_value_options: {key_str_value} not mapped. Either it's not a list value or it was missed in Utils.filter_non_used_config_attrs.", exc_info=True)
         return options_list
     
     @staticmethod

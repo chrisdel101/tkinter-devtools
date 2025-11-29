@@ -1,10 +1,8 @@
 from __future__ import annotations
 import logging
 
-from devtools.widgets.components.ConfigListboxManager import OPTIONS
-from devtools.constants import CommonConfigAttr
-
-
+from devtools.constants import ValidConfigAttr
+from devtools.maps import CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
 class Utils:
     @staticmethod
@@ -75,38 +73,84 @@ class Utils:
 
         return True
     @staticmethod
-    def remove_junk_config_items(config):
+    # remove any non standard unusable attrs like screen, use
+    def filter_non_used_config_attrs(config):
         try:
-            common_attributes = [e.value for e in CommonConfigAttr]
+            common_attributes = [e.value for e in ValidConfigAttr]
             # value can be tuple or str/int
             for key in list(config.keys()):
             # delete unwanted config values from dict in place using list
                 if key not in common_attributes:
                     del config[key]
-                
             return config
         except Exception as e:
             logging.error(f"Error removing junk config items: {e}", exc_info=True)
             raise e
     @staticmethod
-    # find keys with valid values {'width':10}
-    def extract_actual_config_values(config):
+    # check for tuple length. if 5 it's last item, if 2 it's an aloas
+    def extract_current_config_values(config):
+        try:
+            key_val_dict = {}
+            # use names from enum values
+            valid_names = {e.value for e in ValidConfigAttr}
+            for key, val in config.items():
+                # resolve alias to full name - or just return name ie borderwidth
+                canonical = Utils.config_attr_resolver(key)
+                # check that name is part is one if valid ones - stop if not
+                if canonical not in valid_names:
+                    continue             
+                # in 5 len tuple we want last item for value
+                config_named_lookup: tuple | str | int = config.get(canonical)
+                if isinstance(config_named_lookup, tuple):
+                    if len(config_named_lookup) == 5:
+                        # last item is always val - in 5 len tuple
+                        actual_value = config_named_lookup[-1]
+                        # if not already added and value is not empty str
+                        if key_val_dict.get(key) == None and actual_value != "":
+                            key_val_dict[canonical] = actual_value
+                    else: 
+                        # if not 5 len tuple break error
+                        err_msg = f"get_valid_key_value_differences: tuple is len {len(config_named_lookup)}, not len 5. Invalid len"
+                        logging.error(err_msg)
+                        raise ValueError(err_msg)
+                elif isinstance(val, (str, int, float)):
+                    # if not already added and value is not empty str
+                    if key_val_dict.get(key) == None and config_named_lookup != "":
+                        # it's just a single key value pair
+                        key_val_dict[canonical] = config_named_lookup
+
+            return key_val_dict
+        except Exception as e:
+            logging.error(f"Error extracting actual config values: {e}", exc_info=True)
+            raise e 
+    @staticmethod
+    # compare L1 - L2 return the differences - check if a difference is valid as a setting value
+    def get_valid_key_value_differences(config):
         try:
             key_val_config = {}
             for key, val in config.items():
                 if isinstance(val, tuple):
-                    # extract all values that do not match the key - if key are the same as values
-                    non_key_matches = [item for item in val if (isinstance(item, str) and (item or "").lower()) != (key or "").lower()]
-
-                    for non_key_match in non_key_matches:
-                       if (option := OPTIONS.get(key)):
-                           type_allowed = option.get('type')
-                           if (type(non_key_match).__name__ or "").lower() == type_allowed:
-                               key_val_config[key] = non_key_match
-                if isinstance(val, (str, int, float)):
-                    if OPTIONS.get(val):
+                    # many values must mirror the keys - find difference
+                    differences = [item for item in val if (isinstance(item, str) and (item or "").lower()) != (key or "").lower()]
+                    # for each difference check if it an an actual setting value - we want these
+                    for difference in differences:
+                        if (setting_value := CONFIG_SETTING_VALUES.get(key)):
+                            type_allowed = setting_value.get('type')
+                        # check if current setting matches a type that's allowed
+                            if ((type(difference).__name__ or "").lower() == type_allowed and difference) != "":
+                                if key_val_config.get(key) == None:
+                                    key_val_config[key] = difference
+                elif isinstance(val, (str, int, float)):
+                    if CONFIG_SETTING_VALUES.get(key):
                         key_val_config[key] = val
             return key_val_config
         except Exception as e:
             logging.error(f"Error extracting actual config values: {e}", exc_info=True)
-            raise e     
+            raise e 
+          
+    @staticmethod 
+    # resolve aliases to call matching value          
+    def config_attr_resolver(attr_str: str):
+    # check if it's alias mapping to a full config attr - else return as is
+        resolved = CONFIG_ALIASES.get(attr_str, attr_str)
+        return resolved

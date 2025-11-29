@@ -124,9 +124,9 @@ class TreeView(ttk.Treeview):
                         # get config of selected
                         original_config = self.selected_item.configure()
                         # filter out unwanted config values - keep original format
-                        filtered_config = Utils.remove_junk_config_items(original_config)
+                        filtered_config = Utils.filter_non_used_config_attrs(original_config)
                         # extract only useful values - will be single key values 
-                        key_value_config = Utils.extract_actual_config_values(filtered_config)
+                        key_value_config = Utils.extract_current_config_values(filtered_config)
                         # send to listbox - display selected tree item's config options
                         self._listbox_widget.insert_all(key_value_config)
                         set_current_node_selected_callback(_, selected_item=self.selected_item)
