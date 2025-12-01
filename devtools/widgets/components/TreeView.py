@@ -126,7 +126,7 @@ class TreeView(ttk.Treeview):
                         # filter out unwanted config values - keep original format
                         filtered_config = Utils.filter_non_used_config_attrs(original_config)
                         # extract only useful values - will be single key values 
-                        key_value_config = Utils.extract_current_config_values(filtered_config)
+                        key_value_config = Utils.extract_current_config_key_values(filtered_config)
                         # send to listbox - display selected tree item's config options
                         self._listbox_widget.insert_all(key_value_config)
                         set_current_node_selected_callback(_, selected_item=self.selected_item)
@@ -142,9 +142,10 @@ class TreeView(ttk.Treeview):
     # select a tree item programatically
     def select_tree_item(self, item):
         self.selection_set(item) 
+
     # takes a dict and applies it to widget config
     def update_tree_item(self, changes_dict):
-            self.selected_item.config(**{changes_dict['key']: changes_dict['value']})
+        self.selected_item.config(**{changes_dict['key']: changes_dict['value']})
 
     def delete_tree(self):
         self.delete(*self.get_children())

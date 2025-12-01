@@ -87,8 +87,8 @@ class Utils:
             logging.error(f"Error removing junk config items: {e}", exc_info=True)
             raise e
     @staticmethod
-    # check for tuple length. if 5 it's last item, if 2 it's an aloas
-    def extract_current_config_values(config):
+    # check for tuple length. if 5 it's last item, if 2 it's an alias
+    def extract_current_config_key_values(config):
         try:
             key_val_dict = {}
             # use names from enum values

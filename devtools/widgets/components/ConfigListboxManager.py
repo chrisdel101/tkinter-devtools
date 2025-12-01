@@ -5,7 +5,6 @@ import tkinter as tk
 from devtools.constants import ListBoxEntryInputAction, OptionBoxState
 from devtools.maps import CONFIG_SETTING_VALUES
 from devtools.utils import Utils
-import pdb
 
 """
 
@@ -17,7 +16,8 @@ https://stackoverflow.com/a/64611569/5972531
 class ConfigListboxManager(tk.Listbox):
 
     def __init__(self, 
-            master, update_current_selected_item_node_callback, 
+            master, 
+            update_current_selected_item_node_callback, 
             toggle_option_box_state_callback, 
             get_tree_item_callback,
             handle_subtract_callback,
@@ -235,7 +235,7 @@ class ConfigListboxManager(tk.Listbox):
         key_option_box.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(key_option_box))) 
         # # get menu btn parent - only way to detect bind on focus out
         btn = key_option_box.children['menu'].master
-        # after adding new item - on focus out subracn the line and cancel
+        # after adding new item - on focus out subract the line and cancel
         btn.bind("<FocusOut>", lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(key_option_box)))
 
         return key_option_box

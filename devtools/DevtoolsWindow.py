@@ -16,7 +16,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.selected_item_tree_item: tk.Widget | None = None
         # right window - create first it can be passed to listbox manager as owner
         self.right_window = RightWindowFrame(master=self,
-        get_tree_item_callback=self.get_current_selected_item_node, set_tree_item_callback=self.update_current_selected_item_node)
+        get_tree_item_callback=self.get_current_selected_item_node, update_current_selected_item_node_callback=self.update_current_selected_item_node)
 
         # listbox for the config entries - sends dict of config values up when updated
         self.config_listbox_mngr = ConfigListboxManager(
