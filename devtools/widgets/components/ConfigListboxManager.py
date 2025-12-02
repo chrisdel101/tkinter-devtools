@@ -23,8 +23,9 @@ class ConfigListboxManager(tk.Listbox):
             handle_subtract_callback,
             **styles
         ): 
+        tk.Listbox.__init__(self, master=master, width=styles.get('width'), font=styles.get('font'))
         self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
-        tk.Listbox.__init__(self, master=master, width=styles.get('width'),  yscrollcommand = self.scroll_bar.set, font=styles.get('font'))
+        # self.config(yscrollcommand=self.scroll_bar.set)
         self.styles = styles
         self.editting_item_index:int | None = None
         # saved callbacks
@@ -96,11 +97,12 @@ class ConfigListboxManager(tk.Listbox):
             value_entry_value=value_entry_value,
             update_current_selected_item_node_callback=update_current_selected_item_node_callback
         ))
-        for ev in ["<Escape>"]:
-            if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
-                value_entry.bind(ev, lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(e.widget, key_entry_widget)))
-            else:
-                value_entry.bind(ev, lambda e: self.cancel_update(e.widget, key_entry_widget))
+        
+        if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
+            value_entry.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self.cancel_update(e.widget, key_entry_widget)))
+        else:
+            value_entry.bind("<Escape>", lambda e: self.cancel_update(e.widget, key_entry_widget))
+            value_entry.bind("<FocusOut>", lambda e: self.cancel_update(e.widget, key_entry_widget))
     # run funcs for entering row update - called from double click on row
     def handle_entry_input_update(
         self, 
@@ -195,7 +197,7 @@ class ConfigListboxManager(tk.Listbox):
         value_option_box.bind("<Escape>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
         # get menu btn parent - only way to detect bind 
         btn = value_option_box.children['menu'].master
-        value_option_box.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
+        btn.bind("<FocusOut>", lambda e: self.cancel_update(value_option_box, key_entry_widget))
 
         return value_option_box
 

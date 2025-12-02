@@ -21,13 +21,15 @@ class RightWindowFrame(tk.Frame):
         # pack subtract button
         self.subtract_config_button.pack(side="left", padx=5, pady=5)
         #  pack header
+        # self.header_frame.configure(takefocus=True)
+        # add focus on click - allows focus out on listbox to work
+        self.header_frame.bind("<Button-1>", lambda e: self.header_frame.focus_set())
         self.header_frame.pack(fill="x", expand=True)
         
     # add listbox manager after init - called on the parent window 
     def set_listbox_manager(self, config_listbox_mngr):
         setattr(self, '_config_listbox_mngr', config_listbox_mngr)
         self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
-
     def handle_add(self):
         current_listbox_selection = self._config_listbox_mngr.curselection()
         current_treeview_item = self._get_tree_item_callback()
@@ -58,12 +60,13 @@ class RightWindowFrame(tk.Frame):
         else:
             # get value at listbox selected index
             active_item_value =self._config_listbox_mngr.get(tk.ACTIVE)
+            # if active send blank value to undo attr on widget
             if active_item_value:
                 changes_dict = Utils.build_split_str_pairs_dict(self._config_listbox_mngr.get(tk.ACTIVE))
                 # send update to page widget to set config to zero
                 self._update_current_selected_item_node_callback({
                     "key": changes_dict['key'],
-                    "value": 0
+                    "value": ""
                 })
             # unpack first item from tuple
             current_selection_index, = curselection
