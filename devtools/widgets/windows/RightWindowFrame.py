@@ -1,6 +1,6 @@
 from __future__ import annotations
 from devtools.utils import Utils
-from devtools.widgets.components.ConfigListboxManager import ConfigListboxManager
+from devtools.widgets.components.config_listbox.ConfigListboxManager import ConfigListboxManager
 import tkinter as tk
 
 class RightWindowFrame(tk.Frame):
@@ -9,21 +9,19 @@ class RightWindowFrame(tk.Frame):
         # button header
         self.header_frame = tk.Frame(self, height=50, bg="lightgrey")
         # sets value on 
+        # callback - send changes in right window to left window treeview
         self._update_current_selected_item_node_callback = update_current_selected_item_node_callback
         self._get_tree_item_callback = get_tree_item_callback
-        # callback - send changes in right window to left window treeview
         self._config_listbox_mngr: ConfigListboxManager = None
-        
         self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
         self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
         # pack add button
         self.add_config_button.pack(side="left", padx=5, pady=5)
         # pack subtract button
         self.subtract_config_button.pack(side="left", padx=5, pady=5)
-        #  pack header
-        # self.header_frame.configure(takefocus=True)
-        # add focus on click - allows focus out on listbox to work
+        # add focus on click - allows focus out from listbox to work
         self.header_frame.bind("<Button-1>", lambda e: self.header_frame.focus_set())
+        #  pack header
         self.header_frame.pack(fill="x", expand=True)
         
     # add listbox manager after init - called on the parent window 

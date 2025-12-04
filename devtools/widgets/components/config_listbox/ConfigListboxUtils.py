@@ -1,0 +1,136 @@
+import logging
+import tkinter as tk
+
+from devtools.constants import ListBoxEntryInputAction, OptionBoxState
+from devtools.maps import CONFIG_SETTING_VALUES
+
+class ConfigListboxUtils:
+
+    def build_value_option_box(self, 
+        index: int,
+        key_entry_widget: tk.Entry | tk.OptionMenu,
+        key_entry_value: str,
+        item_option_vals_list: list[str],
+        update_current_selected_item_node_callback
+    ):
+        value_inside = tk.StringVar()
+        # set default top value
+        value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
+        # set any list to list var - done to keep it the same across calls
+        self.list_var.set(item_option_vals_list or [])
+        self.value_box_wrapper = tk.Frame(self.master)
+        # like bind - get selected value from drop down
+        value_option_box = tk.OptionMenu(self.value_box_wrapper,
+            value_inside,
+            *self.list_var.get(),
+            )
+        # on option_box value_ select
+        value_inside.trace_add('write', lambda *args:self.accept_edit_to_page_widget
+            (current_widget=value_option_box, 
+             index=index,
+             value_widget_to_destroy=value_option_box, 
+             key_widget_to_destroy=key_entry_widget,
+             key_entry_value=key_entry_value,
+             value_entry_value=value_inside.get(), 
+             update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+       
+        value_option_box.bind("<Escape>", lambda e: self._cancel_update(value_option_box, key_entry_widget, self.value_box_wrapper))
+        # get menu btn parent - only way to detect bind 
+        btn = value_option_box.children['menu'].master
+        btn.bind("<FocusOut>", lambda e: self._cancel_update(value_option_box, key_entry_widget, self.value_box_wrapper))
+
+        return value_option_box
+
+    def build_key_option_box(self, 
+        index: int,
+        item_option_vals_list: list[str],
+        # update callback goes to value option box
+        update_current_selected_item_node_callback):
+        value_inside = tk.StringVar()
+        self.key_box_wrapper = tk.Frame(self.master)
+        # set default top value
+        value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
+        # set any list to list var - done to keep it the same across calls
+        self.list_var.set(item_option_vals_list or [])
+        # like bind - get selected value from drop down
+        key_option_box = tk.OptionMenu(self.key_box_wrapper,
+            value_inside,
+            *self.list_var.get(),
+            )
+        # on option_box select - build and pack value option box if list values
+        value_inside.trace_add('write', lambda *args: self.handle_build_value_option_box_from_key_option_box(
+            index=index,
+            key_option_box=key_option_box,
+            value_inside=value_inside,
+            item_option_vals_list=self._get_config_value_options(value_inside.get()),
+            update_current_selected_item_node_callback=update_current_selected_item_node_callback   
+        # else build and pack value entry
+        ) if self._get_config_value_options(value_inside.get()) else self.handle_build_value_entry_from_key_option_or_entry(
+            index=index,
+            key_entry_widget=key_option_box,
+            key_entry_value=value_inside.get(),
+            value_entry_value="",
+            y_coord=self.bbox(self.editting_item_index)[1],
+            update_current_selected_item_node_callback=update_current_selected_item_node_callback,
+            **{'entry_input_action':ListBoxEntryInputAction.CREATE.value}
+        ))
+        # this is when adding new line with new key item entry - subtract list item and cancel option box
+        key_option_box.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(key_option_box))) 
+        # # get menu btn parent - only way to detect bind on focus out
+        btn = key_option_box.children['menu'].master
+        # after adding new item - on focus out subract the line and cancel
+        btn.bind("<FocusOut>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(key_option_box)))
+
+        return key_option_box
+    
+    # get options of config properties to use in dropdown - if they exist
+    @staticmethod
+    def _get_config_value_options(key_str_value:str=None) -> list| str:
+        if not key_str_value:
+            return 
+        # check for options in map
+        options_list = (CONFIG_SETTING_VALUES.get(key_str_value) or {}).get('values')
+        if options_list is None:
+            logging.debug(f"_get_config_value_options: {key_str_value} not mapped. Either it's not a list value or it was missed in Utils.filter_non_used_config_attrs.", exc_info=True)
+        return options_list
+    
+    @staticmethod
+    def _cancel_update(widget, *args):
+        widget.destroy()
+        for arg in filter(None, args):
+            arg.destroy()
+    
+    def _delete(self):
+        self.delete(0, tk.END)
+    # on init - load selected tree items attrs into listbox
+    # runs from treeview
+    def _insert_all(self, config_dict):
+         for key in config_dict:
+            # insert selected node into styles_window_listbox window
+            display = f"{key}: {config_dict[key]}"
+            # this auto sizes w/o adding styles
+            self.insert(tk.END, display)
+
+    # UNUSED - set to open on click - only handles open since close is not detectable
+    def set_box_state_on_open(self, event):
+        # if open set to closed - else set to open
+        if self.option_box_state == OptionBoxState.CLOSED.value:
+            self.option_box_state = OptionBoxState.OPEN.value
+            # logging.debug("Option box opened.")
+        else:
+            self.option_box_state = OptionBoxState.CLOSED.value
+            # logging.debug("Option box closed.")
+
+    def _set_selected_by_index(self, index:int):
+        # clear other selections
+        self.selection_clear(0, "end")
+        # select row
+        self.selection_set(index)
+        # activate on keyboard
+        self.activate(index)
+
+    # frame wrapper causes an offset of the optionboxes - adjusting w the parent y coord 
+    def _translate_y_coord(self, index:int) -> int:
+        widget_in_listbox_coord = self.bbox(index)[1]
+        lisbox_in_parent_coord = self.winfo_y()
+        return widget_in_listbox_coord + lisbox_in_parent_coord

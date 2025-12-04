@@ -3,7 +3,7 @@ import logging
 import tkinter as tk
 from devtools.constants import OptionBoxState
 from devtools.style import Style
-from devtools.widgets.components.ConfigListboxManager import ConfigListboxManager
+from devtools.widgets.components.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.widgets.windows.RightWindowFrame import RightWindowFrame
 
