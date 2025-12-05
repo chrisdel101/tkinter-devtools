@@ -1,5 +1,7 @@
 from tkinter import *
 import tkinter as tk
+from tkinter import ttk
+from devtools.style import Style
 
 from devtools.DevtoolsWindow import DevtoolsWindow
 
@@ -8,6 +10,11 @@ def open_dev_tools(main_root):
     dev_window = DevtoolsWindow(main_root)
     
 root = Tk()
+style = ttk.Style()
+style.configure(
+    "My.Treeview",
+    **Style.treeview
+)
 root_inner_frame = tk.Frame(root, padx=10, width=300, height=200)
 tk.Label(root_inner_frame, text="Hello World!").grid(column=0, row=0)
 tk.Label(root_inner_frame, text="Hello World2!").grid(column=0, row=1)

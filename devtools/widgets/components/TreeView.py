@@ -8,7 +8,7 @@ from devtools.utils import Utils
 class TreeView(ttk.Treeview):
     
     def __init__(self, root, master, listbox_widget): 
-        super().__init__(master, show="tree")
+        super().__init__(master, show="tree", style="My.Treeview")
         self.root = root
         self.selected_item = None
         self._listbox_widget = listbox_widget
@@ -16,6 +16,7 @@ class TreeView(ttk.Treeview):
         self.store_widget_by_tree_insert_id: dict[str, tk.Widget] = {}
         # use obj mem id from id(obj) - {id: {tree_id:str, widget:tk.Widget}}
         self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
+        self.column("#0", width=300)
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
         """Store the widget by Treeview.insert ID."""

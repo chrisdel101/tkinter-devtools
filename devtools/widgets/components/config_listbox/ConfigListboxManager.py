@@ -5,6 +5,7 @@ import tkinter as tk
 from devtools.constants import ListBoxEntryInputAction, OptionBoxState
 from devtools.utils import Utils
 from devtools.widgets.components.config_listbox.ConfigListboxUtils import ConfigListboxUtils
+from devtools.style import Style
 
 """
 
@@ -23,8 +24,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             handle_subtract_callback,
             **styles
         ): 
-        tk.Listbox.__init__(self, master=master, width=styles.get('width'), font=styles.get('font'))
-        self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
+        tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
+        # self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         # self.config(yscrollcommand=self.scroll_bar.set)
         self.styles = styles
         self.editting_item_index:int | None = None
@@ -35,7 +36,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # listener on listbox - for editing an entry using dbl click - not used in creating init val
         self._toggle_option_box_state_callback = toggle_option_box_state_callback
         self.bind("<Double-1>", self.start_update)
-        self.scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
+        # self.scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
         self.option_box_state = OptionBoxState.CLOSED.value
         self.key_var = tk.StringVar()
         self.val_var = tk.StringVar()
@@ -172,9 +173,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_option_vals_list=item_option_vals_list,
             update_current_selected_item_node_callback=update_current_selected_item_node_callback
             )
-            value_option_box.pack()
+            value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(self.editting_item_index), relwidth=0.5, width=-1)
-            # value_option_box.place(relx=0.3, y=y_coord, relwidth=0.5, width=-1)
             value_option_box.focus_set()
         else:
             self.handle_build_value_entry_from_key_option_or_entry(
@@ -194,8 +194,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         item_option_vals_list = None
         # store current editting index
         self.editting_item_index = index
-        # coords of y1 inside bb rect- where to place entry inside listbox
-        y_coord = self.bbox(index)[1]
         current_treeview_item = self._get_tree_item_callback()
         # get possible config for values 
         current_item_options_list = current_treeview_item.config().keys()
@@ -206,7 +204,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_option_vals_list=current_item_options_list,
             update_current_selected_item_node_callback=update_current_selected_item_node_callback
         )
-        key_option_box.pack()
+        key_option_box.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=self._translate_y_coord(index), relwidth=0.5, width=-1)
         key_option_box.focus_set()
         # set manually so curselect can access it on subract

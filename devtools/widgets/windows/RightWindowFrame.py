@@ -1,28 +1,28 @@
 from __future__ import annotations
+from devtools.style import Style
 from devtools.utils import Utils
 from devtools.widgets.components.config_listbox.ConfigListboxManager import ConfigListboxManager
 import tkinter as tk
 
 class RightWindowFrame(tk.Frame):
     def __init__(self, master, get_tree_item_callback, update_current_selected_item_node_callback):
-        super().__init__(master, width=300, height=500, bg="red")
+        super().__init__(master, **Style.right_window_frame)
         # button header
-        self.header_frame = tk.Frame(self, height=50, bg="lightgrey")
-        # sets value on 
-        # callback - send changes in right window to left window treeview
+        self.header_frame = tk.Frame(self, **Style.header)
+        # sets value on callback - send changes in right window to left window treeview
         self._update_current_selected_item_node_callback = update_current_selected_item_node_callback
         self._get_tree_item_callback = get_tree_item_callback
         self._config_listbox_mngr: ConfigListboxManager = None
-        self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add)
-        self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract)
+        self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add, width=2, height=2)
+        self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract, width=2, height=2)
         # pack add button
-        self.add_config_button.pack(side="left", padx=5, pady=5)
+        self.add_config_button.pack(side="left", padx=5, pady=5,anchor='sw')
         # pack subtract button
-        self.subtract_config_button.pack(side="left", padx=5, pady=5)
+        self.subtract_config_button.pack(side="left", padx=5, pady=5, anchor='sw')
         # add focus on click - allows focus out from listbox to work
         self.header_frame.bind("<Button-1>", lambda e: self.header_frame.focus_set())
         #  pack header
-        self.header_frame.pack(fill="x", expand=True)
+        self.header_frame.pack(fill='both', expand=True)
         
     # add listbox manager after init - called on the parent window 
     def set_listbox_manager(self, config_listbox_mngr):

@@ -10,7 +10,7 @@ from devtools.widgets.windows.RightWindowFrame import RightWindowFrame
 logging.basicConfig(level = logging.DEBUG)
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, root, title="Devtools"):
-        super().__init__(root, width=600, height=600)
+        super().__init__(root)
         self.title(title)
         self.root = root
         self.selected_item_tree_item: tk.Widget | None = None

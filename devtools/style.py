@@ -1,15 +1,35 @@
+
 class Style:
+    header = {
+        'bg': 'systemWindowBackgroundColor',
+    }
+    treeview = {
+        'background':"yellow",
+        'fieldbackground':"orange",   
+    }
     config_listbox_manager = {
-        'bg': 'black',
-        'width': 50,
-        'font': ("Courier New", 14),
-        'inserted_item_width': 10,
+        'listbox': {
+            'bg': 'grey',
+            'width': 50,
+            'font': ("Courier New", 14),
+        },
         'entry':{
             'borderwidth': 0,
-            'highlightthickness': 1,
+            'highlightthickness': 1,    
             'font': ("Helvetica", 14)
         },
         'key_entry':{
             'takefocus': False
         }
+    }
+    right_window_frame = {
+        'width': 100,
+        'height': 200,
+        'bg': 'green',
+    }
+    left_window_frame = {
+        'width': 100,
+        'height': 300,
+        'bg': 'yellow',
+
     }
