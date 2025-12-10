@@ -24,7 +24,7 @@ class ConfigListboxUtils:
             value_inside,
             *self.list_var.get(),
             )
-        # on option_box value_ select
+        # on option_box value select
         value_inside.trace_add('write', lambda *args:self.accept_edit_to_page_widget
             (current_widget=value_option_box, 
              index=index,
@@ -34,8 +34,8 @@ class ConfigListboxUtils:
              value_entry_value=value_inside.get(), 
              update_current_selected_item_node_callback=update_current_selected_item_node_callback))
        
-        value_option_box.bind("<Escape>", lambda e: self._cancel_update(value_option_box, key_entry_widget, self.value_box_wrapper))
-        # get menu btn parent - only way to detect bind 
+        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.value_box_wrapper)))
+        # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
         btn.bind("<FocusOut>", lambda e: self._cancel_update(value_option_box, key_entry_widget, self.value_box_wrapper))
 
@@ -46,42 +46,53 @@ class ConfigListboxUtils:
         item_option_vals_list: list[str],
         # update callback goes to value option box
         update_current_selected_item_node_callback):
-        value_inside = tk.StringVar()
-        self.key_box_wrapper = tk.Frame(self.master)
-        # set default top value
-        value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
-        # set any list to list var - done to keep it the same across calls
-        self.list_var.set(item_option_vals_list or [])
-        # like bind - get selected value from drop down
-        key_option_box = tk.OptionMenu(self.key_box_wrapper,
-            value_inside,
-            *self.list_var.get(),
-            )
-        # on option_box select - build and pack value option box if list values
-        value_inside.trace_add('write', lambda *args: self.handle_build_value_option_box_from_key_option_box(
-            index=index,
-            key_option_box=key_option_box,
-            value_inside=value_inside,
-            item_option_vals_list=self._get_config_value_options(value_inside.get()),
-            update_current_selected_item_node_callback=update_current_selected_item_node_callback   
-        # else build and pack value entry
-        ) if self._get_config_value_options(value_inside.get()) else self.handle_build_value_entry_from_key_option_or_entry(
-            index=index,
-            key_entry_widget=key_option_box,
-            key_entry_value=value_inside.get(),
-            value_entry_value="",
-            y_coord=self.bbox(self.editting_item_index)[1],
-            update_current_selected_item_node_callback=update_current_selected_item_node_callback,
-            **{'entry_input_action':ListBoxEntryInputAction.CREATE.value}
-        ))
-        # this is when adding new line with new key item entry - subtract list item and cancel option box
-        key_option_box.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(key_option_box, self.key_box_wrapper))) 
-        # # get menu btn parent - only way to detect bind on focus out
-        btn = key_option_box.children['menu'].master
-        # after adding new item - on focus out subract the line and cancel
-        btn.bind("<FocusOut>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(key_option_box, self.key_box_wrapper)))
-        return key_option_box
+        try:
+                
+            value_inside = tk.StringVar()
+            self.key_box_wrapper = tk.Frame(self.master)
+            # set default top value
+            value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
+            # set any list to list var - done to keep it the same across calls
+            self.list_var.set(item_option_vals_list or [])
+            # like bind - get selected value from drop down
+            key_option_box = tk.OptionMenu(self.key_box_wrapper,
+                value_inside,
+                *self.list_var.get(),
+                )
+            # on option_box select - build and pack value option box if list values
+            value_inside.trace_add('write', lambda *args: self.handle_build_value_option_box_from_key_option_box(
+                index=index,
+                key_option_box=key_option_box,
+                value_inside=value_inside,
+                item_option_vals_list=self._get_config_value_options(value_inside.get()),
+                update_current_selected_item_node_callback=update_current_selected_item_node_callback   
+            # else build and pack value entry
+            ) if self._get_config_value_options(value_inside.get()) else self.handle_build_value_entry_from_key_option_or_entry(
+                index=index,
+                key_entry_widget=key_option_box,
+                key_entry_value=value_inside.get(),
+                value_entry_value="",
+                y_coord=self.bbox(self.editting_item_index)[1],
+                update_current_selected_item_node_callback=update_current_selected_item_node_callback,
+                **{'entry_input_action':ListBoxEntryInputAction.CREATE.value}
+            ))
+            # this is when adding new line with new key item entry - subtract list item and cancel option box
+            key_option_box.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(key_option_box, self.key_box_wrapper))) 
+            # # get menu btn parent - only way to detect bind on focus out
+            btn = key_option_box.children['menu'].master
+            # on focus out subract the line and cancel - don't focus out when setting to value option box or entry
+            btn.bind("<FocusOut>", lambda e: self._on_focus_out(e, key_option_box=key_option_box))
+
+            return key_option_box
+        except Exception as e:
+            logging.error("Error building key option box.", exc_info=True)
     
+    def _on_focus_out(self,e, key_option_box):
+        if not self._key_option_focus_change:
+            return  # internal focus change → ignore
+
+        self._handle_subtract_callback(e)
+        self._cancel_update(key_option_box)
     # get options of config properties to use in dropdown - if they exist
     @staticmethod
     def _get_config_value_options(key_str_value:str=None) -> list| str:

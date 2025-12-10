@@ -43,6 +43,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.list_var = tk.Variable(value=[])
         self.value_box_wrapper = None
         self.key_box_wrapper = None
+        # don't allow key option focus out on value create
+        self._key_option_focus_change = False
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
         selected_index: int = self.index(f"@{event.x},{event.y}")
@@ -60,7 +62,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             changes_dict=changes_dict,
             update_current_selected_item_node_callback=self._update_current_selected_item_node_callback
         )
-        return "break"
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
     def accept_edit_to_page_widget(
@@ -101,7 +102,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             'value': value_entry_value
         })
     
-        self._cancel_update(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper)
+        self._cancel_update(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
         return value_entry_value
      # return and place value_option_box from key_option_box
     def handle_build_value_option_box_from_key_option_box(self,index: int, key_option_box: tk.OptionMenu, value_inside: tk.StringVar, item_option_vals_list: list[str], update_current_selected_item_node_callback):
@@ -110,8 +111,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             key_entry_widget=key_option_box, 
             key_entry_value=value_inside.get(),
             item_option_vals_list=item_option_vals_list, update_current_selected_item_node_callback=update_current_selected_item_node_callback)
-        value_option_box.place(relx=0.3, y=self._translate_y_coord(self.editting_item_index), relwidth=0.5, width=-1)
-        # value_option_box.focus_set()
+        value_option_box.pack(fill='x')
+        self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(self.editting_item_index), relwidth=0.5, width=-1)
+        self._key_option_focus_change = True
+        value_option_box.focus_set()
+        self._key_option_focus_change = False
+
         self._set_selected_by_index(index)
 
     def handle_build_value_entry_from_key_option_or_entry(
@@ -128,8 +133,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         value_entry.selection_from(0)
         value_entry.selection_to("end")
         value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
+        self._key_option_focus_change = True
         # set focus to value entry
         value_entry.focus_set()
+        self._key_option_focus_change = False
         # set manually so curselect can access it on subract
         self._set_selected_by_index(index)
         value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget
@@ -175,7 +182,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             )
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(self.editting_item_index), relwidth=0.5, width=-1)
+            self._key_option_focus_change = True
             value_option_box.focus_set()
+            self._key_option_focus_change = False
         else:
             self.handle_build_value_entry_from_key_option_or_entry(
                 index=index,
@@ -185,7 +194,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 y_coord=y_coord,
                 update_current_selected_item_node_callback=update_current_selected_item_node_callback
             )
-    # run funcs for entering row add - called fromcalled from parent when add button clicked parent when add button clicked
+    # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
     def handle_entry_input_create(
         self, 
         index: int, 
@@ -198,7 +207,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # get possible config for values 
         current_item_options_list = current_treeview_item.config().keys()
         current_treeview_item = self._get_tree_item_callback()
-        current_item_options_list = list(current_treeview_item.config().keys())
+        current_item_options_list = list(Utils.filter_non_used_config_attrs(current_treeview_item.config()).keys())
         key_option_box = self.build_key_option_box(
             index=index,
             item_option_vals_list=current_item_options_list,
