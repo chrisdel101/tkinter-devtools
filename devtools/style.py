@@ -1,7 +1,7 @@
 
 class Style:
     header = {
-        'bg': 'systemWindowBackgroundColor',
+        'bg': 'grey',
     }
     treeview = {
         'background':"yellow",

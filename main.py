@@ -4,10 +4,6 @@ from tkinter import ttk
 from devtools.style import Style
 
 from devtools.DevtoolsWindow import DevtoolsWindow
-
-def open_dev_tools(main_root):
-    # # main devtools window
-    dev_window = DevtoolsWindow(main_root)
     
 root = Tk()
 style = ttk.Style()

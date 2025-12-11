@@ -1,1 +1,4 @@
 __pycache__
+dist
+build
+tk_devtools.egg-info

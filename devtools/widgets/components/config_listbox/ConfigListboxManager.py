@@ -3,6 +3,7 @@ import logging
 import tkinter as tk
 
 from devtools.constants import ListBoxEntryInputAction, OptionBoxState
+from devtools.decorators import toggle_key_option_focus
 from devtools.utils import Utils
 from devtools.widgets.components.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -44,7 +45,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.value_box_wrapper = None
         self.key_box_wrapper = None
         # don't allow key option focus out on value create
-        self._key_option_focus_change = False
+        self._key_option_focus_change = True
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
         selected_index: int = self.index(f"@{event.x},{event.y}")
@@ -86,7 +87,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # after_idle runs after ant tk interals that might overwrite 
             # - move back to correct position if tk snapped it away
             self.after_idle(lambda: self.yview_moveto(y0))
-            self._cancel_update(value_widget_to_destroy, key_widget_to_destroy)
+            self._cancel_update(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
             return
         # check for .get method  - use .get for new entry else val correct option box  
         value_entry_value = current_widget.get() if getattr(current_widget, 'get', None) else value_entry_value
@@ -104,6 +105,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     
         self._cancel_update(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
         return value_entry_value
+    @toggle_key_option_focus
      # return and place value_option_box from key_option_box
     def handle_build_value_option_box_from_key_option_box(self,index: int, key_option_box: tk.OptionMenu, value_inside: tk.StringVar, item_option_vals_list: list[str], update_current_selected_item_node_callback):
         value_option_box = self.build_value_option_box(
@@ -119,6 +121,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
         self._set_selected_by_index(index)
 
+    @toggle_key_option_focus
     def handle_build_value_entry_from_key_option_or_entry(
             self,
             index: int, 

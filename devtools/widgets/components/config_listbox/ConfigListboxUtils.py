@@ -34,10 +34,10 @@ class ConfigListboxUtils:
              value_entry_value=value_inside.get(), 
              update_current_selected_item_node_callback=update_current_selected_item_node_callback))
        
-        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.value_box_wrapper)))
+        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)))
         # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
-        btn.bind("<FocusOut>", lambda e: self._cancel_update(value_option_box, key_entry_widget, self.value_box_wrapper))
+        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, )))
 
         return value_option_box
 
@@ -81,18 +81,18 @@ class ConfigListboxUtils:
             # # get menu btn parent - only way to detect bind on focus out
             btn = key_option_box.children['menu'].master
             # on focus out subract the line and cancel - don't focus out when setting to value option box or entry
-            btn.bind("<FocusOut>", lambda e: self._on_focus_out(e, key_option_box=key_option_box))
+            btn.bind("<FocusOut>", lambda e: self._on_focus_out(e, key_option_box, self.key_box_wrapper))
 
             return key_option_box
         except Exception as e:
             logging.error("Error building key option box.", exc_info=True)
     
-    def _on_focus_out(self,e, key_option_box):
+    def _on_focus_out(self,e, *args):
         if not self._key_option_focus_change:
             return  # internal focus change → ignore
 
         self._handle_subtract_callback(e)
-        self._cancel_update(key_option_box)
+        self._cancel_update(*args)
     # get options of config properties to use in dropdown - if they exist
     @staticmethod
     def _get_config_value_options(key_str_value:str=None) -> list| str:
