@@ -1,7 +1,8 @@
 from __future__ import annotations
 import logging
+from tkinter import ttk
 
-from devtools.constants import ValidConfigAttr
+from devtools.constants import COMBOBOX_ARROW_OFFSET, ValidConfigAttr
 from devtools.maps import CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
 class Utils:
@@ -154,3 +155,20 @@ class Utils:
     # check if it's alias mapping to a full config attr - else return as is
         resolved = CONFIG_ALIASES.get(attr_str, attr_str)
         return resolved
+    # using focus_displayof causes combobox KeyError: 'popdown'
+    @staticmethod
+    def _safe_focus_displayof(widget):
+        try:
+            return widget.focus_displayof()
+        except KeyError:
+            # ttk Combobox popdown (not in widget tree)
+            return widget
+    @staticmethod
+    def is_combobox_arrow(combobox: ttk.Combobox, x: int) -> bool:
+        try:
+           combobox_arrow_area = combobox.winfo_width() - COMBOBOX_ARROW_OFFSET
+           if x >= combobox_arrow_area:
+                return True
+           return
+        except Exception:
+            logging.error("Error determining if click was on combobox arrow.", exc_info=True)

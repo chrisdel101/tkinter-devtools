@@ -2,6 +2,7 @@ from enum import Enum
 
 
 MAX_KEY_WIDTH = 30  # adjust as needed
+COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
 class ConfigValueType(Enum):
     STRING = "str"
