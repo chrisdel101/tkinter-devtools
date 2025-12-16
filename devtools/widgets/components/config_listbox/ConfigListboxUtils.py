@@ -2,7 +2,7 @@ import logging
 import tkinter as tk
 from tkinter import ttk
 
-from devtools.constants import OptionBoxState
+from devtools.constants import ListBoxEntryInputAction, OptionBoxState
 from devtools.maps import CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 
@@ -36,10 +36,10 @@ class ConfigListboxUtils:
              value_entry_value=value_inside.get(), 
              update_current_selected_item_node_callback=update_current_selected_item_node_callback))
        
-        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)))
+        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), self._handle_subtract_callback(e, ), print("escape pressed build_value_option_box")))
         # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
-        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, )))
+        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, ), print("focus out build_value_option_box")) )
 
         return value_option_box
 
@@ -61,27 +61,27 @@ class ConfigListboxUtils:
                 textvariable=value_inside,
                 values=self.list_var.get(),
                 )
-            # on option_box select - build and pack value option box if list values
-            # value_inside.trace_add('write', lambda *args: self.handle_build_value_option_box_from_key_option_box(
-            #     index=index,
-            #     key_option_box=key_option_box,
-            #     value_inside=value_inside,
-            #     item_option_vals_list=self._get_config_value_options(value_inside.get()),
-            #     update_current_selected_item_node_callback=update_current_selected_item_node_callback   
-            # # else build and pack value entry
-            # ) if self._get_config_value_options(value_inside.get()) else self.handle_build_value_entry_from_key_option_or_entry(
-            #     index=index,
-            #     key_entry_widget=key_option_box,
-            #     key_entry_value=value_inside.get(),
-            #     value_entry_value="",
-            #     y_coord=self.bbox(self.editting_item_index)[1],
-            #     update_current_selected_item_node_callback=update_current_selected_item_node_callback,
-            #     **{'entry_input_action':ListBoxEntryInputAction.CREATE.value}
-            # ))
+            # on selectd select - build and pack value option box if list values
+            key_option_box.bind("<<ComboboxSelected>>", lambda e: 
+                self.handle_build_value_option_box_from_key_option_box( index=index,
+                key_option_box=key_option_box,
+                value_inside=value_inside,
+                item_option_vals_list=self._get_config_value_options(value_inside.get()),
+                update_current_selected_item_node_callback=update_current_selected_item_node_callback
+                ) if self._get_config_value_options(value_inside.get()) else 
+                self.handle_build_value_entry_from_key_option_or_entry(
+                index=index,
+                key_entry_widget=key_option_box,
+                key_entry_value=value_inside.get(),
+                value_entry_value="",
+                y_coord=self.bbox(self.editting_item_index)[1],
+                update_current_selected_item_node_callback=update_current_selected_item_node_callback,
+                **{'entry_input_action':ListBoxEntryInputAction.CREATE.value})
+                )
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_option_box.bind("<Escape>", lambda e: 
                 (self._handle_subtract_callback(e, ), 
-                 self._cancel_update(key_option_box, self.key_box_wrapper))) 
+                 self._cancel_update(key_option_box, self.key_box_wrapper), print("escape build_key_option_box"))) 
             # # get menu btn parent - only way to detect bind on focus out
             # btn = key_option_box.children['menu'].master
             # # on focus out subract the line and cancel - don't focus out when setting to value option box or entry
@@ -93,14 +93,14 @@ class ConfigListboxUtils:
                 "<Unmap>",
                 self.register(self._on_combobox_click_closed)
             )
-            key_option_box.bind("<<ComboboxSelected>>", self._handle_combobox_selected)
+            # key_option_box.bind("<<ComboboxSelected>>", self._handle_combobox_selected)
             key_option_box.bind("<FocusOut>", lambda e: 
                 self._on_focus_out(e, key_option_box, self.key_box_wrapper))
             # self._track_any_selected_combobox_or_wrapper_callback(self.key_box_wrapper)
             return key_option_box
         except Exception as e:
             logging.error("Error building key option box.", exc_info=True)
-    def _handle_combobox_selected(self):
+    def _handle_combobox_selected(self, e):
         print("Select called")
 
     def _on_combobox_click_closed(self):
@@ -125,6 +125,7 @@ class ConfigListboxUtils:
             return  # internal focus change → ignore
         if self._combobox_popdown_open: 
             return
+        print("focus out build_key_option_box")
         self._handle_subtract_callback(e)
         self._cancel_update(*args)
     # get options of config properties to use in dropdown - if they exist

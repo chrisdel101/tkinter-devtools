@@ -23,6 +23,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             toggle_option_box_state_callback, 
             get_tree_item_callback,
             handle_subtract_callback,
+            track_any_selected_combobox_or_wrapper_callback,
             **styles
         ): 
         tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
@@ -34,6 +35,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._handle_subtract_callback = handle_subtract_callback
         self._update_current_selected_item_node_callback = update_current_selected_item_node_callback
         self._get_tree_item_callback = get_tree_item_callback
+        self._track_any_selected_combobox_or_wrapper_callback = track_any_selected_combobox_or_wrapper_callback
         # listener on listbox - for editing an entry using dbl click - not used in creating init val
         self._toggle_option_box_state_callback = toggle_option_box_state_callback
         self.bind("<Double-1>", self.start_update)
@@ -44,8 +46,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.list_var = tk.Variable(value=[])
         self.value_box_wrapper = None
         self.key_box_wrapper = None
-        # don't allow key option focus out on value create
+        # focus guard - block 
         self._key_option_focus_change = True
+        self._combobox_popdown_open = False
+
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
         selected_index: int = self.index(f"@{event.x},{event.y}")
@@ -105,6 +109,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     
         self._cancel_update(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
         return value_entry_value
+    
     @toggle_key_option_focus
      # return and place value_option_box from key_option_box
     def handle_build_value_option_box_from_key_option_box(self,index: int, key_option_box: tk.OptionMenu, value_inside: tk.StringVar, item_option_vals_list: list[str], update_current_selected_item_node_callback):
@@ -115,9 +120,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_option_vals_list=item_option_vals_list, update_current_selected_item_node_callback=update_current_selected_item_node_callback)
         value_option_box.pack(fill='x')
         self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(self.editting_item_index), relwidth=0.5, width=-1)
-        self._key_option_focus_change = True
         value_option_box.focus_set()
-        self._key_option_focus_change = False
 
         self._set_selected_by_index(index)
 
@@ -136,10 +139,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         value_entry.selection_from(0)
         value_entry.selection_to("end")
         value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
-        self._key_option_focus_change = True
         # set focus to value entry
         value_entry.focus_set()
-        self._key_option_focus_change = False
         # set manually so curselect can access it on subract
         self._set_selected_by_index(index)
         value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget
@@ -154,11 +155,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         ))
         
         if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
-            value_entry.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(e.widget, key_entry_widget)))
+            value_entry.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper)))
         else:
-            value_entry.bind("<Escape>", lambda e: self._cancel_update(e.widget, key_entry_widget))
-            value_entry.bind("<FocusOut>", lambda e: self._cancel_update(e.widget, key_entry_widget))
+            value_entry.bind("<Escape>", lambda e: self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper))
+            value_entry.bind("<FocusOut>", lambda e: self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper))
     # run funcs for entering row update - called from double click on row
+    @toggle_key_option_focus
     def handle_entry_input_update(
         self, 
         index: int, 
@@ -185,9 +187,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             )
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(self.editting_item_index), relwidth=0.5, width=-1)
-            self._key_option_focus_change = True
             value_option_box.focus_set()
-            self._key_option_focus_change = False
         else:
             self.handle_build_value_entry_from_key_option_or_entry(
                 index=index,

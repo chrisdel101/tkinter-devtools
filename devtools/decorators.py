@@ -2,12 +2,12 @@
 from functools import wraps
 import logging
 
-
+# block key box focusout cancel - only allow key focus for functions called
 def toggle_key_option_focus(func):
     try:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            self._key_option_focus_change = False
+            self._key_option_focus_change = True
             try:
                 return func(self, *args, **kwargs)
             finally:
