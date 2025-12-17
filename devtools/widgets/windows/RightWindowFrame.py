@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.widgets.components.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -24,11 +25,17 @@ class RightWindowFrame(tk.Frame):
         #  pack header
         self.header_frame.pack(fill='both', expand=True)
         
-    # add listbox manager after init - called on the parent window 
+    # add listbox manager after init - b/c right window parent is master but both r sitting side by side
     def set_listbox_manager(self, config_listbox_mngr):
         setattr(self, '_config_listbox_mngr', config_listbox_mngr)
         self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
     def handle_add(self):
+        # self.add_config_button.state = "disabled"
+        if self.master.active_adding:
+            logging.debug("handle_add state true. Cannot add.")
+            return
+        
+        self.master.active_adding = True
         current_listbox_selection = self._config_listbox_mngr.curselection()
         current_treeview_item = self._get_tree_item_callback()
         if len(current_listbox_selection) == 0:

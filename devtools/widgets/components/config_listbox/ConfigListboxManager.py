@@ -155,10 +155,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         ))
         
         if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
-            value_entry.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper)))
+            value_entry.bind("<Escape>", lambda e: (self._handle_subtract_callback(e, ), self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper,), setattr(self.master.master, 'active_adding', False)))
         else:
-            value_entry.bind("<Escape>", lambda e: self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper))
-            value_entry.bind("<FocusOut>", lambda e: self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper))
+            value_entry.bind("<Escape>", lambda e: (self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper,), setattr(self.master.master, 'active_adding', False)))
+            value_entry.bind("<FocusOut>", lambda e: (self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper,), setattr(self.master.master, 'active_adding', False)))
     # run funcs for entering row update - called from double click on row
     @toggle_key_option_focus
     def handle_entry_input_update(

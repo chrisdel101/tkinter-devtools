@@ -36,10 +36,10 @@ class ConfigListboxUtils:
              value_entry_value=value_inside.get(), 
              update_current_selected_item_node_callback=update_current_selected_item_node_callback))
        
-        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), self._handle_subtract_callback(e, ), print("escape pressed build_value_option_box")))
+        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), self._handle_subtract_callback(e, ), print("escape pressed build_value_option_box"),  setattr(self.master.master, 'active_adding', False)))
         # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
-        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, ), print("focus out build_value_option_box")) )
+        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, ), print("focus out build_value_option_box")), setattr(self.master.master, 'active_adding', False))
 
         return value_option_box
 
@@ -81,51 +81,50 @@ class ConfigListboxUtils:
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_option_box.bind("<Escape>", lambda e: 
                 (self._handle_subtract_callback(e, ), 
-                 self._cancel_update(key_option_box, self.key_box_wrapper), print("escape build_key_option_box"))) 
-            # # get menu btn parent - only way to detect bind on focus out
-            # btn = key_option_box.children['menu'].master
-            # # on focus out subract the line and cancel - don't focus out when setting to value option box or entry
-            key_option_box.bind("<Button-1>", self._on_combobox_click_open)
+                 self._cancel_update(key_option_box, self.key_box_wrapper), setattr(self.master.master, 'active_adding', False))) 
+            # use native tcl to detect when open
+            key_option_box.bind("<Button-1>", self._handle_combobox_open)
+            # exists when open
             popdown = self.tk.call("ttk::combobox::PopdownWindow", key_option_box)
+            # unmap fires when widget is removed or hidden
             self.tk.call(
                 "bind",
                 popdown,
                 "<Unmap>",
-                self.register(self._on_combobox_click_closed)
+                self.register(self._handle_combobox_closed)
             )
-            # key_option_box.bind("<<ComboboxSelected>>", self._handle_combobox_selected)
             key_option_box.bind("<FocusOut>", lambda e: 
                 self._on_focus_out(e, key_option_box, self.key_box_wrapper))
             # self._track_any_selected_combobox_or_wrapper_callback(self.key_box_wrapper)
             return key_option_box
         except Exception as e:
             logging.error("Error building key option box.", exc_info=True)
-    def _handle_combobox_selected(self, e):
-        print("Select called")
-
-    def _on_combobox_click_closed(self):
+    # if open flip state to closed - called on tcl unmap
+    def _handle_combobox_closed(self):
         try:
             if self._combobox_popdown_open:
                 self._combobox_popdown_open = False
                 logging.debug(f"Combobox popdown closed state: {self._combobox_popdown_open}")
         except Exception as e:
-            logging.error(f"Error _on_combobox_click_closed: {e}", exc_info=True)
-    def _on_combobox_click_open(self, e):
+            logging.error(f"Error _handle_combobox_closed: {e}", exc_info=True)
+    # when arrow clicked flip to open
+    def _handle_combobox_open(self, e):
         try:
             check = Utils.is_combobox_arrow(e.widget, e.x)
             if check:
                 if not self._combobox_popdown_open:
                     self._combobox_popdown_open = True
-                logging.debug(f"Combobox popdown open state: {self._combobox_popdown_open}")
+                logging.debug(f"_handle_combobox_open open state: {self._combobox_popdown_open}")
         except Exception as e:
-            logging.error(f"Error _on_combobox_click_open: {e}", exc_info=True)
+            logging.error(f"Error _handle_combobox_open: {e}", exc_info=True)
 
     def _on_focus_out(self,e, *args):
         if not self._key_option_focus_change:
             return  # internal focus change → ignore
         if self._combobox_popdown_open: 
             return
-        print("focus out build_key_option_box")
+        logging.debug("_on_focus_out build_key_option_box")
+        self.master.master.active_adding =  False
         self._handle_subtract_callback(e)
         self._cancel_update(*args)
     # get options of config properties to use in dropdown - if they exist

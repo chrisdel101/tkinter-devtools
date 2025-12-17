@@ -19,14 +19,16 @@ class DevtoolsWindow(tk.Toplevel):
         self.devtools_window_in_focus = True
         self.selected_combobox_wrapper: tk.Widget | None = None
         self.selected_combobox: tk.Widget | None = None
-        self.active_handle_add_index: int | None = None
+        self.active_adding: bool = False # during add new item
         # right window - create first it can be passed to listbox manager as owner
-        self.right_window = RightWindowFrame(master=self,
-        get_tree_item_callback=self.get_current_selected_item_node, update_current_selected_item_node_callback=self.update_current_selected_item_node)
+        self.right_window = RightWindowFrame(
+            master=self,
+            get_tree_item_callback=self.get_current_selected_item_node, update_current_selected_item_node_callback=self.update_current_selected_item_node)
 
-        # listbox for the config entries - sends dict of config values up when updated
+        # listbox for the conf`ig entries - sends dict of config values up when updated
         self.config_listbox_mngr = ConfigListboxManager(
-            master=self.right_window, update_current_selected_item_node_callback=self.update_current_selected_item_node,toggle_option_box_state_callback=self.toggle_option_box_state,
+            master=self.right_window, 
+            update_current_selected_item_node_callback=self.update_current_selected_item_node,toggle_option_box_state_callback=self.toggle_option_box_state,
             get_tree_item_callback=self.get_current_selected_item_node, 
             handle_subtract_callback=self.right_window.handle_subract,
             track_any_selected_combobox_or_wrapper_callback=self.track_any_selected_combobox_or_wrapper,
@@ -44,6 +46,15 @@ class DevtoolsWindow(tk.Toplevel):
         self.bind("<FocusOut>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
         # self.poll_for_changes()
+
+    @property
+    def active_adding(self):
+        return self._active_adding
+
+    @active_adding.setter
+    def active_adding(self, value):
+        print('setting active_adding to', value )
+        self._active_adding = value 
 
     def on_focus_out(self, e):
         if self.devtools_window_in_focus:
