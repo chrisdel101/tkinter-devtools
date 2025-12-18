@@ -188,6 +188,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(self.editting_item_index), relwidth=0.5, width=-1)
             value_option_box.focus_set()
+            # self._key_option_focus_change = False
         else:
             self.handle_build_value_entry_from_key_option_or_entry(
                 index=index,

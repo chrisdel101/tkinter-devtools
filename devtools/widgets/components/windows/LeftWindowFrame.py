@@ -1,9 +1,9 @@
 from __future__ import annotations
+import tkinter as tk
 from devtools.style import Style
 from devtools.widgets.components.TreeView import TreeView
-from devtools.widgets.windows.WindowFrame import WindowFrame
 
-class LeftWindowFrame(WindowFrame):
+class LeftWindowFrame(tk.Frame):
     def __init__(self, root, master, listbox_widget, set_current_node_selected_callback):
         super().__init__(master,  **Style.left_window_frame)
        # pass the other window listbox down for updating it from left window

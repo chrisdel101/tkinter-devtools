@@ -5,8 +5,8 @@ from devtools.constants import OptionBoxState
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.widgets.components.config_listbox.ConfigListboxManager import ConfigListboxManager
-from devtools.widgets.windows.LeftWindowFrame import LeftWindowFrame
-from devtools.widgets.windows.RightWindowFrame import RightWindowFrame
+from devtools.widgets.components.windows.LeftWindowFrame import LeftWindowFrame
+from devtools.widgets.components.windows.RightWindowFrame import RightWindowFrame
 
 logging.basicConfig(level = logging.DEBUG)
 class DevtoolsWindow(tk.Toplevel):
