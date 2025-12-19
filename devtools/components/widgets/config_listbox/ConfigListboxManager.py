@@ -5,7 +5,7 @@ import tkinter as tk
 from devtools.constants import ListBoxEntryInputAction, OptionBoxState
 from devtools.decorators import toggle_key_option_focus
 from devtools.utils import Utils
-from devtools.widgets.components.config_listbox.ConfigListboxUtils import ConfigListboxUtils
+from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
 
 """
@@ -19,6 +19,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
     def __init__(self, 
             master, 
+            state_subject,
             update_current_selected_item_node_callback, 
             toggle_option_box_state_callback, 
             get_tree_item_callback,
@@ -27,6 +28,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             **styles
         ): 
         tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
+        state_subject.register_observer(self)
+
         # self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         # self.config(yscrollcommand=self.scroll_bar.set)
         self.styles = styles

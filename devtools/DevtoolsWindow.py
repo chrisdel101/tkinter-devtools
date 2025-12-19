@@ -4,9 +4,10 @@ import tkinter as tk
 from devtools.constants import OptionBoxState
 from devtools.style import Style
 from devtools.utils import Utils
-from devtools.widgets.components.config_listbox.ConfigListboxManager import ConfigListboxManager
-from devtools.widgets.components.windows.LeftWindowFrame import LeftWindowFrame
-from devtools.widgets.components.windows.RightWindowFrame import RightWindowFrame
+from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
+from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+from devtools.components.subject_context import SubjectState
 
 logging.basicConfig(level = logging.DEBUG)
 class DevtoolsWindow(tk.Toplevel):
@@ -14,6 +15,7 @@ class DevtoolsWindow(tk.Toplevel):
         super().__init__(root)
         self.title(title)
         self.root = root
+        self.state_subject = SubjectState()
         # state
         self.selected_item_tree_item: tk.Widget | None = None
         self.devtools_window_in_focus = True
@@ -23,11 +25,13 @@ class DevtoolsWindow(tk.Toplevel):
         # right window - create first it can be passed to listbox manager as owner
         self.right_window = RightWindowFrame(
             master=self,
+            state_subject=self.state_subject,
             get_tree_item_callback=self.get_current_selected_item_node, update_current_selected_item_node_callback=self.update_current_selected_item_node)
 
         # listbox for the conf`ig entries - sends dict of config values up when updated
         self.config_listbox_mngr = ConfigListboxManager(
             master=self.right_window, 
+            state_subject=self.state_subject,
             update_current_selected_item_node_callback=self.update_current_selected_item_node,toggle_option_box_state_callback=self.toggle_option_box_state,
             get_tree_item_callback=self.get_current_selected_item_node, 
             handle_subtract_callback=self.right_window.handle_subract,
@@ -37,7 +41,8 @@ class DevtoolsWindow(tk.Toplevel):
         self.right_window.set_listbox_manager(self.config_listbox_mngr)
 
         # left window - sends currently selected node up when changed - pass down listbox to apply updates
-        self.left_window = LeftWindowFrame(root=root, master=self, listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
+        self.left_window = LeftWindowFrame(root=root, master=self,state_subject=self.state_subject,
+         listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
 
         # pack left window
         self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)

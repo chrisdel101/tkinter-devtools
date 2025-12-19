@@ -2,12 +2,13 @@ from __future__ import annotations
 import logging
 from devtools.style import Style
 from devtools.utils import Utils
-from devtools.widgets.components.config_listbox.ConfigListboxManager import ConfigListboxManager
+from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 import tkinter as tk
 
 class RightWindowFrame(tk.Frame):
-    def __init__(self, master, get_tree_item_callback, update_current_selected_item_node_callback):
+    def __init__(self, master, state_subject, get_tree_item_callback, update_current_selected_item_node_callback):
         super().__init__(master, **Style.right_window_frame)
+        state_subject.register_observer(self)
         # button header
         self.header_frame = tk.Frame(self, **Style.header)
         # sets value on callback - send changes in right window to left window treeview
