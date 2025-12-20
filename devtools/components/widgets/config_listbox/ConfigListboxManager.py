@@ -19,7 +19,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
     def __init__(self, 
             master, 
-            state_subject,
+            state_observable,
             update_current_selected_item_node_callback, 
             toggle_option_box_state_callback, 
             get_tree_item_callback,
@@ -28,7 +28,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             **styles
         ): 
         tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
-        state_subject.register_observer(self)
+        self.state_observable = state_observable
+        state_observable.register_observer(self)
 
         # self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         # self.config(yscrollcommand=self.scroll_bar.set)

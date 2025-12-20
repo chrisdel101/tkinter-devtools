@@ -36,10 +36,10 @@ class ConfigListboxUtils:
              value_entry_value=value_inside.get(), 
              update_current_selected_item_node_callback=update_current_selected_item_node_callback))
        
-        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), self._handle_subtract_callback(e, ), print("escape pressed build_value_option_box"),  setattr(self.master.master, 'active_adding', False)))
+        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), self._handle_subtract_callback(e, ), print("escape pressed build_value_option_box"),  setattr(self.state_observable, 'active_adding', False)))
         # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
-        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, ), print("focus out build_value_option_box")), setattr(self.master.master, 'active_adding', False))
+        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, ), print("focus out build_value_option_box")), setattr(self.state_observable, 'active_adding', False))
 
         return value_option_box
 
@@ -81,7 +81,7 @@ class ConfigListboxUtils:
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_option_box.bind("<Escape>", lambda e: 
                 (self._handle_subtract_callback(e, ), 
-                 self._cancel_update(key_option_box, self.key_box_wrapper), setattr(self.master.master, 'active_adding', False))) 
+                 self._cancel_update(key_option_box, self.key_box_wrapper), setattr(self.state_observable, 'active_adding', False))) 
             # use native tcl to detect when open
             key_option_box.bind("<Button-1>", self._handle_combobox_open)
             # exists when open
@@ -124,7 +124,7 @@ class ConfigListboxUtils:
         if self._combobox_popdown_open: 
             return
         logging.debug("_on_focus_out build_key_option_box")
-        self.master.master.active_adding =  False
+        self.state_observable.active_adding =  False
         self._handle_subtract_callback(e)
         self._cancel_update(*args)
     # get options of config properties to use in dropdown - if they exist

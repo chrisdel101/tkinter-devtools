@@ -6,9 +6,10 @@ from devtools.components.widgets.config_listbox.ConfigListboxManager import Conf
 import tkinter as tk
 
 class RightWindowFrame(tk.Frame):
-    def __init__(self, master, state_subject, get_tree_item_callback, update_current_selected_item_node_callback):
+    def __init__(self, master, state_observable, get_tree_item_callback, update_current_selected_item_node_callback):
         super().__init__(master, **Style.right_window_frame)
-        state_subject.register_observer(self)
+        self.state_observable = state_observable
+        state_observable.register_observer(self)
         # button header
         self.header_frame = tk.Frame(self, **Style.header)
         # sets value on callback - send changes in right window to left window treeview
@@ -32,11 +33,11 @@ class RightWindowFrame(tk.Frame):
         self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
     def handle_add(self):
         # self.add_config_button.state = "disabled"
-        if self.master.active_adding:
+        if self.state_observable.active_adding:
             logging.debug("handle_add state true. Cannot add.")
             return
-        
-        self.master.active_adding = True
+        # setter for state store
+        self.state_observable.active_adding = True
         current_listbox_selection = self._config_listbox_mngr.curselection()
         current_treeview_item = self._get_tree_item_callback()
         if len(current_listbox_selection) == 0:

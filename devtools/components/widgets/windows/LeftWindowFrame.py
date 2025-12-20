@@ -4,9 +4,9 @@ from devtools.style import Style
 from devtools.components.widgets.TreeView import TreeView
 
 class LeftWindowFrame(tk.Frame):
-    def __init__(self, root, master, state_subject,listbox_widget, set_current_node_selected_callback):
+    def __init__(self, root, master, state_observable,listbox_widget, set_current_node_selected_callback):
         super().__init__(master,  **Style.left_window_frame)
-        state_subject.register_observer(self)
+        state_observable.register_observer(self)
 
        # pass the other window listbox down for updating it from left window
         self.tree = TreeView(root=root, master=self, listbox_widget=listbox_widget)
