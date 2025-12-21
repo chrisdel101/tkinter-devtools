@@ -1,7 +1,8 @@
 from __future__ import annotations
 import logging
 import tkinter as tk
-from devtools.components.state_observable import StateObservable
+from devtools.components.observable import Observable
+from devtools.components.store import Store
 from devtools.constants import OptionBoxState
 from devtools.style import Style
 from devtools.utils import Utils
@@ -16,7 +17,8 @@ class DevtoolsWindow(tk.Toplevel):
         super().__init__(root)
         self.title(title)
         self.root = root
-        self.state_observable = StateObservable()
+        self._observable = Observable()
+        self._store = Store()
         # state
         self.selected_item_tree_item: tk.Widget | None = None
         self.devtools_window_in_focus = True
@@ -25,14 +27,16 @@ class DevtoolsWindow(tk.Toplevel):
         # right window - create first it can be passed to listbox manager as owner
         self.right_window = RightWindowFrame(
             master=self,
-            state_observable=self.state_observable,
-            get_tree_item_callback=self.get_current_selected_item_node, update_current_selected_item_node_callback=self.update_current_selected_item_node)
+            observable=self._observable,
+            store=self._store,
+            get_tree_item_callback=self.get_current_selected_item_node)
 
         # listbox for the conf`ig entries - sends dict of config values up when updated
         self.config_listbox_mngr = ConfigListboxManager(
             master=self.right_window, 
-            state_observable=self.state_observable,
-            update_current_selected_item_node_callback=self.update_current_selected_item_node,toggle_option_box_state_callback=self.toggle_option_box_state,
+            observable=self._observable,
+            store=self._store,
+            toggle_option_box_state_callback=self.toggle_option_box_state,
             get_tree_item_callback=self.get_current_selected_item_node, 
             handle_subtract_callback=self.right_window.handle_subract,
             track_any_selected_combobox_or_wrapper_callback=self.track_any_selected_combobox_or_wrapper,
@@ -41,8 +45,9 @@ class DevtoolsWindow(tk.Toplevel):
         self.right_window.set_listbox_manager(self.config_listbox_mngr)
 
         # left window - sends currently selected node up when changed - pass down listbox to apply updates
-        self.left_window = LeftWindowFrame(root=root, master=self,state_observable=self.state_observable,
-         listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
+        self.left_window = LeftWindowFrame(root=root, master=self,observable=self._observable,
+        store=self._store,
+        listbox_widget=self.config_listbox_mngr, set_current_node_selected_callback=self.store_current_selected_item_node)
 
         # pack left window
         self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
@@ -52,14 +57,6 @@ class DevtoolsWindow(tk.Toplevel):
         self.bind("<FocusIn>", self.on_focus_in)
         # self.poll_for_changes()
 
-    # @property
-    # def active_adding(self):
-    #     return self._active_adding
-
-    # @active_adding.setter
-    # def active_adding(self, value):
-    #     print('setting active_adding to', value )
-    #     self._active_adding = value 
 
     def on_focus_out(self, e):
         if self.devtools_window_in_focus:
@@ -69,7 +66,6 @@ class DevtoolsWindow(tk.Toplevel):
                 logging.debug("DevtoolsWindow REALLY lost focus")
                 self.devtools_window_in_focus = False
                 if self.selected_combobox_wrapper:
-                    pass
                     logging.debug("Focus out - cancelling comboboxes.")
                     # cancel any comboxes that are stored in state
                     self.config_listbox_mngr._cancel_update(self.selected_combobox_wrapper, *self.selected_combobox_wrapper.winfo_children())

@@ -12,8 +12,7 @@ class ConfigListboxUtils:
         index: int,
         key_entry_widget: tk.Entry | tk.OptionMenu,
         key_entry_value: str,
-        item_option_vals_list: list[str],
-        update_current_selected_item_node_callback
+        item_option_vals_list: list[str]
     ):
         value_inside = tk.StringVar()
         # set default top value
@@ -34,20 +33,19 @@ class ConfigListboxUtils:
              key_widget_to_destroy=key_entry_widget,
              key_entry_value=key_entry_value,
              value_entry_value=value_inside.get(), 
-             update_current_selected_item_node_callback=update_current_selected_item_node_callback))
+        ))
        
-        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), self._handle_subtract_callback(e, ), print("escape pressed build_value_option_box"),  setattr(self.state_observable, 'active_adding', False)))
+        value_option_box.bind("<Escape>", lambda e: (self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), self._handle_subtract_callback(e, ), print("escape pressed build_value_option_box"),  setattr(self._store, 'active_adding', False)))
         # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
-        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, ), print("focus out build_value_option_box")), setattr(self.state_observable, 'active_adding', False))
+        btn.bind("<FocusOut>", lambda e: ((self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), self._handle_subtract_callback(e, ), print("focus out build_value_option_box")), setattr(self._store, 'active_adding', False))
 
         return value_option_box
+        
 
     def build_key_option_box(self, 
         index: int,
-        item_option_vals_list: list[str],
-        # update callback goes to value option box
-        update_current_selected_item_node_callback):
+        item_option_vals_list: list[str]):
         try:
                 
             value_inside = tk.StringVar()
@@ -67,7 +65,6 @@ class ConfigListboxUtils:
                 key_option_box=key_option_box,
                 value_inside=value_inside,
                 item_option_vals_list=self._get_config_value_options(value_inside.get()),
-                update_current_selected_item_node_callback=update_current_selected_item_node_callback
                 ) if self._get_config_value_options(value_inside.get()) else 
                 self.handle_build_value_entry_from_key_option_or_entry(
                 index=index,
@@ -75,13 +72,12 @@ class ConfigListboxUtils:
                 key_entry_value=value_inside.get(),
                 value_entry_value="",
                 y_coord=self.bbox(self.editting_item_index)[1],
-                update_current_selected_item_node_callback=update_current_selected_item_node_callback,
                 **{'entry_input_action':ListBoxEntryInputAction.CREATE.value})
                 )
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_option_box.bind("<Escape>", lambda e: 
                 (self._handle_subtract_callback(e, ), 
-                 self._cancel_update(key_option_box, self.key_box_wrapper), setattr(self.state_observable, 'active_adding', False))) 
+                 self._cancel_update(key_option_box, self.key_box_wrapper), setattr(self._store, 'active_adding', False))) 
             # use native tcl to detect when open
             key_option_box.bind("<Button-1>", self._handle_combobox_open)
             # exists when open
@@ -124,7 +120,7 @@ class ConfigListboxUtils:
         if self._combobox_popdown_open: 
             return
         logging.debug("_on_focus_out build_key_option_box")
-        self.state_observable.active_adding =  False
+        self._store.active_adding =  False
         self._handle_subtract_callback(e)
         self._cancel_update(*args)
     # get options of config properties to use in dropdown - if they exist

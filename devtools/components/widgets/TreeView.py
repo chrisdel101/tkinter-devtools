@@ -2,16 +2,20 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk 
 import logging
+from typing import Any
 
 from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
     
-    def __init__(self, root, master, listbox_widget): 
+    def __init__(self, root, master, observable, store, listbox_widget): 
         super().__init__(master, show="tree", style="My.Treeview")
         self.root = root
         self.selected_item = None
         self._listbox_widget = listbox_widget
+        self._observable = observable
+        self._store = store
+        self._observable.register_observer(self)
         # use Treeview.insert id like 'I001'
         self.store_widget_by_tree_insert_id: dict[str, tk.Widget] = {}
         # use obj mem id from id(obj) - {id: {tree_id:str, widget:tk.Widget}}
@@ -130,7 +134,7 @@ class TreeView(ttk.Treeview):
                         key_value_config = Utils.extract_current_config_key_values(filtered_config)
                         # send to listbox - display selected tree item's config options
                         self._listbox_widget._insert_all(key_value_config)
-                        set_current_node_selected_callback(_, selected_item=self.selected_item)
+                        self._store.selected_item_tree_item = self.selected_item
 
                     except Exception as e:
                         self._listbox_widget._delete()
@@ -145,8 +149,17 @@ class TreeView(ttk.Treeview):
         self.selection_set(item) 
 
     # takes a dict and applies it to widget config
+    # - called from notify when 
     def update_tree_item(self, changes_dict):
+        # self is the page widget - updates the config
         self.selected_item.config(**{changes_dict['key']: changes_dict['value']})
 
     def delete_tree(self):
         self.delete(*self.get_children())
+
+    def notify(self, **kwargs: dict[str, Any]):
+        if kwargs.get("action") == "update_current_selected_item_node":
+            changes_dict = kwargs.get("data")
+            self.update_tree_item(changes_dict)
+        
+        
