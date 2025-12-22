@@ -77,10 +77,9 @@ class TreeView(ttk.Treeview):
             logging.error(f"Error building tree: {e}")
     
     # main listener for tree item selects
-    def bind_tree_select(self, set_current_node_selected_callback):
+    def bind_tree_select(self):
         # call func when tree item is selected
-        self.bind("<<TreeviewSelect>>", lambda e:
-        self.handle_tree_select(e, set_current_node_selected_callback))
+        self.bind("<<TreeviewSelect>>", self.handle_tree_select)
 
     # walk the tree and get all the widgets  
     def collect_widgets(self, widget, acc=None):
@@ -109,7 +108,7 @@ class TreeView(ttk.Treeview):
         except Exception as e:
             logging.error(f"Error collecting widgets: {e}") 
 
-    def handle_tree_select(self, _, set_current_node_selected_callback):
+    def handle_tree_select(self, _,):
         try:
             collect_widgets = self.collect_widgets(self.root)
             # get selected tree item 

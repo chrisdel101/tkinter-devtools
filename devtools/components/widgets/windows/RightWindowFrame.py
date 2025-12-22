@@ -9,8 +9,8 @@ class RightWindowFrame(tk.Frame):
     def __init__(self, 
                 master, 
                 observable, 
-                store, 
-                get_tree_item_callback):
+                store 
+                ):
         super().__init__(master, **Style.right_window_frame)
         self._observable = observable
         self._store = store
@@ -18,7 +18,6 @@ class RightWindowFrame(tk.Frame):
         # button header
         self.header_frame = tk.Frame(self, **Style.header)
        
-        self._get_tree_item_callback = get_tree_item_callback
         self._config_listbox_mngr: ConfigListboxManager = None
         self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add, width=2, height=2)
         self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract, width=2, height=2)
@@ -43,7 +42,7 @@ class RightWindowFrame(tk.Frame):
         # setter for state store
         self._store.active_adding = True
         current_listbox_selection = self._config_listbox_mngr.curselection()
-        current_treeview_item = self._get_tree_item_callback()
+        current_treeview_item = self._store.selected_item_tree_item
         if len(current_listbox_selection) == 0:
             # if none selected insert at top
             insert_at_index = 0
@@ -62,7 +61,7 @@ class RightWindowFrame(tk.Frame):
     def handle_subract(self, _=None):
         # this is tuple format (3,)
         curselection: tuple[int] = self._config_listbox_mngr.curselection()
-        current_treeview_item = self._get_tree_item_callback()
+        current_treeview_item = self._store.selected_item_tree_item
 
         if len(curselection) == 0:
             print("No item selected to remove.")
@@ -84,4 +83,5 @@ class RightWindowFrame(tk.Frame):
             self._config_listbox_mngr.delete(current_selection_index)
 
     def notify(self, **kwargs: dict[str, any]):
-        pass
+        if kwargs.get("action") == "handle_subract":
+            self.handle_subract()
