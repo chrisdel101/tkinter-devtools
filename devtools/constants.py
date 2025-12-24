@@ -4,6 +4,11 @@ from enum import Enum
 MAX_KEY_WIDTH = 30  # adjust as needed
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
+class ActionType(Enum):
+    UPDATE_CURRENT_SELECTED_ITEM_NODE = "update_current_selected_item_node"
+    LOAD_LISTBOX = "load_listbox"
+    HANDLE_SUBTRACT = "handle_subtract"
+
 class ConfigValueType(Enum):
     STRING = "str"
     INTEGER = "int"

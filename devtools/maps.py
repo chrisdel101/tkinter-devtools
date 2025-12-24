@@ -1,4 +1,4 @@
-from devtools.constants import ValidConfigAttr, ConfigValueType
+from devtools.constants import ActionType, ValidConfigAttr, ConfigValueType
 
 CONFIG_SETTING_VALUES = {
     # relief
@@ -72,4 +72,11 @@ CONFIG_ALIASES = {
     ValidConfigAttr.BD.value: ValidConfigAttr.BORDERWIDTH.value,
     ValidConfigAttr.BG.value: ValidConfigAttr.BACKGROUND.value,
     ValidConfigAttr.FG.value: ValidConfigAttr.FOREGROUND.value,
+}
+
+# maps notification actions to the method names they call
+ACTION_REGISTRY = {
+    ActionType.UPDATE_CURRENT_SELECTED_ITEM_NODE.name: ActionType.UPDATE_CURRENT_SELECTED_ITEM_NODE.value,
+    ActionType.LOAD_LISTBOX.name: '_insert_all',
+    ActionType.HANDLE_SUBTRACT.name: ActionType.HANDLE_SUBTRACT.value,
 }

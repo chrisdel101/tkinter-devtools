@@ -4,7 +4,7 @@ class Style:
         'bg': 'grey',
     }
     treeview = {
-        'background':"yellow",
+        'background':"black",
         'fieldbackground':"orange",   
     }
     config_listbox_manager = {
@@ -30,6 +30,6 @@ class Style:
     left_window_frame = {
         'width': 100,
         'height': 300,
-        'bg': 'yellow',
+        'bg': 'black',
 
     }

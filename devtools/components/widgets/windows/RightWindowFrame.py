@@ -1,5 +1,7 @@
 from __future__ import annotations
 import logging
+from devtools.components.observable import Action
+from devtools.constants import ActionType
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -20,7 +22,7 @@ class RightWindowFrame(tk.Frame):
        
         self._config_listbox_mngr: ConfigListboxManager = None
         self.add_config_button = tk.Button(self.header_frame, text="+", command=self.handle_add, width=2, height=2)
-        self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subract, width=2, height=2)
+        self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subtract, width=2, height=2)
         # pack add button
         self.add_config_button.pack(side="left", padx=5, pady=5,anchor='sw')
         # pack subtract button
@@ -42,7 +44,7 @@ class RightWindowFrame(tk.Frame):
         # setter for state store
         self._store.active_adding = True
         current_listbox_selection = self._config_listbox_mngr.curselection()
-        current_treeview_item = self._store.selected_item_tree_item
+        # current_treeview_item = self._store.tree_state_get('selected_item')
         if len(current_listbox_selection) == 0:
             # if none selected insert at top
             insert_at_index = 0
@@ -58,10 +60,10 @@ class RightWindowFrame(tk.Frame):
         )
         
 
-    def handle_subract(self, _=None):
+    def handle_subtract(self, _=None):
         # this is tuple format (3,)
         curselection: tuple[int] = self._config_listbox_mngr.curselection()
-        current_treeview_item = self._store.selected_item_tree_item
+        # current_treeview_item = self._store.tree_state_get('selected_item')
 
         if len(curselection) == 0:
             print("No item selected to remove.")
@@ -73,15 +75,20 @@ class RightWindowFrame(tk.Frame):
             if active_item_value:
                 changes_dict = Utils.build_split_str_pairs_dict(self._config_listbox_mngr.get(tk.ACTIVE))
                 #    # updates the page widget - notify tree - sets config to zero
-                self._observable.notify_observers(**{"action": "update_current_selected_item_node", "data": {
-                    "key": changes_dict['key'],
-                    'value': ""
-                }})   
+                self._observable.notify_observers(
+                    Action(type=ActionType.UPDATE_CURRENT_SELECTED_ITEM_NODE.name, 
+                    data={
+                        "key": changes_dict['key'],
+                        "value": ""
+                }))   
             # unpack first item from tuple
             current_selection_index, = curselection
             # remove from listbox
             self._config_listbox_mngr.delete(current_selection_index)
 
-    def notify(self, **kwargs: dict[str, any]):
-        if kwargs.get("action") == "handle_subract":
-            self.handle_subract()
+    def notify(self, action: Action):
+        Utils.dispatch_action(self, action)
+        # # check if action maps to a method on this class
+        # fn = getattr(self, ACTION_REGISTRY.get(action.type), None)
+        # if fn:
+        #     fn(action.data)

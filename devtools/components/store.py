@@ -1,16 +1,55 @@
+import copy
 import logging
 import tkinter as tk
+from typing import Any, TypedDict
+
+from devtools.components.observable import Action
+from devtools.constants import ActionType
+
+class TreeState(TypedDict):
+    # widgets tracked using tree ids 'I001'
+    selected_widget_item: tk.Widget | None
+
+class ListboxManagerState(TypedDict):
+    selected_index: int | None
+    current_values: dict[str, str] | None
 
 class Store:
     """A simple store to hold key-value pairs."""
-    def __init__(self):
+    def __init__(self, observable):
+        self._observable = observable
         self.active_adding: bool = False 
-        self.selected_item_tree_item: tk.Widget | None = None
+        # self.selected_item_tree_item: tk.Widget | None = None
         self.selected_combobox_wrapper: tk.Widget | None = None
         self.selected_combobox: tk.Widget | None = None
         self.devtools_window_in_focus: bool = True
         self.combobox_popdown_open: bool = False
-        self.editting_item_index:int | None = None      
+        self.editting_item_index:int | None = None 
+        self.tree_state: TreeState = {
+            'selected_item': None
+        }  
+        self.listbox_manager_state: ListboxManagerState = {
+            'selected_index': None,
+            'current_values': None
+        }  
+
+    def tree_state_get(self, key: str):
+        return self.tree_state.get(key)
+    
+    def tree_state_set(self, key: str, value: Any):
+        tree_state_merge = {**self.tree_state, key: value}
+        self.tree_state = tree_state_merge 
+
+    def listbox_manager_state_get(self, key: str):
+        return self.listbox_manager_state.get(key)
+    
+    def listbox_manager_state_set(self, key: str, value: Any):
+        listbox_manager_state_merge = {**self.listbox_manager_state, key: value}
+        self.listbox_manager_state = listbox_manager_state_merge 
+        self._observable.notify_observers(
+            Action(type=ActionType.LOAD_LISTBOX.name,
+            data=value)
+        )
 
     @property
     def editting_item_index(self):
@@ -44,15 +83,6 @@ class Store:
     def active_adding(self, value):
         # logging.debug(f'SETTING ACTIVE_ADDING TO {value}')
         self._active_adding = value 
-        
-    @property
-    def selected_item_tree_item(self):
-        return self._selected_item_tree_item
-    
-    @selected_item_tree_item.setter
-    def selected_item_tree_item(self, value):
-        # print('setting selected_item_tree_item to', value )
-        self._selected_item_tree_item = value 
 
     # remove any selected comboboxs or wrappers in state
     def focus_out_untrack_comboboxs_or_wrappers(self):
@@ -61,7 +91,7 @@ class Store:
             self.selected_combobox_wrapper = None
 
     # track frame and inner combobox - when window focus out - cancel all comboboxes - called in build_key_option_box
-    def track_any_selected_combobox_or_wrapper(self,widget):
+    def track_any_selected_combobox_or_wrapper(self, widget):
     # - combobox widget cannot focusout itself
         try:
             if widget.winfo_name() == "!combobox":

@@ -14,7 +14,7 @@ class LeftWindowFrame(tk.Frame):
         super().__init__(master,  **Style.left_window_frame)
         self._observable = observable
         self._store = store
-        self._observable.register_observer(self)
+        # self._observable.register_observer(self)
 
        # pass the other window listbox down for updating it from left window
         self.tree = TreeView(
@@ -33,6 +33,5 @@ class LeftWindowFrame(tk.Frame):
         # pack treeview 
         self.tree.pack(side="left", fill="both", expand=True)
         
-    def notify(self, **kwargs: dict[str, Any]):
-            pass
+    
     

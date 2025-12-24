@@ -1,6 +1,14 @@
 
 from typing import Any
 import tkinter as tk
+from dataclasses import dataclass
+
+from devtools.constants import ActionType
+
+@dataclass(frozen=True)
+class Action:
+    type: ActionType
+    data: Any | None = None
 
 # this is the Subject
 class Observable:
@@ -10,7 +18,6 @@ class Observable:
     def register_observer(self, observer) -> None:
         self._observers.append(observer)
 
-    def notify_observers(self, **kwargs: dict[str, Any]) -> None:
+    def notify_observers(self, action: Action) -> None:
         for observer in self._observers:
-            observer.notify(**kwargs)
-   
+            observer.notify(action)

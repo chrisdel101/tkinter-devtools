@@ -2,8 +2,9 @@ from __future__ import annotations
 import logging
 from tkinter import ttk
 
+from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, ValidConfigAttr
-from devtools.maps import CONFIG_SETTING_VALUES, CONFIG_ALIASES
+from devtools.maps import ACTION_REGISTRY, CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
 class Utils:
     @staticmethod
@@ -89,6 +90,7 @@ class Utils:
             raise e
     @staticmethod
     # check for tuple length. if 5 it's last item, if 2 it's an alias
+    # This is a tk inter standard for all configs objs
     def extract_current_config_key_values(config):
         try:
             key_val_dict = {}
@@ -172,3 +174,12 @@ class Utils:
            return
         except Exception:
             logging.error("Error determining if click was on combobox arrow.", exc_info=True)
+    @staticmethod
+    # universal fn called in class notify methods
+    def dispatch_action(self, action: Action):
+        # check if action maps to a method on this class
+        fn = getattr(self, ACTION_REGISTRY.get(action.type), None)
+        if fn:
+            # pass in data or None
+            fn(action.data)
+        

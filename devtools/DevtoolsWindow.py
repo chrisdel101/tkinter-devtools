@@ -1,9 +1,9 @@
 from __future__ import annotations
 import logging
 import tkinter as tk
-from devtools.components.observable import Observable
+from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
-from devtools.constants import OptionBoxState
+from devtools.constants import ActionType, OptionBoxState
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -18,7 +18,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.title(title)
         self.root = root
         self._observable = Observable()
-        self._store = Store()
+        self._store = Store(observable=self._observable)
         # state
         self.devtools_window_in_focus = True
         self.selected_combobox: tk.Widget | None = None
@@ -49,7 +49,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
         # pack right window
         self.right_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
-        
+
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
         # self.poll_for_changes()
@@ -62,7 +62,7 @@ class DevtoolsWindow(tk.Toplevel):
                 # cancel any comboxes that are stored in state
                 self.config_listbox_mngr._cancel_update(self._store.selected_combobox_wrapper, *self._store.selected_combobox_wrapper.winfo_children())
                 self._store.focus_out_untrack_comboboxs_or_wrappers()   
-                self._observable.notify_observers(**{"action": "handle_subract"}),
+                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)),
                 self._store.active_adding = False
         
     def on_focus_in(self, e):

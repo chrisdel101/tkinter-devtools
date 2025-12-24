@@ -2,8 +2,8 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk 
 import logging
-from typing import Any
 
+from devtools.components.observable import Action
 from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
@@ -120,7 +120,7 @@ class TreeView(ttk.Treeview):
                 item_id = selected[0]
                 # set store state from stored tree state 
                 self._store.tree_state_set('selected_item', self.get_widget_by_tree_insert_id(item_id))
-                mem_obj_id = self.get_widget_by_obj_mem_id(id(self.selected_item))
+                # mem_obj_id = self.get_widget_by_obj_mem_id(id(self._store.tree_state_get('selected_item')))
                 
                 # TODO check if current select is already selected
                 if self._store.tree_state_get('selected_item'):
@@ -131,10 +131,12 @@ class TreeView(ttk.Treeview):
                         original_config = self._store.tree_state_get('selected_item').configure()
                         # filter out unwanted config values - keep original format
                         filtered_config = Utils.filter_non_used_config_attrs(original_config)
-                        # extract only useful values - will be single key values 
+                        # extract the actual set value - will be single value 
                         key_value_config = Utils.extract_current_config_key_values(filtered_config)
+                        self._store.listbox_manager_state_set('current_values', key_value_config)
                         # send to listbox - display selected tree item's config options
-                        self._listbox_widget._insert_all(key_value_config)
+                        # self._observable.notify_observers(**{"action": ActionType.LOAD_LISTBOX.value, "data": key_value_config})
+                        # self._listbox_widget._insert_all(key_value_config)
 
                     except Exception as e:
                         self._listbox_widget._delete()
@@ -159,9 +161,8 @@ class TreeView(ttk.Treeview):
     def delete_tree(self):
         self.delete(*self.get_children())
 
-    def notify(self, **kwargs: dict[str, Any]):
-        if kwargs.get("action") == "update_current_selected_item_node":
-            changes_dict = kwargs.get("data")
-            self.update_tree_item(changes_dict)
+    def notify(self, action: Action):
+        Utils.dispatch_action(self, action)
+
         
         

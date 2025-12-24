@@ -2,7 +2,8 @@ import logging
 import tkinter as tk
 from tkinter import ttk
 
-from devtools.constants import ListBoxEntryInputAction, OptionBoxState
+from devtools.components.observable import Action
+from devtools.constants import ActionType, ListBoxEntryInputAction, OptionBoxState
 from devtools.maps import CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 
@@ -26,7 +27,7 @@ class ConfigListboxUtils:
             *self.list_var.get(),
             )
         # on option_box value select
-        value_inside.trace_add('write', lambda *args:self.accept_edit_to_page_widget
+        value_inside.trace_add('write', lambda *args:self.insert_value_output_and_apply_to_page
             (current_widget=value_option_box, 
              index=index,
              value_widget_to_destroy=value_option_box, 
@@ -37,13 +38,13 @@ class ConfigListboxUtils:
        
         value_option_box.bind("<Escape>", lambda e: (
             self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), 
-            self._observable.notify_observers(**{"action": "handle_subract"}), 
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)), 
             setattr(self._store, 'active_adding', False)))
         # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
         btn.bind("<FocusOut>", lambda e: ((
             self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), 
-            self._observable.notify_observers(**{"action": "handle_subract"}), 
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)), 
             print("focus out build_value_option_box")), 
             setattr(self._store, 'active_adding', False))
 
@@ -78,12 +79,12 @@ class ConfigListboxUtils:
                 key_entry_widget=key_combo_box,
                 key_entry_value=value_inside.get(),
                 value_entry_value="",
-                y_coord=self.bbox(self.editting_item_index)[1],
+                y_coord=self.bbox(self._store.editting_item_index)[1],
                 **{'entry_input_action':ListBoxEntryInputAction.CREATE.value})
                 )
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_combo_box.bind("<Escape>", lambda e: 
-                (self._observable.notify_observers(**{"action": "handle_subract"}), 
+                (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)), 
                  self._cancel_update(key_combo_box, self.key_box_wrapper), 
                  setattr(self._store, 'active_adding', False))) 
             # use native tcl to detect when open
@@ -129,7 +130,7 @@ class ConfigListboxUtils:
             return
         logging.debug("_on_focus_out build_key_option_box")
         self._store.active_adding =  False
-        self._observable.notify_observers(**{"action": "handle_subract"})
+        self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name))
         self._cancel_update(*args)
     # get options of config properties to use in dropdown - if they exist
     @staticmethod

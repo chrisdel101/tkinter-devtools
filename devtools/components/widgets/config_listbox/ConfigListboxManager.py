@@ -2,11 +2,10 @@ from __future__ import annotations
 import logging
 import tkinter as tk
 from tkinter import ttk
-from typing import Any
 
-from devtools.components.observable import Observable
+from devtools.components.observable import Action, Observable
 from devtools.components.store import Store
-from devtools.constants import ListBoxEntryInputAction, OptionBoxState
+from devtools.constants import ActionType, ListBoxEntryInputAction, OptionBoxState
 from devtools.decorators import toggle_key_option_focus
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
@@ -65,7 +64,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         )
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
-    def accept_edit_to_page_widget(
+    def insert_value_output_and_apply_to_page(
             self, 
             current_widget: tk.Entry | tk.OptionMenu, 
             index: int, 
@@ -97,10 +96,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         
         self.after_idle(lambda: self.yview_moveto(y0))
         # updates the page widget - notify tree
-        self._observable.notify_observers(**{"action": "update_current_selected_item_node", "data": {
+        self._observable.notify_observers(Action(type=ActionType.UPDATE_CURRENT_SELECTED_ITEM_NODE.name), data={
             'key': key_entry_value,
             'value': value_entry_value
-        }})    
+        })    
         self._cancel_update(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
         return value_entry_value
     
@@ -141,7 +140,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         value_entry.focus_set()
         # set manually so curselect can access it on subract
         self._set_selected_by_index(index)
-        value_entry.bind("<Return>", lambda e: self.accept_edit_to_page_widget
+        value_entry.bind("<Return>", lambda e: self.insert_value_output_and_apply_to_page
             (
             current_widget=e.widget, 
             index=index, 
@@ -153,7 +152,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         
         if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
             value_entry.bind("<Escape>", lambda e: (
-                self._observable.notify_observers(**{"action": "handle_subract"}),
+                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)),
                 self._cancel_update(e.widget, key_entry_widget, self.key_box_wrapper,), 
                 setattr(self._store, 'active_adding', False)))
         else:
@@ -206,7 +205,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         item_option_vals_list = None
         # store current editting index
         self._store.editting_item_index = index
-        current_treeview_item = self._store.selected_item_tree_item
+        current_treeview_item = self._store.tree_state_get('selected_item')
         # get possible config for values 
         current_item_options_list = current_treeview_item.config().keys()
         current_item_options_list = list(Utils.filter_non_used_config_attrs(current_treeview_item.config()).keys())
@@ -220,5 +219,5 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # set manually so curselect can access it on subract
         self._set_selected_by_index(index)
         
-    def notify(self, **kwargs: dict[str, Any]):
-        pass
+    def notify(self, action: Action):
+        Utils.dispatch_action(self, action)
