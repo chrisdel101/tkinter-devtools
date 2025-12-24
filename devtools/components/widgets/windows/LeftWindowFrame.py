@@ -24,13 +24,14 @@ class LeftWindowFrame(tk.Frame):
             store=self._store,
             listbox_widget=listbox_widget
         )
-        self.tree.bind_tree_select()
-        self.tree.build_tree(root)
 
-        self.tree.select_tree_item(self.tree.get_children()[0]) 
+        # move to inside tree
+        # self.tree.bind_tree_select()
+        # self.tree.build_tree(root)
+        # # on init select first item - triggers con
+        # self.tree.select_tree_item(self.tree.get_children()[0]) 
         # pack treeview 
         self.tree.pack(side="left", fill="both", expand=True)
-        self.selected_item = None
         
     def notify(self, **kwargs: dict[str, Any]):
             pass

@@ -21,6 +21,12 @@ class TreeView(ttk.Treeview):
         # use obj mem id from id(obj) - {id: {tree_id:str, widget:tk.Widget}}
         self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
         self.column("#0", width=300)
+        # main listener for tree item selects
+        self.bind("<<TreeviewSelect>>", self.handle_tree_select)
+        self.build_tree(root)
+        # on init use tree selection_set api - triggers lb load
+        self.selection_set(self.get_children()[0])
+
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
         """Store the widget by Treeview.insert ID."""
@@ -75,11 +81,7 @@ class TreeView(ttk.Treeview):
               
         except Exception as e:
             logging.error(f"Error building tree: {e}")
-    
-    # main listener for tree item selects
-    def bind_tree_select(self):
-        # call func when tree item is selected
-        self.bind("<<TreeviewSelect>>", self.handle_tree_select)
+
 
     # walk the tree and get all the widgets  
     def collect_widgets(self, widget, acc=None):
@@ -111,29 +113,28 @@ class TreeView(ttk.Treeview):
     def handle_tree_select(self, _,):
         try:
             collect_widgets = self.collect_widgets(self.root)
-            # get selected tree item 
+            # get selected tree item via tree api
             selected = self.selection()
-            if selected and selected != self.selected_item:
+            if selected and selected != self._store.tree_state_get('selected_item'):    
                 # .selection give tree insert item ID
                 item_id = selected[0]
-                # get widget info from store
-                self.selected_item: tk.Widget = self.get_widget_by_tree_insert_id(item_id)
+                # set store state from stored tree state 
+                self._store.tree_state_set('selected_item', self.get_widget_by_tree_insert_id(item_id))
                 mem_obj_id = self.get_widget_by_obj_mem_id(id(self.selected_item))
                 
                 # TODO check if current select is already selected
-                if self.selected_item:
+                if self._store.tree_state_get('selected_item'):
                     try:
                         # delete prev content in listbox
                         self._listbox_widget._delete()
-                        # get config of selected
-                        original_config = self.selected_item.configure()
+                        # config used to populate listbox
+                        original_config = self._store.tree_state_get('selected_item').configure()
                         # filter out unwanted config values - keep original format
                         filtered_config = Utils.filter_non_used_config_attrs(original_config)
                         # extract only useful values - will be single key values 
                         key_value_config = Utils.extract_current_config_key_values(filtered_config)
                         # send to listbox - display selected tree item's config options
                         self._listbox_widget._insert_all(key_value_config)
-                        self._store.selected_item_tree_item = self.selected_item
 
                     except Exception as e:
                         self._listbox_widget._delete()
@@ -143,15 +144,17 @@ class TreeView(ttk.Treeview):
             logging.error(f"Error handling tree select: {e}", exc_info=True)
 
 
-    # select a tree item programatically
-    def select_tree_item(self, item):
-        self.selection_set(item) 
+    # # select a tree item programatically
+    # def select_tree_item(self, item):
+    #     self.selection_set(item) 
 
     # takes a dict and applies it to widget config
     # - called from notify when 
     def update_tree_item(self, changes_dict):
         # self is the page widget - updates the config
-        self.selected_item.config(**{changes_dict['key']: changes_dict['value']})
+        current_keys = self._store.tree_state_get('selected_item').configure().keys()
+
+        self._store.tree_state_get('selected_item').config(**{changes_dict['key']: changes_dict['value']})
 
     def delete_tree(self):
         self.delete(*self.get_children())
