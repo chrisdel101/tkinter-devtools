@@ -1,24 +1,25 @@
-import copy
 import logging
 import tkinter as tk
-from typing import Any, TypedDict
+from typing import Any, OrderedDict, TypedDict
+from enum import Enum
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType
+from devtools.constants import ActionType, ListboxManagerStateKey, TreeStateKey
 
 class TreeState(TypedDict):
     # widgets tracked using tree ids 'I001'
     selected_widget_item: tk.Widget | None
 
 class ListboxManagerState(TypedDict):
-    selected_index: int | None
-    current_values: dict[str, str] | None
+    # widgets tracked using tree ids 'I001'
+    selected_index: int| None
+    current_values_state: OrderedDict[str, str] | None
 
 class Store:
     """A simple store to hold key-value pairs."""
     def __init__(self, observable):
         self._observable = observable
-        self.active_adding: bool = False 
+        self.block_active_adding: bool = False 
         # self.selected_item_tree_item: tk.Widget | None = None
         self.selected_combobox_wrapper: tk.Widget | None = None
         self.selected_combobox: tk.Widget | None = None
@@ -30,25 +31,29 @@ class Store:
         }  
         self.listbox_manager_state: ListboxManagerState = {
             'selected_index': None,
-            'current_values': None
+            'current_values_state': None
         }  
 
-    def tree_state_get(self, key: str):
-        return self.tree_state.get(key)
-    
-    def tree_state_set(self, key: str, value: Any):
-        tree_state_merge = {**self.tree_state, key: value}
-        self.tree_state = tree_state_merge 
+    def tree_state_get(self, enum_key:  TreeStateKey):
+        return self.tree_state.get(enum_key.value)
+    # handles tracking store state or tree - i.e. selected item
+    def tree_state_set(self, enum_key: TreeStateKey, state_to_set: Any):
+        self.tree_state[enum_key.value] = state_to_set
+        
+    def tree_state_set(self, enum_key: TreeStateKey, state_to_set: Any):
+        self.tree_state[enum_key.value] = state_to_set
 
-    def listbox_manager_state_get(self, key: str):
-        return self.listbox_manager_state.get(key)
+    # get single value from listbox manager state
+    def listbox_manager_state_get_value(self, enum_key: ListboxManagerStateKey):
+        return self.listbox_manager_state.get(enum_key.value)
     
-    def listbox_manager_state_set(self, key: str, value: Any):
-        listbox_manager_state_merge = {**self.listbox_manager_state, key: value}
-        self.listbox_manager_state = listbox_manager_state_merge 
+    # key for name listbox_manager_state, value is dict of values
+    # - updates whole dict whenever a change occurs
+    def listbox_manager_state_set(self, enum_key: ListboxManagerStateKey, state_to_set: Any):
+        self.listbox_manager_state[enum_key.value] = state_to_set 
         self._observable.notify_observers(
-            Action(type=ActionType.LOAD_LISTBOX.name,
-            data=value)
+            Action(type=ActionType.INSERT_ALL_LISTBOX.name,
+            data=self.listbox_manager_state.get(enum_key.value))
         )
 
     @property
@@ -76,13 +81,13 @@ class Store:
         self._selected_combobox_wrapper = value 
 
     @property
-    def active_adding(self):
-        return self._active_adding
+    def block_active_adding(self):
+        return self._block_active_adding
     
-    @active_adding.setter
-    def active_adding(self, value):
-        # logging.debug(f'SETTING ACTIVE_ADDING TO {value}')
-        self._active_adding = value 
+    @block_active_adding.setter
+    def block_active_adding(self, value):
+        # logging.debug(f'SETTING block_active_adding TO {value}')
+        self._block_active_adding = value 
 
     # remove any selected comboboxs or wrappers in state
     def focus_out_untrack_comboboxs_or_wrappers(self):

@@ -180,6 +180,9 @@ class Utils:
         # check if action maps to a method on this class
         fn = getattr(self, ACTION_REGISTRY.get(action.type), None)
         if fn:
-            # pass in data or None
-            fn(action.data)
+            if isinstance(action.data, (list, tuple)):
+                fn(*action.data)
+            else:
+                fn(action.data)
+            
         

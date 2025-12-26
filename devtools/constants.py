@@ -4,10 +4,20 @@ from enum import Enum
 MAX_KEY_WIDTH = 30  # adjust as needed
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
+class TreeStateKey(Enum):
+    SELECTED_ITEM =  "selected_item"
+
+class ListboxManagerStateKey(Enum):
+    SELECTED_INDEX = "selected_index"
+    CURRENT_VALUES_STATE = "current_values_state"
+
 class ActionType(Enum):
     UPDATE_CURRENT_SELECTED_ITEM_NODE = "update_current_selected_item_node"
-    LOAD_LISTBOX = "load_listbox"
-    HANDLE_SUBTRACT = "handle_subtract"
+    INSERT_ALL_LISTBOX = "insert_all_listbox"
+    HANDLE_SUBTRACT_INDEX = "handle_subtract_index"
+    HANDLE_SUBTRACT_SELECTION = "handle_subtract_selection"
+    CANCEL_UPDATE_LISTBOX = "cancel_update_listbox"
+    UPDATE_TREE_ITEM_TO_PAGE_WIDGET = "update_tree_item_to_page_widget"
 
 class ConfigValueType(Enum):
     STRING = "str"

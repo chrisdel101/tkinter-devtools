@@ -37,16 +37,17 @@ class ConfigListboxUtils:
         ))
        
         value_option_box.bind("<Escape>", lambda e: (
-            self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), 
-            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)), 
-            setattr(self._store, 'active_adding', False)))
+            self.cancel_update_listbox(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper), 
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
+            print("escape build_value_option_box block_active_adding FALSE"), 
+            setattr(self._store, 'block_active_adding', False)))
         # get menu btn par ent - only way to detect bind 
         btn = value_option_box.children['menu'].master
         btn.bind("<FocusOut>", lambda e: ((
-            self._cancel_update(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), 
-            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)), 
-            print("focus out build_value_option_box")), 
-            setattr(self._store, 'active_adding', False))
+            self.cancel_update_listbox(value_option_box, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), 
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
+            print("focus out build_value_option_box block_active_adding FALSE")), 
+            setattr(self._store, 'block_active_adding', False))
 
         return value_option_box
         
@@ -73,8 +74,9 @@ class ConfigListboxUtils:
                 key_option_box=key_combo_box,
                 value_inside=value_inside,
                 item_option_vals_list=self._get_config_value_options(value_inside.get()),
-                ) if self._get_config_value_options(value_inside.get()) else 
-                self.handle_build_value_entry_from_key_option_or_entry(
+                ) 
+                if self._get_config_value_options(value_inside.get()) else 
+                self.handle_build_value_entry_from_key_entry(
                 index=index,
                 key_entry_widget=key_combo_box,
                 key_entry_value=value_inside.get(),
@@ -84,9 +86,10 @@ class ConfigListboxUtils:
                 )
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_combo_box.bind("<Escape>", lambda e: 
-                (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name)), 
-                 self._cancel_update(key_combo_box, self.key_box_wrapper), 
-                 setattr(self._store, 'active_adding', False))) 
+                (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
+                self.cancel_update_listbox(key_combo_box, self.key_box_wrapper),
+                print("escape build_key_option_box block_active_adding FALSE"),
+                setattr(self._store, 'block_active_adding', False))) 
             # use native tcl to detect when open
             key_combo_box.bind("<Button-1>", self._handle_combobox_open)
             # exists when open
@@ -99,7 +102,7 @@ class ConfigListboxUtils:
                 self.register(self._handle_combobox_closed)
             )
             key_combo_box.bind("<FocusOut>", lambda e: 
-                self._on_focus_out(e, key_combo_box, self.key_box_wrapper))
+                self.listbox_key_focus_out(e, key_combo_box, self.key_box_wrapper))
             self._store.track_any_selected_combobox_or_wrapper(self.key_box_wrapper)
             return key_combo_box
         except Exception as e:
@@ -123,15 +126,17 @@ class ConfigListboxUtils:
         except Exception as e:
             logging.error(f"Error _handle_combobox_open: {e}", exc_info=True)
 
-    def _on_focus_out(self,e, *args):
-        if not self._key_option_focus_change:
+    def listbox_key_focus_out(self,e, *args):
+        if not self.allow_focus_out_key_logic:
+            print("LISTBOX_ON_FOCUS guard1", self.allow_focus_out_key_logic)
             return  # internal focus change → ignore
         if self._store.combobox_popdown_open: 
+            print("LISTBOX_ON_FOCUS guard2")
             return
-        logging.debug("_on_focus_out build_key_option_box")
-        self._store.active_adding =  False
-        self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT.name))
-        self._cancel_update(*args)
+        print("listbox_key_focus_out build_key_option_box block_active_adding FALSE")
+        self._store.block_active_adding =  False
+        self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+        self.cancel_update_listbox(*args)
     # get options of config properties to use in dropdown - if they exist
     @staticmethod
     def _get_config_value_options(key_str_value:str=None) -> list| str:
@@ -144,8 +149,7 @@ class ConfigListboxUtils:
         return options_list
     
     @staticmethod
-    def _cancel_update(widget, *args):
-        widget.destroy()
+    def cancel_update_listbox(*args):
         for arg in filter(None, args):
             arg.destroy()
     
@@ -153,12 +157,15 @@ class ConfigListboxUtils:
         self.delete(0, tk.END)
     # on init - load selected tree items attrs into listbox
     # runs from treeview
-    def _insert_all(self, config_dict):
+    def insert_all_listbox(self, config_dict):
          for key in config_dict:
             # insert selected node into styles_window_listbox window
             display = f"{key}: {config_dict[key]}"
             # this auto sizes w/o adding styles
             self.insert(tk.END, display)
+    # runs from treeview
+    def delete_all_listbox(self):
+        self.delete(0, tk.END)
 
     # UNUSED - set to open on click - only handles open since close is not detectable
     def set_box_state_on_open(self, event):

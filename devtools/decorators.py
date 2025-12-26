@@ -2,20 +2,20 @@
 from functools import wraps
 import logging
 
-# block key box focusout cancel - only allow key focus for functions called
-#  - used to stop focus when focusset is called after key box moves to value box
-def toggle_key_option_focus(func):
+# focus out guard - if true block any logic that runs on key_combo_box focus out - listbox_key_focus_out
+# mostly to handle focusset from key-value option
+def toggle_block_focus_out_key_logic(func):
     try:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            self._key_option_focus_change = True
+            self.allow_focus_out_key_logic = True
             try:
-                logging.debug(f"decorator focus locked: {self._key_option_focus_change}")
+                logging.debug(f"decorator allow_focus_out_key_logic: {self.allow_focus_out_key_logic}")
                 return func(self, *args, **kwargs)
             finally:
-                self._key_option_focus_change = False
-                logging.debug(f"decorator focus locked: {self._key_option_focus_change}")
+                self.allow_focus_out_key_logic = False
+                logging.debug(f"decorator allow_focus_out_key_logic: {self.allow_focus_out_key_logic}")
                     
         return wrapper
     except Exception as e:
-        logging.error("Error in toggle_key_option_focus decorator.", exc_info=True)
+        logging.error("Error in toggle_block_focus_out_key_logic decorator.", exc_info=True)

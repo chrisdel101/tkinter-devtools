@@ -74,9 +74,5 @@ CONFIG_ALIASES = {
     ValidConfigAttr.FG.value: ValidConfigAttr.FOREGROUND.value,
 }
 
-# maps notification actions to the method names they call
-ACTION_REGISTRY = {
-    ActionType.UPDATE_CURRENT_SELECTED_ITEM_NODE.name: ActionType.UPDATE_CURRENT_SELECTED_ITEM_NODE.value,
-    ActionType.LOAD_LISTBOX.name: '_insert_all',
-    ActionType.HANDLE_SUBTRACT.name: ActionType.HANDLE_SUBTRACT.value,
-}
+# uses action type enums to make to func with same name
+ACTION_REGISTRY = {a.name: a.value for a in ActionType}
