@@ -58,10 +58,10 @@ class DevtoolsWindow(tk.Toplevel):
     def on_focus_out(self, e):
         if self.devtools_window_in_focus:
             self.devtools_window_in_focus = False
-            if self._store.selected_combobox_wrapper and self._store.selected_combobox_wrapper.winfo_exists():
+            if len(self._store.existing_combobox_wrappers) > 0:
                 # cancel any comboxes that are stored in state
-                self.config_listbox_mngr.cancel_update_listbox(self._store.selected_combobox_wrapper, *self._store.selected_combobox_wrapper.winfo_children())
-                self._store.focus_out_untrack_comboboxs_or_wrappers()   
+                self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
+                self._store.focus_out_untrack_combobox_wrappers()   
                 self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0)),
                 self._store.block_active_adding = False
         

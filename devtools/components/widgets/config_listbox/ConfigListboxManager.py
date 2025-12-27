@@ -44,8 +44,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.list_var = tk.Variable(value=[])
         self.value_box_wrapper = None
         self.key_box_wrapper = None
-        # focus guard - block 
+        # focus guard - blocks
         self.allow_focus_out_key_logic = True
+        self.allow_focus_out_value_logic = True
 
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
@@ -87,7 +88,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # after_idle runs after ant tk interals that might overwrite 
             # - move back to correct position if tk snapped it away
             self.after_idle(lambda: self.yview_moveto(y0))
-            self.cancel_update_listbox(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
+            self.cancel_update_listbox(self._store.existing_combobox_wrappers)
             return
         # check for .get method  - use .get for new entry else val correct option box  
         value_entry_value = current_widget.get() if getattr(current_widget, 'get', None) else value_entry_value
@@ -105,7 +106,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             'value': value_entry_value
         }))
         self.cancel_update_listbox(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
-        print("HERE2", self._store.block_active_adding)
         self._store.block_active_adding = False
         self.allow_focus_out_key_logic = True
         # print("insert_value_output_and_apply_to_page block_active_adding FALSE")

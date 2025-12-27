@@ -37,12 +37,6 @@ class RightWindowFrame(tk.Frame):
         setattr(self, '_config_listbox_mngr', config_listbox_mngr)
         self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
     def handle_add(self, index=None):
-        # self.add_config_button.state = "disabled"
-        print("HERE1", self._store.block_active_adding)
-        print("HEREX", index)
-       
-       
-
         if self._store.block_active_adding:
             logging.debug("handle_add state true. Cannot add.")
             return
@@ -66,8 +60,11 @@ class RightWindowFrame(tk.Frame):
             index=insert_at_index
         )
         
-    # remove current selection or remove by index if added
+    # remove current selection
     def handle_subtract_selection(self, _=None):
+        if self._store.block_active_adding:
+            logging.debug("addning state is blocked/in session. Cannot subtract.")
+            return
         # this is tuple format (3,)
         curselection: tuple[int] = self._config_listbox_mngr.curselection()
         # current_treeview_item = self._store.tree_state_get('selected_item')
@@ -82,7 +79,6 @@ class RightWindowFrame(tk.Frame):
             mem_widget_store_dict = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
             lookup_by_id_frozen_config = mem_widget_store_dict.get(memory_id)['widget_config_init_frozen']
             
-
             # get value at listbox selected index
             active_item_value =self._config_listbox_mngr.get(tk.ACTIVE)
             # if active send blank value to undo attr on widget

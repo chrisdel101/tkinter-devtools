@@ -29,11 +29,11 @@ class Store:
     def __init__(self, observable):
         self._observable = observable
         self.block_active_adding: bool = False 
-        # self.selected_item_tree_item: tk.Widget | None = None
-        self.selected_combobox_wrapper: tk.Widget | None = None
+        self.existing_combobox_wrappers: list[tk.Widget] | list = []
         self.selected_combobox: tk.Widget | None = None
         self.devtools_window_in_focus: bool = True
-        self.combobox_popdown_open: bool = False
+        self.key_combobox_popdown_open: bool = False
+        self.value_combobox_popdown_open: bool = False
         self.editting_item_index:int | None = None 
         self.tree_state: TreeState = {
             TreeStateKey.SELECTED_ITEM.value: None,
@@ -74,20 +74,20 @@ class Store:
         self._editting_item_index = value 
 
     @property
-    def combobox_popdown_open(self):
-        return self._combobox_popdown_open
+    def value_combobox_popdown_open(self):
+        return self._value_combobox_popdown_open
     
-    @combobox_popdown_open.setter
-    def combobox_popdown_open(self, value):
-        self._combobox_popdown_open = value 
+    @value_combobox_popdown_open.setter
+    def value_combobox_popdown_open(self, value):
+        self._value_combobox_popdown_open = value 
 
     @property
-    def selected_combobox_wrapper(self):
-        return self._selected_combobox_wrapper
+    def key_combobox_popdown_open(self):
+        return self._key_combobox_popdown_open
     
-    @selected_combobox_wrapper.setter
-    def selected_combobox_wrapper(self, value):
-        self._selected_combobox_wrapper = value 
+    @key_combobox_popdown_open.setter
+    def key_combobox_popdown_open(self, value):
+        self._key_combobox_popdown_open = value 
 
     @property
     def block_active_adding(self):
@@ -99,13 +99,13 @@ class Store:
         self._block_active_adding = value 
 
     # remove any selected comboboxs or wrappers in state
-    def focus_out_untrack_comboboxs_or_wrappers(self):
-        if self.selected_combobox_wrapper:
+    def focus_out_untrack_combobox_wrappers(self):
+        if self.existing_combobox_wrappers:
             logging.debug(f"Combobox removed from state.")
-            self.selected_combobox_wrapper = None
+            self.existing_combobox_wrappers = []
 
     # track frame and inner combobox - when window focus out - cancel all comboboxes - called in build_key_option_box
-    def track_any_selected_combobox_or_wrapper(self, widget):
+    def track_combobox_wrappers(self, widget):
     # - combobox widget cannot focusout itself
         try:
             if widget.winfo_name() == "!combobox":
@@ -115,7 +115,7 @@ class Store:
                 for child in widget.winfo_children():
                     if child.winfo_name() == "!combobox":
                         # store wrapper if child is combobox
-                        self.selected_combobox_wrapper = widget
+                        self.existing_combobox_wrappers.append(widget)
                         self.selected_combobox = child
                         logging.debug(f"Combobox added to state.")
                         # logging.debug(f"Combobox state added: {widget}")
