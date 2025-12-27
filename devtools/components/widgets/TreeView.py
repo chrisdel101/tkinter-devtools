@@ -19,9 +19,9 @@ class TreeView(ttk.Treeview):
         self._store = store
         self._observable.register_observer(self)
         # use Treeview.insert id like 'I001'
-        self.store_widget_by_tree_insert_id: dict[str, tk.Widget] = {}
+        # self.store_widget_by_tree_insert_id: dict[str, tk.Widget] = {}
         # use obj mem id from id(obj) - {id: {tree_id:str, widget:tk.Widget}}
-        self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
+        # self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
         self.column("#0", width=300)
         # main listener for tree item selects
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
@@ -32,21 +32,34 @@ class TreeView(ttk.Treeview):
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
         """Store the widget by Treeview.insert ID."""
-        self.store_widget_by_tree_insert_id[item_id] = widget
+        current_widget_id_dict = self._store.tree_state_get(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT) 
+        new_dict = {**current_widget_id_dict, **{item_id: widget}}
+        
+        self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, new_dict)
+        # self.store_widget_by_tree_insert_id[item_id] = widget
 
-    # store mem id() like {id: {tree_id:str, widget:tk.Widget}}
+    # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
     def add_tree_item_to_obj_mem_id_store(self, memory_id: int, tree_insert_id: str, widget: tk.Widget):
-        """Store the widget by Treeview.insert ID."""
-        self.store_widget_by_obj_mem_id[memory_id] = {
-            "tree_id": tree_insert_id, 
-             "widget": widget
-            }
+        # """Store the widget by Treeview.insert ID."""
+        # self.store_widget_by_obj_mem_id[memory_id] = {
+        #     "tree_id": tree_insert_id, 
+        #      "widget": widget
+        #     }
+        current_mem_id_widget_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) 
+        new_dict = {
+            **current_mem_id_widget_store, 
+            **{memory_id: {
+                "tree_id": tree_insert_id, 
+                "widget": widget,
+                "widget_config_init_frozen": Utils.extract_current_config_key_values(Utils.filter_non_used_config_attrs(widget.configure()))
+            }}}
+        self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
 
     def get_widget_by_tree_insert_id(self, item_id: str):
-        return self.store_widget_by_tree_insert_id.get(item_id)
+        return self._store.tree_state_get(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT).get(item_id)
 
     def get_widget_by_obj_mem_id(self, item_id: int):
-        return self.store_widget_by_obj_mem_id.get(item_id)  
+        return self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(item_id).get("widget")
     
     # on first call insert widget and get insert id - recurse
     # on next calls used vals passed in 
@@ -58,7 +71,7 @@ class TreeView(ttk.Treeview):
                 # manual insert -get insert id
                 # set using blank str   - used for first level tree node
                 insert_parent_memory_id = self.insert("", "end", text=parent_widget.winfo_class())
-
+                # add using mem id {4579038880: {tree_id:'I002', widget:tk.Widget}}
                 self.add_tree_item_to_obj_mem_id_store(parent_memory_id, insert_parent_memory_id, parent_widget)
                 self.add_tree_item_to_tree_insert_id_store(insert_parent_memory_id, parent_widget) 
                
@@ -120,7 +133,7 @@ class TreeView(ttk.Treeview):
             if selected and selected != self._store.tree_state_get(TreeStateKey.SELECTED_ITEM):    
                 # .selection give tree insert item ID
                 item_id = selected[0]
-                # set store state from stored tree state 
+                # set tree state selected item
                 self._store.tree_state_set(TreeStateKey.SELECTED_ITEM, self.get_widget_by_tree_insert_id(item_id))
                 # mem_obj_id = self.get_widget_by_obj_mem_id(id(self._store.tree_state_get('selected_item')))
                 

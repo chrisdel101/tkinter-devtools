@@ -6,6 +6,8 @@ COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
 class TreeStateKey(Enum):
     SELECTED_ITEM =  "selected_item"
+    WIDGETS_BY_TREE_INSERT_ID_DICT = "widgets_by_tree_insert_id"
+    MEM_WIDGET_STORE_BY_PY_MEM_ID= "mem_widget_store_by_py_mem_id"
 
 class ListboxManagerStateKey(Enum):
     SELECTED_INDEX = "selected_index"

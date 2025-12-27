@@ -50,24 +50,20 @@ class DevtoolsWindow(tk.Toplevel):
         # pack right window
         self.right_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
 
-        self.bind("<Deactivate>", self.window_on_focus_out)
+        self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
         # self.poll_for_changes()
 
 
-    def toggle_devtools_window_in_focus(self):
-        self.devtools_window_in_focus = not self.devtools_window_in_focus
-
-    def window_on_focus_out(self, e):
+    def on_focus_out(self, e):
         if self.devtools_window_in_focus:
-            self.toggle_devtools_window_in_focus()
+            self.devtools_window_in_focus = False
             if self._store.selected_combobox_wrapper and self._store.selected_combobox_wrapper.winfo_exists():
-                self._observable.notify_observers(Action(type=ActionType.CANCEL_UPDATE_LISTBOX.name, data=[self._store.selected_combobox_wrapper, *self._store.selected_combobox_wrapper.winfo_children()]))
-                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
                 # cancel any comboxes that are stored in state
-                # self.config_listbox_mngr.cancel_update_listbox(self._store.selected_combobox_wrapper, *self._store.selected_combobox_wrapper.winfo_children())
+                self.config_listbox_mngr.cancel_update_listbox(self._store.selected_combobox_wrapper, *self._store.selected_combobox_wrapper.winfo_children())
                 self._store.focus_out_untrack_comboboxs_or_wrappers()   
-                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0)),
+                self._store.block_active_adding = False
         
     def on_focus_in(self, e):
         # if state if false
@@ -79,7 +75,7 @@ class DevtoolsWindow(tk.Toplevel):
                 self.devtools_window_in_focus = True
     
     def update_current_selected_item_node(self, changes_dict: dict[str, str]):
-        self.left_window.tree.update_tree_item_to_page_widget(changes_dict)
+        self.left_window.tree.update_tree_item(changes_dict)
     
     # NOT USED- toggle when open on child - detect on window and close
     # optionbox does not detect close, window does not detect open

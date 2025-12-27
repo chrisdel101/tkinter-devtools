@@ -1,14 +1,23 @@
 import logging
 import tkinter as tk
 from typing import Any, OrderedDict, TypedDict
-from enum import Enum
 
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListboxManagerStateKey, TreeStateKey
 
+class MemIdWidgetStore(TypedDict):
+    tree_id: str
+    # is the active widget
+    widget: tk.Widget
+    widget_config_init_frozen: dict[str, Any]
+
 class TreeState(TypedDict):
     # widgets tracked using tree ids 'I001'
     selected_widget_item: tk.Widget | None
+    # use Treeview.insert id like 'I001'
+    widgets_by_tree_insert_id: dict[str, tk.Widget] = {}
+    # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
+    mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore] = {}
 
 class ListboxManagerState(TypedDict):
     # widgets tracked using tree ids 'I001'
@@ -27,22 +36,22 @@ class Store:
         self.combobox_popdown_open: bool = False
         self.editting_item_index:int | None = None 
         self.tree_state: TreeState = {
-            'selected_item': None
+            TreeStateKey.SELECTED_ITEM.value: None,
+            TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT.value: {},
+            TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }  
         self.listbox_manager_state: ListboxManagerState = {
-            'selected_index': None,
-            'current_values_state': None
+            ListboxManagerStateKey.SELECTED_INDEX.value: None,
+            ListboxManagerStateKey.CURRENT_VALUES_STATE.value: None
         }  
 
     def tree_state_get(self, enum_key:  TreeStateKey):
         return self.tree_state.get(enum_key.value)
+    
     # handles tracking store state or tree - i.e. selected item
     def tree_state_set(self, enum_key: TreeStateKey, state_to_set: Any):
         self.tree_state[enum_key.value] = state_to_set
         
-    def tree_state_set(self, enum_key: TreeStateKey, state_to_set: Any):
-        self.tree_state[enum_key.value] = state_to_set
-
     # get single value from listbox manager state
     def listbox_manager_state_get_value(self, enum_key: ListboxManagerStateKey):
         return self.listbox_manager_state.get(enum_key.value)

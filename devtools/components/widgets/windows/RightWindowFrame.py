@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 from devtools.components.observable import Action
-from devtools.constants import ActionType
+from devtools.constants import ActionType, TreeStateKey
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -67,7 +67,7 @@ class RightWindowFrame(tk.Frame):
         )
         
     # remove current selection or remove by index if added
-    def handle_subtract_selection(self, e=None, custom_index: int = None):
+    def handle_subtract_selection(self, _=None):
         # this is tuple format (3,)
         curselection: tuple[int] = self._config_listbox_mngr.curselection()
         # current_treeview_item = self._store.tree_state_get('selected_item')
@@ -76,20 +76,28 @@ class RightWindowFrame(tk.Frame):
             print("No item selected to remove.")
             return
         else:
+            current_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
+            # look up original state in memory_id store w py id
+            memory_id = id(current_widget)
+            mem_widget_store_dict = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
+            lookup_by_id_frozen_config = mem_widget_store_dict.get(memory_id)['widget_config_init_frozen']
+            
+
             # get value at listbox selected index
             active_item_value =self._config_listbox_mngr.get(tk.ACTIVE)
             # if active send blank value to undo attr on widget
             if active_item_value:
                 changes_dict = Utils.build_split_str_pairs_dict(self._config_listbox_mngr.get(tk.ACTIVE))
+                original_config_value = lookup_by_id_frozen_config.get(changes_dict['key'])
                 # updates the page widget - notify tree - sets config to zero
                 self._observable.notify_observers(
                     Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET.name, 
                     data={
                         "key": changes_dict['key'],
-                        "value": ""
+                        "value": original_config_value
                 }))   
             # unpack first item from tuple
-            current_selection_index, = curselection if not custom_index else (custom_index,)
+            current_selection_index, = curselection
             # remove from listbox
             self._config_listbox_mngr.delete(current_selection_index)
 
