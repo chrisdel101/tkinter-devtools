@@ -2,11 +2,11 @@ from __future__ import annotations
 import logging
 import tkinter as tk
 from tkinter import ttk
-from typing import Literal, OrderedDict
+from typing import OrderedDict
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxManagerStateKey, Store
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxKeywordAction, OptionBoxState, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, OptionBoxState, TreeStateKey
 from devtools.decorators import toggle_block_focus_out_key_logic
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
@@ -110,6 +110,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             
         value_option_box.pack(fill='x')
         self.value_box_wrapper.place(relx=0.5, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
+        self._store.add_existing_wrapper(self.value_box_wrapper)
         self.allow_focus_out_logic = True
         value_option_box.focus_set()
         self.allow_focus_out_logic = False
@@ -193,6 +194,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             )
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.45, y=self._translate_y_coord(index), relwidth=0.5, width=-1)
+            self._store.add_existing_wrapper(self.value_box_wrapper)
             self.allow_focus_out_logic = True
             value_option_box.focus_set()
             self.allow_focus_out_logic = False
@@ -221,6 +223,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         )
         key_option_box.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
+        self._store.add_existing_wrapper(self.key_box_wrapper)
         # move focus to key combo
         key_option_box.focus_set()
         # set manually so curselect can access it on subract

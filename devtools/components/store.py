@@ -76,6 +76,9 @@ class Store:
     def add_existing_wrapper(self, wrapper: tk.Widget):
         self.existing_combobox_wrappers.append(wrapper)
 
+    def remove_existing_wrappers(self):
+        self.existing_combobox_wrappers = []
+
     @property
     def value_combobox_popdown_open(self):
         return self._value_combobox_popdown_open
@@ -100,30 +103,4 @@ class Store:
     def block_active_adding(self, value):
         # logging.debug(f'SETTING block_active_adding TO {value}')
         self._block_active_adding = value 
-
-    # remove any selected comboboxs or wrappers in state
-    def focus_out_untrack_combobox_wrappers(self):
-        if self.existing_combobox_wrappers:
-            logging.debug(f"Combobox removed from state.")
-            self.existing_combobox_wrappers = []
-
-    # track frame and inner combobox - when window focus out - cancel all comboboxes - called in build_key_option_box
-    def track_combobox_wrappers(self, widget):
-    # - combobox widget cannot focusout itself
-        try:
-            if widget.winfo_name() == "!combobox":
-                # store combobox i
-                logging.debug(f"Combobox selected1 NO LOGIC: {widget.get()}")
-            else:    
-                for child in widget.winfo_children():
-                    if child.winfo_name() == "!combobox":
-                        # store wrapper if child is combobox
-                        self.add_existing_wrapper(widget)
-                        self.selected_combobox = child
-                        logging.debug(f"Combobox added to state.")
-                        # logging.debug(f"Combobox state added: {widget}")
-                        break
-              
-        except Exception as e:
-            logging.error(f"Error tracking combobox selection: {e}", exc_info=True)
 

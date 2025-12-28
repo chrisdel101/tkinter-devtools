@@ -21,7 +21,6 @@ class DevtoolsWindow(tk.Toplevel):
         self._store = Store(observable=self._observable)
         # state
         self.devtools_window_in_focus = True
-        self.selected_combobox: tk.Widget | None = None
         # right window - create first it can be passed to listbox manager as owner
         self.right_window = RightWindowFrame(
             master=self,
@@ -61,7 +60,7 @@ class DevtoolsWindow(tk.Toplevel):
             if len(self._store.existing_combobox_wrappers) > 0:
                 # cancel any comboxes that are stored in state
                 self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
-                self._store.focus_out_untrack_combobox_wrappers()   
+                self._store.remove_existing_wrappers()   
                 self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0)),
                 self._store.block_active_adding = False
         

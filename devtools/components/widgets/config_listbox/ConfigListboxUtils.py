@@ -37,8 +37,6 @@ class ConfigListboxUtils:
        
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
-            # self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
-            # print("escape build_value_combobox block_active_adding FALSE"), 
             setattr(self._store, 'block_active_adding', False)))
         
         value_combobox.bind("<Button-1>", self.handle_value_combobox_open)
@@ -53,7 +51,6 @@ class ConfigListboxUtils:
         )
         value_combobox.bind("<FocusOut>", lambda e: 
                 self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers, **kwargs))
-        self._store.track_combobox_wrappers(self.value_box_wrapper)
 
         return value_combobox
         
@@ -108,7 +105,7 @@ class ConfigListboxUtils:
             )
             key_combo_box.bind("<FocusOut>", lambda e: 
                 self.listbox_key_focus_out(e, self.key_box_wrapper))
-            self._store.track_combobox_wrappers(self.key_box_wrapper)
+         
             return key_combo_box
         except Exception as e:
             logging.error("Error building key option box.", exc_info=True)
