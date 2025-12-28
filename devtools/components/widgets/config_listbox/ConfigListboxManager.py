@@ -2,11 +2,11 @@ from __future__ import annotations
 import logging
 import tkinter as tk
 from tkinter import ttk
-from typing import OrderedDict
+from typing import Literal, OrderedDict
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxManagerStateKey, Store
-from devtools.constants import ActionType, ListBoxEntryInputAction, OptionBoxState, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxKeywordAction, OptionBoxState, TreeStateKey
 from devtools.decorators import toggle_block_focus_out_key_logic
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
@@ -45,8 +45,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.value_box_wrapper = None
         self.key_box_wrapper = None
         # focus guard - blocks
-        self.allow_focus_out_key_logic = True
-        self.allow_focus_out_value_logic = True
+        self.allow_focus_out_logic = True
 
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
@@ -91,7 +90,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         }))
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
         self._store.block_active_adding = False
-        self.allow_focus_out_key_logic = True
+        self.allow_focus_out_logic = True
         # print("insert_value_output_and_apply_to_page block_active_adding FALSE")
         # return value_entry_value
     
@@ -110,10 +109,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_option_vals_list=item_option_vals_list)
             
         value_option_box.pack(fill='x')
-        self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
-        self.allow_focus_out_key_logic = True
+        self.value_box_wrapper.place(relx=0.5, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
+        self.allow_focus_out_logic = True
         value_option_box.focus_set()
-        self.allow_focus_out_key_logic = False
+        self.allow_focus_out_logic = False
 
         self._set_selected_by_index(index)
 
@@ -132,7 +131,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         value_entry.selection_from(0)
         value_entry.selection_to("end")
         value_entry.pack(fill='x')
-        self.value_box_wrapper.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
+        self.value_box_wrapper.place(relx=0.5, y=y_coord,relwidth=0.5, width=-1)
         self._store.add_existing_wrapper(self.value_box_wrapper)
         # set focus to value entry
         value_entry.focus_set()
@@ -141,29 +140,29 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         value_entry.bind("<Return>", lambda e: 
             self.insert_value_output_and_apply_to_page(
             current_widget=e.widget, 
-            index=index, 
-            value_widget_to_destroy=e.widget, 
-            key_widget_to_destroy=key_entry_widget,
             key_entry_value=key_entry_value,
             value_entry_value=value_entry_value
             )
         )
-        
         if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
             value_entry.bind("<Escape>", lambda e: (
                 self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)),
-                self.cancel_update_listbox(e.widget, key_entry_widget, self.key_box_wrapper,), 
+                self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
                 print("escape entry create"),
-                setattr(self._store, 'active_adding', False)))
+                setattr(self._store, 'block_active_adding', False)))
+            value_entry.bind("<FocusOut>", lambda e: (
+                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)),
+                self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
+                setattr(self._store, 'block_active_adding', False)))
         else:
             value_entry.bind("<Escape>", lambda e: (
-                self.cancel_update_listbox(e.widget, key_entry_widget, self.key_box_wrapper,), 
+                self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
                 print("escape entry update"),
-                setattr(self._store, 'active_adding', False)))
+                setattr(self._store, 'block_active_adding', False)))
             value_entry.bind("<FocusOut>", lambda e: (
-                self.cancel_update_listbox(e.widget, key_entry_widget, self.key_box_wrapper,), 
+                self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
                 print("focusout entry update"),
-                setattr(self._store, 'active_adding', False)))
+                setattr(self._store, 'block_active_adding', False)))
     # run funcs for entering row update - called from double click on row
     @toggle_block_focus_out_key_logic
     def handle_entry_input_update(
@@ -180,7 +179,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         key_entry.selection_from(0)
         key_entry.selection_to("end")
         key_entry.pack(fill='x')
-        self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5 or 1, width=-1)
+        self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
         self._store.add_existing_wrapper(self.key_box_wrapper)
 
         item_option_vals_list: list[str] | None = self._get_config_value_options(changes_dict.get('key'))
@@ -189,13 +188,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             index=index,
             key_entry_widget=key_entry,
             key_entry_value=changes_dict.get('key'),
-            item_option_vals_list=item_option_vals_list
+            item_option_vals_list=item_option_vals_list,
+            entry_input_action=ListBoxEntryInputAction.UPDATE.value
             )
             value_option_box.pack(fill='x')
-            self.value_box_wrapper.place(relx=0.3, y=self._translate_y_coord(index), relwidth=0.5, width=-1)
-            self.allow_focus_out_key_logic = True
+            self.value_box_wrapper.place(relx=0.45, y=self._translate_y_coord(index), relwidth=0.5, width=-1)
+            self.allow_focus_out_logic = True
             value_option_box.focus_set()
-            self.allow_focus_out_key_logic = False
+            self.allow_focus_out_logic = False
         else:
             self.handle_build_value_entry_from_key_entry(
                 index=index,

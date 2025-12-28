@@ -13,7 +13,9 @@ class ConfigListboxUtils:
         index: int,
         key_entry_widget: tk.Entry | ttk.Combobox,
         key_entry_value: str,
-        item_option_vals_list: list[str]
+        item_option_vals_list: list[str],
+        **kwargs
+
     ):
         value_inside = tk.StringVar()
         # set default top value
@@ -35,7 +37,7 @@ class ConfigListboxUtils:
        
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
-            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
+            # self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
             # print("escape build_value_combobox block_active_adding FALSE"), 
             setattr(self._store, 'block_active_adding', False)))
         
@@ -50,7 +52,7 @@ class ConfigListboxUtils:
             self.register(self.handle_value_combobox_closed)
         )
         value_combobox.bind("<FocusOut>", lambda e: 
-                self.listbox_value_focus_out(e, self.key_box_wrapper, self.value_box_wrapper))
+                self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers, **kwargs))
         self._store.track_combobox_wrappers(self.value_box_wrapper)
 
         return value_combobox
@@ -84,8 +86,8 @@ class ConfigListboxUtils:
                 key_entry_widget=key_combo_box,
                 key_entry_value=value_inside.get(),
                 value_entry_value="",
-                y_coord=self.bbox(self._store.editting_item_index)[1],
-                **{'entry_input_action':ListBoxEntryInputAction.CREATE.value})
+                y_coord=self.bbox(self._store.editting_item_index)[1],                   
+                entry_input_action=ListBoxEntryInputAction.CREATE.value)
                 )
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_combo_box.bind("<Escape>", lambda e: 
@@ -149,8 +151,8 @@ class ConfigListboxUtils:
             logging.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
 
     def listbox_key_focus_out(self,e, *args):
-        if not self.allow_focus_out_key_logic:
-            print("key LISTBOX_ON_FOCUS guard1", self.allow_focus_out_key_logic)
+        if not self.allow_focus_out_logic:
+            print("key LISTBOX_ON_FOCUS guard1", self.allow_focus_out_logic)
             return  # internal focus change → ignore
         if self._store.key_combobox_popdown_open: 
             print("key LISTBOX_ON_FOCUS guard2")
@@ -160,7 +162,7 @@ class ConfigListboxUtils:
         self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
         self.cancel_update_listbox(*args)
 
-    def listbox_value_focus_out(self,e, *args):
+    def listbox_value_focus_out(self,e, *args, **kwargs):
         # if not self.allow_focus_out_value_logic:
         #     print("value LISTBOX_ON_FOCUS guard1", self.allow_focus_out_value_logic)
             #     return  # internal focus change → ignore
@@ -169,7 +171,9 @@ class ConfigListboxUtils:
             return
         print("llistbox_value_focus_out")
         self._store.block_active_adding =  False
-        self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+        self.allow_focus_out_logic = True
+        if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
         self.cancel_update_listbox(*args)
 
     # get options of config properties to use in dropdown - if they exist
@@ -225,3 +229,8 @@ class ConfigListboxUtils:
         widget_in_listbox_coord = self.bbox(index)[1]
         lisbox_in_parent_coord = self.winfo_y()
         return widget_in_listbox_coord + lisbox_in_parent_coord
+
+    def _translate_x_coord(self, index: int) -> int:
+        widget_in_listbox_x = self.bbox(index)[0]
+        listbox_in_parent_x = self.winfo_x()
+        return widget_in_listbox_x + listbox_in_parent_x

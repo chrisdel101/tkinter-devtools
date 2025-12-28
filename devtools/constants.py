@@ -66,3 +66,6 @@ class OptionBoxState(Enum):
 class ListBoxEntryInputAction(Enum):
     CREATE = "create"
     UPDATE = "update"
+
+class ListboxKeywordAction(Enum):
+    ENTRY_INPUT_ACTION = "entry_input_action"
