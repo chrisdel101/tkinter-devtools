@@ -64,5 +64,5 @@ class OptionBoxState(Enum):
     CLOSED = "closed"
 # create used when adding and no val is being input
 class ListBoxEntryInputAction(Enum):
-    CREATE = "create"
-    UPDATE = "update"
+    CREATE = 1
+    UPDATE = 2

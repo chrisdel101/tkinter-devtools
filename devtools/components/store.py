@@ -1,9 +1,9 @@
 import logging
 import tkinter as tk
-from typing import Any, OrderedDict, TypedDict
+from typing import Any, TypedDict
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxManagerStateKey, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerStateKey, TreeStateKey
 
 class MemIdWidgetStore(TypedDict):
     tree_id: str
@@ -22,7 +22,7 @@ class TreeState(TypedDict):
 class ListboxManagerState(TypedDict):
     # widgets tracked using tree ids 'I001'
     selected_index: int| None
-    current_values_state: OrderedDict[str, str] | None
+    current_values_state: dict[str, str] | None
 
 class Store:
     """A simple store to hold key-value pairs."""
@@ -34,6 +34,7 @@ class Store:
         self.devtools_window_in_focus: bool = True
         self.key_combobox_popdown_open: bool = False
         self.value_combobox_popdown_open: bool = False
+        self.listbox_entry_input_action:   ListBoxEntryInputAction | None  = None
         self.editting_item_index:int | None = None 
         self.tree_state: TreeState = {
             TreeStateKey.SELECTED_ITEM.value: None,
@@ -72,6 +73,14 @@ class Store:
     @editting_item_index.setter
     def editting_item_index(self, value):
         self._editting_item_index = value 
+
+    @property
+    def listbox_entry_input_action(self):
+        return self._listbox_entry_input_action
+    
+    @listbox_entry_input_action.setter
+    def listbox_entry_input_action(self, value):
+        self._listbox_entry_input_action = value 
     
     def add_existing_wrapper(self, wrapper: tk.Widget):
         self.existing_combobox_wrappers.append(wrapper)

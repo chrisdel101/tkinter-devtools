@@ -2,7 +2,6 @@ from __future__ import annotations
 import logging
 import tkinter as tk
 from tkinter import ttk
-from typing import OrderedDict
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxManagerStateKey, Store
@@ -78,9 +77,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
         current_value_state_dict  = self._store.listbox_manager_state_get_value(ListboxManagerStateKey.CURRENT_VALUES_STATE)
-        # overwrite current vals - doesn't allow dupes
-        updated_value_state_dict = OrderedDict(sorted({**current_value_state_dict, key_entry_value: value_entry_value}.items()))
-        self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_dict)
+        # overwrite - stops duplicates
+        updated_value_state_sorted_dict = Utils.sorted_dict(Utils.merge_dicts(current_value_state_dict, {key_entry_value: value_entry_value}))
+        self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
         
         self.after_idle(lambda: self.yview_moveto(y0))
         # UPDATE THE PAGE WIDGET HERE
@@ -106,7 +105,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             index, 
             key_entry_widget=key_option_box, 
             key_entry_value=value_inside.get(),
-            item_option_vals_list=item_option_vals_list)
+            item_option_vals_list=item_option_vals_list
+            )
             
         value_option_box.pack(fill='x')
         self.value_box_wrapper.place(relx=0.5, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
@@ -171,6 +171,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         index: int, 
         changes_dict: dict = {}, 
     ):
+        self._store.listbox_entry_input_action = ListBoxEntryInputAction.UPDATE
         self._store.editting_item_index = index
         y_coord = self.bbox(index)[1]
         self.key_box_wrapper = tk.Frame(self)
@@ -189,8 +190,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             index=index,
             key_entry_widget=key_entry,
             key_entry_value=changes_dict.get('key'),
-            item_option_vals_list=item_option_vals_list,
-            entry_input_action=ListBoxEntryInputAction.UPDATE.value
+            item_option_vals_list=item_option_vals_list
             )
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.45, y=self._translate_y_coord(index), relwidth=0.5, width=-1)
@@ -211,7 +211,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     def handle_entry_input_create(
         self, 
         index: int):
-        item_option_vals_list = None
+        self._store.listbox_entry_input_action = ListBoxEntryInputAction.CREATE
         # store current editting index
         self._store.editting_item_index = index
         current_treeview_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)

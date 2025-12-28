@@ -126,6 +126,25 @@ class Utils:
         except Exception as e:
             logging.error(f"Error extracting actual config values: {e}", exc_info=True)
             raise e 
+        
+    @staticmethod
+    def merge_dicts(*dicts) -> dict:
+        try:
+            merged = {}
+            for d in dicts:
+                # dict union operator, like .update
+                merged |= d 
+        except Exception as e:
+                logging.error(f"Error merge_dicts: {e}", exc_info=True)
+                raise e
+    @staticmethod
+    def sorted_dict(unsorted_dict: dict) -> dict:
+        try:
+            d = dict(sorted(unsorted_dict.items()))
+            return d
+        except Exception as e:
+            logging.error(f"Error sorting_dict: {e}", exc_info=True)
+            raise e
     @staticmethod
     # compare L1 - L2 return the differences - check if a difference is valid as a setting value
     def get_valid_key_value_differences(config):

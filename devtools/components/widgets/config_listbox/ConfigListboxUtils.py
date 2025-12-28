@@ -13,9 +13,7 @@ class ConfigListboxUtils:
         index: int,
         key_entry_widget: tk.Entry | ttk.Combobox,
         key_entry_value: str,
-        item_option_vals_list: list[str],
-        **kwargs
-
+        item_option_vals_list: list[str]
     ):
         value_inside = tk.StringVar()
         # set default top value
@@ -50,7 +48,7 @@ class ConfigListboxUtils:
             self.register(self.handle_value_combobox_closed)
         )
         value_combobox.bind("<FocusOut>", lambda e: 
-                self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers, **kwargs))
+                self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers))
 
         return value_combobox
         
@@ -159,7 +157,7 @@ class ConfigListboxUtils:
         self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
         self.cancel_update_listbox(*args)
 
-    def listbox_value_focus_out(self,e, *args, **kwargs):
+    def listbox_value_focus_out(self,e, *args):
         # if not self.allow_focus_out_value_logic:
         #     print("value LISTBOX_ON_FOCUS guard1", self.allow_focus_out_value_logic)
             #     return  # internal focus change → ignore
@@ -169,7 +167,7 @@ class ConfigListboxUtils:
         print("llistbox_value_focus_out")
         self._store.block_active_adding =  False
         self.allow_focus_out_logic = True
-        if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
+        if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
             self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
         self.cancel_update_listbox(*args)
 

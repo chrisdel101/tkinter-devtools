@@ -1,5 +1,4 @@
 from __future__ import annotations
-from collections import OrderedDict
 import tkinter as tk
 from tkinter import ttk 
 import logging
@@ -148,9 +147,9 @@ class TreeView(ttk.Treeview):
                         filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(original_config)
                         # extract the actual set value from value tuples - is key val str pairs
                         key_value_config_dict: dict[str, str] = Utils.extract_current_config_key_values(filtered_config_dict)
-                        key_value_config_ordered_dict = OrderedDict(sorted(key_value_config_dict.items()))
+                        key_value_config_sorted_dict = Utils.sorted_dict(key_value_config_dict)
                         # set store current listbox value state
-                        self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_ordered_dict)
+                        self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
                         # send to listbox - display selected tree item's config options
                         # self._observable.notify_observers(**{"action": ActionType.INSERT_ALL_LISTBOX.value, "data": key_value_config_dict})
                         # self._listbox_widget.insert_all_listbox(key_value_config_dict)
