@@ -69,31 +69,15 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     def insert_value_output_and_apply_to_page(
             self, 
             current_widget: tk.Entry | tk.OptionMenu, 
-            index: int, 
-            value_widget_to_destroy: tk.Widget, 
-            key_widget_to_destroy: tk.Widget, 
             key_entry_value: str,
             value_entry_value: str,
-            ):
+        ):
         # store the current y position in listbox  
-        y0, _ = self.yview()       
-        # delete empty entry
-        is_val_widget = isinstance(value_widget_to_destroy, tk.Widget) or isinstance(value_widget_to_destroy, tk.StringVar)
-        is_key_widget = isinstance(key_widget_to_destroy, tk.Widget)
-        if not is_val_widget or not is_key_widget:
-            fn = lambda val_type: logging.error(f"No data received for {val_type}. Cancelling edit.")
-            fn("value_entry_widget") if not is_val_widget else fn("key_widget_to_destroy")
-
-            self.delete(index)
-            # after_idle runs after ant tk interals that might overwrite 
-            # - move back to correct position if tk snapped it away
-            self.after_idle(lambda: self.yview_moveto(y0))
-            self.cancel_update_listbox(self._store.existing_combobox_wrappers)
-            return
+        y0, _ = self.yview()
         # check for .get method  - use .get for new entry else val correct option box  
         value_entry_value = current_widget.get() if getattr(current_widget, 'get', None) else value_entry_value
          # delete data at current index and insert new data there
-        self.delete_all_listbox()
+        self.delete_all_listbox_items()
         current_value_state_dict  = self._store.listbox_manager_state_get_value(ListboxManagerStateKey.CURRENT_VALUES_STATE)
         # overwrite current vals - doesn't allow dupes
         updated_value_state_dict = OrderedDict(sorted({**current_value_state_dict, key_entry_value: value_entry_value}.items()))
@@ -105,7 +89,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             'key': key_entry_value,
             'value': value_entry_value
         }))
-        self.cancel_update_listbox(value_widget_to_destroy, key_widget_to_destroy, self.value_box_wrapper, self.key_box_wrapper)
+        self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
         self._store.block_active_adding = False
         self.allow_focus_out_key_logic = True
         # print("insert_value_output_and_apply_to_page block_active_adding FALSE")
@@ -133,7 +117,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
         self._set_selected_by_index(index)
 
-    # @toggle_block_focus_out_key_logic
+    @toggle_block_focus_out_key_logic
     def handle_build_value_entry_from_key_entry(
             self,
             index: int, 
@@ -142,41 +126,46 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             value_entry_value: str,
             y_coord: int,
             **kwargs):
-        value_entry = tk.Entry(self, **self.styles['entry'])
+        self.value_box_wrapper = tk.Frame(self)
+        value_entry = tk.Entry(self.value_box_wrapper, **self.styles['entry'])
         value_entry.insert(0, value_entry_value)
         value_entry.selection_from(0)
         value_entry.selection_to("end")
-        value_entry.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
+        value_entry.pack(fill='x')
+        self.value_box_wrapper.place(relx=0.3, y=y_coord, relwidth=0.58, width=-1)
+        self._store.add_existing_wrapper(self.value_box_wrapper)
         # set focus to value entry
-        self.allow_focus_out_key_logic = False
         value_entry.focus_set()
-        self.allow_focus_out_key_logic = True
         # set manually so curselect can access it on subract
         self._set_selected_by_index(index)
-        value_entry.bind("<Return>", lambda e: self.insert_value_output_and_apply_to_page
-            (
+        value_entry.bind("<Return>", lambda e: 
+            self.insert_value_output_and_apply_to_page(
             current_widget=e.widget, 
             index=index, 
             value_widget_to_destroy=e.widget, 
             key_widget_to_destroy=key_entry_widget,
             key_entry_value=key_entry_value,
             value_entry_value=value_entry_value
-        ))
+            )
+        )
         
         if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
             value_entry.bind("<Escape>", lambda e: (
                 self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)),
                 self.cancel_update_listbox(e.widget, key_entry_widget, self.key_box_wrapper,), 
+                print("escape entry create"),
                 setattr(self._store, 'active_adding', False)))
         else:
             value_entry.bind("<Escape>", lambda e: (
                 self.cancel_update_listbox(e.widget, key_entry_widget, self.key_box_wrapper,), 
+                print("escape entry update"),
                 setattr(self._store, 'active_adding', False)))
             value_entry.bind("<FocusOut>", lambda e: (
                 self.cancel_update_listbox(e.widget, key_entry_widget, self.key_box_wrapper,), 
+                print("focusout entry update"),
                 setattr(self._store, 'active_adding', False)))
     # run funcs for entering row update - called from double click on row
-    # @toggle_block_focus_out_key_logic
+    @toggle_block_focus_out_key_logic
     def handle_entry_input_update(
         self, 
         index: int, 
@@ -184,12 +173,15 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     ):
         self._store.editting_item_index = index
         y_coord = self.bbox(index)[1]
-        key_entry = tk.Entry(self, **self.styles['entry'], **self.styles['key_entry'])
+        self.key_box_wrapper = tk.Frame(self)
+        key_entry = tk.Entry(self.key_box_wrapper, **self.styles['entry'], **self.styles['key_entry'])
         # add the text from the item into the key_entry - just place it but dont allow focus
         key_entry.insert(0, changes_dict.get('key'))
         key_entry.selection_from(0)
         key_entry.selection_to("end")
-        key_entry.place(relx=0, y=y_coord, relwidth=0.5 or 1, width=-1)
+        key_entry.pack(fill='x')
+        self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5 or 1, width=-1)
+        self._store.add_existing_wrapper(self.key_box_wrapper)
 
         item_option_vals_list: list[str] | None = self._get_config_value_options(changes_dict.get('key'))
         if item_option_vals_list:
@@ -229,6 +221,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         )
         key_option_box.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
+        # move focus to key combo
         key_option_box.focus_set()
         # set manually so curselect can access it on subract
         self._set_selected_by_index(index)

@@ -72,6 +72,9 @@ class Store:
     @editting_item_index.setter
     def editting_item_index(self, value):
         self._editting_item_index = value 
+    
+    def add_existing_wrapper(self, wrapper: tk.Widget):
+        self.existing_combobox_wrappers.append(wrapper)
 
     @property
     def value_combobox_popdown_open(self):
@@ -115,7 +118,7 @@ class Store:
                 for child in widget.winfo_children():
                     if child.winfo_name() == "!combobox":
                         # store wrapper if child is combobox
-                        self.existing_combobox_wrappers.append(widget)
+                        self.add_existing_wrapper(widget)
                         self.selected_combobox = child
                         logging.debug(f"Combobox added to state.")
                         # logging.debug(f"Combobox state added: {widget}")

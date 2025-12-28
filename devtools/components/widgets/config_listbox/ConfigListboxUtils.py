@@ -29,17 +29,14 @@ class ConfigListboxUtils:
         
         value_combobox.bind("<<ComboboxSelected>>", lambda e: self.insert_value_output_and_apply_to_page
             (current_widget=value_combobox, 
-             index=index,
-             value_widget_to_destroy=value_combobox, 
-             key_widget_to_destroy=key_entry_widget,
              key_entry_value=key_entry_value,
              value_entry_value=value_inside.get(), 
-        ))
+            ))
        
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
             self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
-            print("escape build_value_combobox block_active_adding FALSE"), 
+            # print("escape build_value_combobox block_active_adding FALSE"), 
             setattr(self._store, 'block_active_adding', False)))
         
         value_combobox.bind("<Button-1>", self.handle_value_combobox_open)
@@ -55,12 +52,6 @@ class ConfigListboxUtils:
         value_combobox.bind("<FocusOut>", lambda e: 
                 self.listbox_value_focus_out(e, self.key_box_wrapper, self.value_box_wrapper))
         self._store.track_combobox_wrappers(self.value_box_wrapper)
-        # # get menu btn par ent - only way to detect bind 
-        # value_combobox.bind("<FocusOut>", lambda e: ((
-        #     self.cancel_update_listbox(value_combobox, key_entry_widget, self.key_box_wrapper, self.value_box_wrapper)), 
-        #     self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
-        #     print("focus out build_value_combobox block_active_adding FALSE")), 
-        #     setattr(self._store, 'block_active_adding', False))
 
         return value_combobox
         
@@ -208,7 +199,7 @@ class ConfigListboxUtils:
             # this auto sizes w/o adding styles
             self.insert(tk.END, display)
     # runs from treeview
-    def delete_all_listbox(self):
+    def delete_all_listbox_items(self):
         self.delete(0, tk.END)
 
     # UNUSED - set to open on click - only handles open since close is not detectable
