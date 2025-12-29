@@ -45,13 +45,13 @@ class TreeView(ttk.Treeview):
         #      "widget": widget
         #     }
         current_mem_id_widget_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) 
-        new_dict = {
-            **current_mem_id_widget_store, 
-            **{memory_id: {
+        new_dict = Utils.merge_dicts(
+            current_mem_id_widget_store, 
+            {memory_id: {
                 "tree_id": tree_insert_id, 
                 "widget": widget,
                 "widget_config_init_frozen": Utils.extract_current_config_key_values(Utils.filter_non_used_config_attrs(widget.configure()))
-            }}}
+            }})
         self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
 
     def get_widget_by_tree_insert_id(self, item_id: str):
@@ -150,9 +150,6 @@ class TreeView(ttk.Treeview):
                         key_value_config_sorted_dict = Utils.sorted_dict(key_value_config_dict)
                         # set store current listbox value state
                         self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
-                        # send to listbox - display selected tree item's config options
-                        # self._observable.notify_observers(**{"action": ActionType.INSERT_ALL_LISTBOX.value, "data": key_value_config_dict})
-                        # self._listbox_widget.insert_all_listbox(key_value_config_dict)
 
                     except Exception as e:
                         self._listbox_widget._delete()
@@ -161,18 +158,14 @@ class TreeView(ttk.Treeview):
         except Exception as e:
             logging.error(f"Error handling tree select: {e}", exc_info=True)
 
-
-    # # select a tree item programatically
-    # def select_tree_item(self, item):
-    #     self.selection_set(item) 
-
     # takes a dict and applies it to widget config
-    # - called from notify
+    # - UPDATE THE PAGE WIDGET HERE
     def update_tree_item_to_page_widget(self, changes_dict):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
         current_tree_item.config(**{changes_dict['key']: changes_dict['value']})
 
+    # delete tree and all branches
     def delete_tree(self):
         self.delete(*self.get_children())
 

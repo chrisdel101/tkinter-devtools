@@ -36,6 +36,7 @@ class Store:
         self.value_combobox_popdown_open: bool = False
         self.listbox_entry_input_action:   ListBoxEntryInputAction | None  = None
         self.editting_item_index:int | None = None 
+        self.allow_input_focus_out_logic: bool = True
         self.tree_state: TreeState = {
             TreeStateKey.SELECTED_ITEM.value: None,
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT.value: {},
@@ -67,6 +68,22 @@ class Store:
         )
 
     @property
+    def allow_input_focus_out_logic(self):
+        return self._allow_focus_out_logic
+    
+    @allow_input_focus_out_logic.setter
+    def allow_input_focus_out_logic(self, value):
+        self._allow_focus_out_logic = value
+
+    @property
+    def devtools_window_in_focus(self):
+        return self._devtools_window_in_focus
+    
+    @devtools_window_in_focus.setter
+    def devtools_window_in_focus(self, value):
+        self._devtools_window_in_focus = value
+
+    @property
     def editting_item_index(self):
         return self._editting_item_index
     
@@ -82,10 +99,10 @@ class Store:
     def listbox_entry_input_action(self, value):
         self._listbox_entry_input_action = value 
     
-    def add_existing_wrapper(self, wrapper: tk.Widget):
+    def add_existing_store_wrapper(self, wrapper: tk.Widget):
         self.existing_combobox_wrappers.append(wrapper)
-
-    def remove_existing_wrappers(self):
+    
+    def remove_existing_store_wrappers(self):
         self.existing_combobox_wrappers = []
 
     @property

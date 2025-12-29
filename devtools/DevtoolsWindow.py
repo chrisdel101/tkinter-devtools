@@ -3,9 +3,8 @@ import logging
 import tkinter as tk
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
-from devtools.constants import ActionType, OptionBoxState
+from devtools.constants import ActionType, ListBoxEntryInputAction
 from devtools.style import Style
-from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -20,7 +19,6 @@ class DevtoolsWindow(tk.Toplevel):
         self._observable = Observable()
         self._store = Store(observable=self._observable)
         # state
-        self.devtools_window_in_focus = True
         # right window - create first it can be passed to listbox manager as owner
         self.right_window = RightWindowFrame(
             master=self,
@@ -55,40 +53,29 @@ class DevtoolsWindow(tk.Toplevel):
 
 
     def on_focus_out(self, e):
-        if self.devtools_window_in_focus:
-            self.devtools_window_in_focus = False
+        if self._store.devtools_window_in_focus:
+            self._store.devtools_window_in_focus = False
             if len(self._store.existing_combobox_wrappers) > 0:
-                # cancel any comboxes that are stored in state
+                # remove all comboxes from the page
                 self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
-                self._store.remove_existing_wrappers()   
-                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0)),
+                # remove all comboxes from state
+                self._store.remove_existing_store_wrappers()
+                if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
+                    self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
                 self._store.block_active_adding = False
         
     def on_focus_in(self, e):
         # if state if false
-        if not self.devtools_window_in_focus:
+        if not self._store.devtools_window_in_focus:
             # if focus on window
             if self.focus_displayof():
                 logging.debug("focus back")
                 # set state to true
-                self.devtools_window_in_focus = True
+                self._store.devtools_window_in_focus = True
     
-    def update_current_selected_item_node(self, changes_dict: dict[str, str]):
-        self.left_window.tree.update_tree_item(changes_dict)
+    # def update_current_selected_item_node(self, changes_dict: dict[str, str]):
+    #     self.left_window.tree.update_tree_item(changes_dict)
     
-    # NOT USED- toggle when open on child - detect on window and close
-    # optionbox does not detect close, window does not detect open
-    def toggle_option_box_state(self, event):
-        if self.config_listbox_mngr.children.get("!optionmenu") != event.widget:
-            return
-        # if open set to closed - else set to open
-        elif self.config_listbox_mngr.option_box_state == OptionBoxState.CLOSED.value:
-            self.config_listbox_mngr.option_box_state = OptionBoxState.OPEN.value
-            # logging.debug("Option box opened.")
-        else:
-            self.config_listbox_mngr.option_box_state = OptionBoxState.CLOSED.value
-            # logging.debug("Option box closed.")
-        logging.debug(f"state: {self.config_listbox_mngr.option_box_state}")
 
     def poll_for_changes(self):
         # poll tree for changes

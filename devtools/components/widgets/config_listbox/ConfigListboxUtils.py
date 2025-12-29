@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListBoxEntryInputAction, OptionBoxState
+from devtools.constants import ActionType, ListBoxEntryInputAction
 from devtools.maps import CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 
@@ -27,15 +27,25 @@ class ConfigListboxUtils:
             values=self.list_var.get(),
             )
         
-        value_combobox.bind("<<ComboboxSelected>>", lambda e: self.insert_value_output_and_apply_to_page
+        value_combobox.bind("<<ComboboxSelected>>", 
+            lambda _: (self.insert_value_output_and_apply_to_page
             (current_widget=value_combobox, 
              key_entry_value=key_entry_value,
              value_entry_value=value_inside.get(), 
-            ))
+            ),
+            print("value box selected"),
+            setattr(self._store, 'listbox_entry_input_action', None)
+        ))
        
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
-            setattr(self._store, 'block_active_adding', False)))
+            print('value box escape'),
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0)) if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
+            setattr(self._store, 'block_active_adding', False),
+            setattr(self._store, 'allow_input_focus_out_logic', True),
+            setattr(self._store, 'listbox_entry_input_action', None)
+            )
+        )
         
         value_combobox.bind("<Button-1>", self.handle_value_combobox_open)
         # exists when open
@@ -69,26 +79,29 @@ class ConfigListboxUtils:
                 values=self.list_var.get(),
                 )
             # on selectd select - build and pack value option box if list values
-            key_combo_box.bind("<<ComboboxSelected>>", lambda e: 
+            key_combo_box.bind("<<ComboboxSelected>>", 
+            lambda _: ( 
                 self.handle_build_value_option_box_from_key_option_box( 
                     index=index,
                     key_option_box=key_combo_box,
                     value_inside=value_inside,
-                    item_option_vals_list=self._get_config_value_options(value_inside.get())) 
+                    item_option_vals_list=self._get_config_value_options(value_inside.get())
+                ) 
                 if self._get_config_value_options(value_inside.get()) else 
                 self.handle_build_value_entry_from_key_entry(
-                index=index,
-                key_entry_widget=key_combo_box,
-                key_entry_value=value_inside.get(),
-                value_entry_value="",
-                y_coord=self.bbox(self._store.editting_item_index)[1],                   
-                entry_input_action=ListBoxEntryInputAction.CREATE.value)
+                    index=index,
+                    key_entry_widget=key_combo_box,
+                    key_entry_value=value_inside.get(),
+                    value_entry_value="",
+                    y_coord=self.bbox(self._store.editting_item_index)[1],                   
+                    entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
+            ))
             # this is when adding new line with new key item entry - subtract list item and cancel option box
-            key_combo_box.bind("<Escape>", lambda e: 
+            key_combo_box.bind("<Escape>", lambda _: 
                 (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
                 self.cancel_update_listbox(self.key_box_wrapper),
-                print("escape build_key_option_box block_active_adding FALSE"),
+                print("keybox escape"),
                 setattr(self._store, 'block_active_adding', False))) 
             # use native tcl to detect when open
             key_combo_box.bind("<Button-1>", self.handle_key_combobox_open)
@@ -146,15 +159,17 @@ class ConfigListboxUtils:
             logging.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
 
     def listbox_key_focus_out(self,e, *args):
-        if not self.allow_focus_out_logic:
-            print("key LISTBOX_ON_FOCUS guard1", self.allow_focus_out_logic)
-            return  # internal focus change → ignore
         if self._store.key_combobox_popdown_open: 
-            print("key LISTBOX_ON_FOCUS guard2")
+            print("key LISTBOX_ON_FOCUS guard1 open")
             return
+        if not self._store.allow_input_focus_out_logic:
+            print("key LISTBOX_ON_FOCUS guard2 off", self._store.allow_input_focus_out_logic)
+            return  # internal focus change → ignore
         print("listbox_key_focus_out build_key_option_box block_active_adding FALSE")
         self._store.block_active_adding =  False
         self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+        setattr(self._store, 'listbox_entry_input_action', None)
+
         self.cancel_update_listbox(*args)
 
     def listbox_value_focus_out(self,e, *args):
@@ -166,9 +181,10 @@ class ConfigListboxUtils:
             return
         print("llistbox_value_focus_out")
         self._store.block_active_adding =  False
-        self.allow_focus_out_logic = True
+        self._store.allow_input_focus_out_logic = True
         if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
             self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+        setattr(self._store, 'listbox_entry_input_action', None)
         self.cancel_update_listbox(*args)
 
     # get options of config properties to use in dropdown - if they exist
@@ -201,16 +217,6 @@ class ConfigListboxUtils:
     def delete_all_listbox_items(self):
         self.delete(0, tk.END)
 
-    # UNUSED - set to open on click - only handles open since close is not detectable
-    def set_box_state_on_open(self, event):
-        # if open set to closed - else set to open
-        if self.option_box_state == OptionBoxState.CLOSED.value:
-            self.option_box_state = OptionBoxState.OPEN.value
-            # logging.debug("Option box opened.")
-        else:
-            self.option_box_state = OptionBoxState.CLOSED.value
-            # logging.debug("Option box closed.")
-
     def _set_selected_by_index(self, index:int):
         # clear other selections
         self.selection_clear(0, "end")
@@ -221,11 +227,9 @@ class ConfigListboxUtils:
 
     # frame wrapper causes an offset of the optionboxes - adjusting w the parent y coord 
     def _translate_y_coord(self, index:int) -> int:
-        widget_in_listbox_coord = self.bbox(index)[1]
-        lisbox_in_parent_coord = self.winfo_y()
-        return widget_in_listbox_coord + lisbox_in_parent_coord
-
-    def _translate_x_coord(self, index: int) -> int:
-        widget_in_listbox_x = self.bbox(index)[0]
-        listbox_in_parent_x = self.winfo_x()
-        return widget_in_listbox_x + listbox_in_parent_x
+        try: 
+            # widget_in_listbox_coord = self.bbox(index)[1]
+            lisbox_in_parent_coord = self.winfo_y()
+            return  lisbox_in_parent_coord
+        except Exception as e:
+            logging.error(f"Error _translate_y_coord: {e}", exc_info=True)

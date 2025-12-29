@@ -134,6 +134,7 @@ class Utils:
             for d in dicts:
                 # dict union operator, like .update
                 merged |= d 
+            return merged
         except Exception as e:
                 logging.error(f"Error merge_dicts: {e}", exc_info=True)
                 raise e

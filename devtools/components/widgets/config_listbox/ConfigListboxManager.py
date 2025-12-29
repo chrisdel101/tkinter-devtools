@@ -5,7 +5,7 @@ from tkinter import ttk
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxManagerStateKey, Store
-from devtools.constants import ActionType, ListBoxEntryInputAction, OptionBoxState, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, TreeStateKey
 from devtools.decorators import toggle_block_focus_out_key_logic
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
@@ -37,14 +37,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
         self.bind("<Double-1>", self.start_update)
         # self.scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.option_box_state = OptionBoxState.CLOSED.value
         self.key_var = tk.StringVar()
         self.val_var = tk.StringVar()
         self.list_var = tk.Variable(value=[])
         self.value_box_wrapper = None
         self.key_box_wrapper = None
         # focus guard - blocks
-        self.allow_focus_out_logic = True
 
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
@@ -82,14 +80,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
         
         self.after_idle(lambda: self.yview_moveto(y0))
-        # UPDATE THE PAGE WIDGET HERE
+        # UPDATE THE PAGE WIDGET - calls tree update_tree_item_to_page_widget
         self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET.name, data={
             'key': key_entry_value,
             'value': value_entry_value
         }))
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
         self._store.block_active_adding = False
-        self.allow_focus_out_logic = True
+        self._store.allow_input_focus_out_logic = True
         # print("insert_value_output_and_apply_to_page block_active_adding FALSE")
         # return value_entry_value
     
@@ -110,14 +108,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             
         value_option_box.pack(fill='x')
         self.value_box_wrapper.place(relx=0.5, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
-        self._store.add_existing_wrapper(self.value_box_wrapper)
-        self.allow_focus_out_logic = True
+        self._store.add_existing_store_wrapper(self.value_box_wrapper)
+        # self.allow_input_focus_out_logic = True
         value_option_box.focus_set()
-        self.allow_focus_out_logic = False
+        # self.allow_input_focus_out_logic = False
 
         self._set_selected_by_index(index)
 
-    @toggle_block_focus_out_key_logic
+    # @toggle_block_focus_out_key_logic
     def handle_build_value_entry_from_key_entry(
             self,
             index: int, 
@@ -133,7 +131,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         value_entry.selection_to("end")
         value_entry.pack(fill='x')
         self.value_box_wrapper.place(relx=0.5, y=y_coord,relwidth=0.5, width=-1)
-        self._store.add_existing_wrapper(self.value_box_wrapper)
+        self._store.add_existing_store_wrapper(self.value_box_wrapper)
         # set focus to value entry
         value_entry.focus_set()
         # set manually so curselect can access it on subract
@@ -182,7 +180,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         key_entry.selection_to("end")
         key_entry.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
-        self._store.add_existing_wrapper(self.key_box_wrapper)
+        self._store.add_existing_store_wrapper(self.key_box_wrapper)
 
         item_option_vals_list: list[str] | None = self._get_config_value_options(changes_dict.get('key'))
         if item_option_vals_list:
@@ -194,10 +192,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             )
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.45, y=self._translate_y_coord(index), relwidth=0.5, width=-1)
-            self._store.add_existing_wrapper(self.value_box_wrapper)
-            self.allow_focus_out_logic = True
+            self._store.add_existing_store_wrapper(self.value_box_wrapper)
+            # self.allow_input_focus_out_logic = True
             value_option_box.focus_set()
-            self.allow_focus_out_logic = False
+            # self.allow_input_focus_out_logic = False
         else:
             self.handle_build_value_entry_from_key_entry(
                 index=index,
@@ -207,7 +205,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 y_coord=y_coord
             )
     # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
-    # @toggle_block_focus_out_key_logic
+    @toggle_block_focus_out_key_logic
     def handle_entry_input_create(
         self, 
         index: int):
@@ -223,7 +221,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         )
         key_option_box.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
-        self._store.add_existing_wrapper(self.key_box_wrapper)
+        self._store.add_existing_store_wrapper(self.key_box_wrapper)
         # move focus to key combo
         key_option_box.focus_set()
         # set manually so curselect can access it on subract
