@@ -191,7 +191,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_option_vals_list=item_option_vals_list
             )
             value_option_box.pack(fill='x')
-            self.value_box_wrapper.place(relx=0.45, y=self._translate_y_coord(index), relwidth=0.5, width=-1)
+            self.value_box_wrapper.place(relx=0.45, y=y_coord + self._translate_y_coord(0), relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.value_box_wrapper)
             # self.allow_input_focus_out_logic = True
             value_option_box.focus_set()

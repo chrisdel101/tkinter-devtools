@@ -93,7 +93,7 @@ class ConfigListboxUtils:
                     key_entry_widget=key_combo_box,
                     key_entry_value=value_inside.get(),
                     value_entry_value="",
-                    y_coord=self.bbox(self._store.editting_item_index)[1],                   
+                    y_coord=0,                   
                     entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
             ))
