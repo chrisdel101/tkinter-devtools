@@ -26,17 +26,16 @@ class ConfigListboxUtils:
             textvariable=value_inside,
             values=self.list_var.get(),
             )
-        
-        value_combobox.bind("<<ComboboxSelected>>", 
-            lambda _: (self.insert_value_output_and_apply_to_page
-            (current_widget=value_combobox, 
-             key_entry_value=key_entry_value,
-             value_entry_value=value_inside.get(), 
-            ),
-            print("value box selected"),
-            setattr(self._store, 'listbox_entry_input_action', None)
-        ))
-       
+        for event in ["<<ComboboxSelected>>", "<Return>"]:
+            value_combobox.bind(event, 
+                lambda _: (self.insert_value_output_and_apply_to_page
+                (current_widget=value_combobox, 
+                key_entry_value=key_entry_value,
+                value_entry_value=value_inside.get(), 
+                ),
+                setattr(self._store, 'listbox_entry_input_action', None)
+            ))
+      
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
             print('value box escape'),
@@ -78,12 +77,13 @@ class ConfigListboxUtils:
                 textvariable=value_inside,
                 values=self.list_var.get(),
                 )
-            # on selectd select - build and pack value option box if list values
-            key_combo_box.bind("<<ComboboxSelected>>", 
-            lambda _: ( 
-                self.handle_build_value_option_box_from_key_option_box( 
-                    index=index,
-                    key_option_box=key_combo_box,
+            # on select - build and pack value option box if list values
+            for event in ["<<ComboboxSelected>>", "<Return>"]:
+                key_combo_box.bind(event, 
+                lambda _: ( 
+                    self.handle_build_value_option_box_from_key_option_box( 
+                        index=index,
+                        key_option_box=key_combo_box,
                     value_inside=value_inside,
                     item_option_vals_list=self._get_config_value_options(value_inside.get())
                 ) 
@@ -96,7 +96,7 @@ class ConfigListboxUtils:
                     y_coord=0,                   
                     entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
-            ))
+            ))            
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_combo_box.bind("<Escape>", lambda _: 
                 (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
@@ -225,7 +225,6 @@ class ConfigListboxUtils:
         # activate on keyboard
         self.activate(index)
 
-    # frame wrapper causes an offset of the optionboxes - adjusting w the parent y coord 
     def _translate_y_coord(self, index:int) -> int:
         try: 
             # widget_in_listbox_coord = self.bbox(index)[1]

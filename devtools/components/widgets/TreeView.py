@@ -161,9 +161,12 @@ class TreeView(ttk.Treeview):
     # takes a dict and applies it to widget config
     # - UPDATE THE PAGE WIDGET HERE
     def update_tree_item_to_page_widget(self, changes_dict):
-        # self is the page widget - updates the config
-        current_tree_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
-        current_tree_item.config(**{changes_dict['key']: changes_dict['value']})
+        try:
+            # self is the page widget - updates the config
+            current_tree_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
+            current_tree_item.config(**{changes_dict['key']: changes_dict['value']})
+        except Exception as e:
+            logging.error(f"Error update_tree_item_to_page_widget: {e}", exc_info=True)
 
     # delete tree and all branches
     def delete_tree(self):
