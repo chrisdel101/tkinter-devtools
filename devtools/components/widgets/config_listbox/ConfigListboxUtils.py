@@ -208,7 +208,7 @@ class ConfigListboxUtils:
 
     # on init - load selected tree items attrs into listbox
     # runs from treeview
-    def insert_listbox_items(self, config_dict):
+    def insert_listbox_items(self, **config_dict):
         try:
                 
             for key in config_dict:
@@ -216,13 +216,13 @@ class ConfigListboxUtils:
                 display = f"{key}: {config_dict[key]}"
                 # this auto sizes w/o adding styles
                 # end inserts at the end of the LB
-                self.insert_listbox_item(tk.END, display)
+                self.insert_listbox_item(index=tk.END, value=display)
         except Exception as e:
             logging.error(f"Error insert_listbox_items: {e}", exc_info=True)
-            
-    def insert_listbox_item(self, index, value):
+    # kwargs is index, value
+    def insert_listbox_item(self, **kwargs):
         try:
-            self.insert(index, value)
+            self.insert(kwargs.get('index'), kwargs.get('value'))
         except Exception as e:
             logging.error(f"Error insert_listbox_item: {e}", exc_info=True)
 

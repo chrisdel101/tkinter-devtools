@@ -202,6 +202,8 @@ class Utils:
         if fn:
             if isinstance(action.data, (list, tuple)):
                 fn(*action.data)
+            elif isinstance(action.data, (dict)):
+                fn(**action.data)
             else:
                 # don't input anything if no data
                 fn(action.data) if action.data is not None else fn()

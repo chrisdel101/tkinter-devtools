@@ -9,11 +9,10 @@ from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
     
-    def __init__(self, root, master, observable, store, listbox_widget): 
+    def __init__(self, root, master, observable, store): 
         super().__init__(master, show="tree", style="My.Treeview")
         self.root = root
         self.selected_item = None
-        self._listbox_widget = listbox_widget
         self._observable = observable
         self._store = store
         self._observable.register_observer(self)
@@ -152,15 +151,19 @@ class TreeView(ttk.Treeview):
                         self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
 
                     except Exception as e:
+                        err_msg = f"rror handle_tree_select: {e}"
+                        logging.error(err_msg, exc_info=True)
+                        # delete all listbox
                         self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS.name))
                         # post the error to the screen
-                        self._listbox_widget.insert(tk.END, f"Error: {e}")
+                        self._observable.notify_observers(Action(type=ActionType.INSERT_LISTBOX_ITEM.name, data={'index': tk.END, 'value': err_msg}))  
+                        
         except Exception as e:
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
     # takes a dict and applies it to widget config
     # - UPDATE THE PAGE WIDGET HERE
-    def update_tree_item_to_page_widget(self, changes_dict):
+    def update_tree_item_to_page_widget(self, **changes_dict):
         try:
             # self is the page widget - updates the config
             current_tree_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
@@ -174,6 +177,3 @@ class TreeView(ttk.Treeview):
 
     def notify(self, action: Action):
         Utils.dispatch_action(self, action)
-
-        
-        

@@ -14,6 +14,7 @@ class ListboxManagerStateKey(Enum):
     CURRENT_VALUES_STATE = "current_values_state"
 
 class ActionType(Enum):
+    INSERT_LISTBOX_ITEM = "insert_listbox_item"
     INSERT_LISTBOX_ITEMS = "insert_listbox_items"
     HANDLE_SUBTRACT_INDEX = "handle_subtract_index"
     HANDLE_SUBTRACT_SELECTION = "handle_subtract_selection"

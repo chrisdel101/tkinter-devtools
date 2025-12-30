@@ -17,6 +17,12 @@ class RightWindowFrame(tk.Frame):
         super().__init__(master, **Style.right_window['frame'])
         self._observable = observable
         self._store = store
+        self._config_listbox_mngr = ConfigListboxManager(
+            master=self, 
+            observable=self._observable,
+            store=self._store,           
+            **Style.config_listbox_manager)
+        self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
         self._observable.register_observer(self)
         # button header
         self.header_frame = tk.Frame(self, **Style.right_window['header']['frame'])
@@ -30,7 +36,6 @@ class RightWindowFrame(tk.Frame):
         btn1 = ttk.Button(self.top_row, text=Style.right_window['header']['top_row']['btn1_text'])
         btn2 = ttk.Button(self.top_row, text=Style.right_window['header']['top_row']['btn2_text'])
        
-        self._config_listbox_mngr: ConfigListboxManager = None
         self.add_config_button = tk.Button(self.bottom_row, text="+", command=lambda:self.handle_add(index=0), width=2, height=2)
         
         self.subtract_config_button = tk.Button(self.bottom_row, text="-", command=self.handle_subtract_selection, width=2, height=2)
@@ -46,10 +51,10 @@ class RightWindowFrame(tk.Frame):
         #  pack header
         self.header_frame.pack(fill='both')
         
-    # add listbox manager after init - b/c right window parent is master but both r sitting side by side
-    def set_listbox_manager(self, config_listbox_mngr):
-        setattr(self, '_config_listbox_mngr', config_listbox_mngr)
-        self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+    # # add listbox manager after init - b/c right window parent is master but both r sitting side by side
+    # def set_listbox_manager(self, config_listbox_mngr):
+    #     setattr(self, '_config_listbox_mngr', config_listbox_mngr)
+    #     self._config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
     def handle_add(self, index=None):
         if self._store.block_active_adding:
             logging.debug("handle_add state true. Cannot add.")
@@ -68,7 +73,7 @@ class RightWindowFrame(tk.Frame):
             current_selection_index = current_listbox_selection[0]
             insert_at_index = current_selection_index + 1
         print("Inserting at index:", insert_at_index)
-        self._config_listbox_mngr.insert_listbox_item(insert_at_index, "")
+        self._config_listbox_mngr.insert_listbox_item(index=insert_at_index, value="")
         # called on the child listbox
         self._config_listbox_mngr.handle_entry_input_create(
             index=insert_at_index

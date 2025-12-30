@@ -24,21 +24,20 @@ class DevtoolsWindow(tk.Toplevel):
             observable=self._observable,
             store=self._store)
         # listbox for the conf`ig entries - sends dict of config values up when updated
-        self.config_listbox_mngr = ConfigListboxManager(
-            master=self.right_window, 
-            observable=self._observable,
-            store=self._store,           
-            **Style.config_listbox_manager)
+        # self.config_listbox_mngr = ConfigListboxManager(
+        #     master=self.right_window, 
+        #     observable=self._observable,
+        #     store=self._store,           
+        #     **Style.config_listbox_manager)
         # pack listbox inside right window after the fact
-        self.right_window.set_listbox_manager(self.config_listbox_mngr)
+        # self.right_window.set_listbox_manager(self.config_listbox_mngr)
 
         # left window - sends currently selected node up when changed - pass down listbox to apply updates
         self.left_window = LeftWindowFrame(
             root=root, 
             master=self,
             observable=self._observable,
-            store=self._store,
-            listbox_widget=self.config_listbox_mngr)
+            store=self._store)
 
         # pack left window
         self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
@@ -54,8 +53,10 @@ class DevtoolsWindow(tk.Toplevel):
         if self._store.devtools_window_in_focus:
             self._store.devtools_window_in_focus = False
             if len(self._store.existing_combobox_wrappers) > 0:
+                self._observable.notify_observers(Action(type=ActionType.CANCEL_UPDATE_LISTBOX.name,
+                    data=self._store.existing_combobox_wrappers))
                 # remove all comboxes from the page
-                self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
+                # self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
                 # remove all comboxes from state
                 self._store.remove_existing_store_wrappers()
                 if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
