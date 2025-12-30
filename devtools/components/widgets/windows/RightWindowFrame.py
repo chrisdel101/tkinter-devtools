@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import ActionType, TreeStateKey
 from devtools.style import Style
@@ -13,24 +14,37 @@ class RightWindowFrame(tk.Frame):
                 observable, 
                 store 
                 ):
-        super().__init__(master, **Style.right_window_frame)
+        super().__init__(master, **Style.right_window['frame'])
         self._observable = observable
         self._store = store
         self._observable.register_observer(self)
         # button header
-        self.header_frame = tk.Frame(self, **Style.header)
+        self.header_frame = tk.Frame(self, **Style.right_window['header']['frame'])
+
+        self.top_row = tk.Frame(self.header_frame, **Style.right_window['header']['top_row']['frame'])
+        self.top_row.grid(row=0, column=0, sticky="w")
+
+        self.bottom_row = tk.Frame(self.header_frame, **Style.right_window['header']['bottom_row'])
+        self.bottom_row.grid(row=1, column=0, sticky="w")
+
+        btn1 = ttk.Button(self.top_row, text=Style.right_window['header']['top_row']['btn1_text'])
+        btn2 = ttk.Button(self.top_row, text=Style.right_window['header']['top_row']['btn2_text'])
        
         self._config_listbox_mngr: ConfigListboxManager = None
-        self.add_config_button = tk.Button(self.header_frame, text="+", command=lambda:self.handle_add(index=0), width=2, height=2)
-        self.subtract_config_button = tk.Button(self.header_frame, text="-", command=self.handle_subtract_selection, width=2, height=2)
+        self.add_config_button = tk.Button(self.bottom_row, text="+", command=lambda:self.handle_add(index=0), width=2, height=2)
+        
+        self.subtract_config_button = tk.Button(self.bottom_row, text="-", command=self.handle_subtract_selection, width=2, height=2)
+
+        btn1.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
+        btn2.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         # pack add button
-        self.add_config_button.pack(side="left", padx=5, pady=5,anchor='sw')
+        self.add_config_button.grid(row=1, column=0, padx=5, pady=5, sticky='sw')
         # pack subtract button
-        self.subtract_config_button.pack(side="left", padx=5, pady=5, anchor='sw')
+        self.subtract_config_button.grid(row=1, column=1, padx=5, pady=5, sticky='sw')
         # add focus on click - allows focus out from listbox to work
         self.header_frame.bind("<Button-1>", lambda e: self.header_frame.focus_set())
         #  pack header
-        self.header_frame.pack(fill='both', expand=True)
+        self.header_frame.pack(fill='both')
         
     # add listbox manager after init - b/c right window parent is master but both r sitting side by side
     def set_listbox_manager(self, config_listbox_mngr):

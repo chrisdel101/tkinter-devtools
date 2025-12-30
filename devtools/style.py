@@ -1,8 +1,5 @@
 
 class Style:
-    header = {
-        'bg': 'grey',
-    }
     treeview = {
         'background':"black",
         'fieldbackground':"orange",   
@@ -22,14 +19,32 @@ class Style:
             'takefocus': False
         }
     }
-    right_window_frame = {
-        'width': 100,
-        'height': 200,
-        'bg': 'green',
+    right_window = {
+        'frame': {
+            'width': 100,
+            'height': 200,
+            'bg': 'green',
+        },
+        'header':{
+            'frame':{
+                'bg': 'grey',
+            },
+            'top_row':{
+                'frame': {
+                    'bg': 'grey'
+                },
+                'btn1_text': 'Attributes',
+                'btn2_text': 'Geometry'
+            },
+            'bottom_row':{
+                'bg': 'grey'
+            },
+        }
     }
-    left_window_frame = {
+    left_window = {
+        'frame': {
         'width': 100,
         'height': 300,
         'bg': 'black',
-
+        }
     }

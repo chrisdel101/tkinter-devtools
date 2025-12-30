@@ -10,7 +10,7 @@ The packs where not making sense. Packing items inside a parent would make the p
 
 Dropdown
 
-It took almost 2 weeks to get the dropdown working.
+Used combobox to allow list and option for manual input. But combobox binds do not work as expected. `FosusOut` triggers when opening the combobox as well as at other unexpected times, so all focus logic has to be managed manually
 
 - Combobox had not way to detect focus off - it first once open occured - so there was no way to close it without manually do it.
 - CB would stay open on page flip. Only close was manually clicking it closed.

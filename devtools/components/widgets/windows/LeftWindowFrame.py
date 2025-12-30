@@ -11,7 +11,7 @@ class LeftWindowFrame(tk.Frame):
             observable, 
             store, 
             listbox_widget):
-        super().__init__(master,  **Style.left_window_frame)
+        super().__init__(master,  **Style.left_window['frame'])
         self._observable = observable
         self._store = store
        # pass
