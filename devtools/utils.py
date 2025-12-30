@@ -203,6 +203,7 @@ class Utils:
             if isinstance(action.data, (list, tuple)):
                 fn(*action.data)
             else:
-                fn(action.data)
+                # don't input anything if no data
+                fn(action.data) if action.data is not None else fn()
             
         

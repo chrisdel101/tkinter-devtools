@@ -14,9 +14,7 @@ class LeftWindowFrame(tk.Frame):
         super().__init__(master,  **Style.left_window_frame)
         self._observable = observable
         self._store = store
-        # self._observable.register_observer(self)
-
-       # pass the other window listbox down for updating it from left window
+       # pass
         self.tree = TreeView(
             root=root, 
             master=self, 
@@ -24,12 +22,6 @@ class LeftWindowFrame(tk.Frame):
             store=self._store,
             listbox_widget=listbox_widget
         )
-
-        # move to inside tree
-        # self.tree.bind_tree_select()
-        # self.tree.build_tree(root)
-        # # on init select first item - triggers con
-        # self.tree.select_tree_item(self.tree.get_children()[0]) 
         # pack treeview 
         self.tree.pack(side="left", fill="both", expand=True)
         

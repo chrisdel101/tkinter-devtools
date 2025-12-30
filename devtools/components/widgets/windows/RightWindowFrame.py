@@ -54,7 +54,7 @@ class RightWindowFrame(tk.Frame):
             current_selection_index = current_listbox_selection[0]
             insert_at_index = current_selection_index + 1
         print("Inserting at index:", insert_at_index)
-        self._config_listbox_mngr.insert(insert_at_index, "")
+        self._config_listbox_mngr.insert_listbox_item(insert_at_index, "")
         # called on the child listbox
         self._config_listbox_mngr.handle_entry_input_create(
             index=insert_at_index

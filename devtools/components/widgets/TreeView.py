@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ListboxManagerStateKey, TreeStateKey
+from devtools.constants import ActionType, ListboxManagerStateKey, TreeStateKey
 from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
@@ -87,14 +87,14 @@ class TreeView(ttk.Treeview):
                   # if it is stored = no change just move on
                
                 # ID of place in tree - insert returns ID of inserted widget
-                insert_child_memory_id = self.insert(insert_parent_memory_id, "end", text=child.winfo_class())
+                insert_child_memory_id = self.insert(insert_parent_memory_id, tk.END, text=child.winfo_class())
                 self.add_tree_item_to_obj_mem_id_store(child_memory_id, insert_child_memory_id, child)
                 # dict store id: widget 
                 self.add_tree_item_to_tree_insert_id_store(insert_child_memory_id, child)
                 self.build_tree(child, insert_child_memory_id)
               
         except Exception as e:
-            logging.error(f"Error building tree: {e}")
+            logging.error(f"Error build_tree: {e}")
 
 
     # walk the tree and get all the widgets  
@@ -106,7 +106,7 @@ class TreeView(ttk.Treeview):
                 self.delete_tree()
                 # change - rebuild tree 
                 self.build_tree(self.root)
-                return "break"
+                return
             else:
                 acc.add(widget)
 
@@ -116,13 +116,13 @@ class TreeView(ttk.Treeview):
                         self.delete_tree()
                         # change - rebuild tree 
                         self.build_tree(self.root)
-                        return "break"  
+                        return  
                     else:
                         self.collect_widgets(child, acc)
 
             return acc
         except Exception as e:
-            logging.error(f"Error collecting widgets: {e}") 
+            logging.error(f"Error collect_widgets: {e}") 
 
     def handle_tree_select(self, _,):
         try:
@@ -140,7 +140,7 @@ class TreeView(ttk.Treeview):
                 if self._store.tree_state_get(TreeStateKey.SELECTED_ITEM):
                     try:
                         # delete prev content in listbox
-                        self._listbox_widget._delete()
+                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS.name))
                         # config used to populate listbox
                         original_config = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM).configure()
                         # filter out unwanted config values - keep original format
@@ -152,11 +152,11 @@ class TreeView(ttk.Treeview):
                         self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
 
                     except Exception as e:
-                        self._listbox_widget._delete()
+                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS.name))
                         # post the error to the screen
                         self._listbox_widget.insert(tk.END, f"Error: {e}")
         except Exception as e:
-            logging.error(f"Error handling tree select: {e}", exc_info=True)
+            logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
     # takes a dict and applies it to widget config
     # - UPDATE THE PAGE WIDGET HERE

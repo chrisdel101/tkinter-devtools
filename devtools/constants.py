@@ -14,11 +14,12 @@ class ListboxManagerStateKey(Enum):
     CURRENT_VALUES_STATE = "current_values_state"
 
 class ActionType(Enum):
-    INSERT_ALL_LISTBOX = "insert_all_listbox"
+    INSERT_LISTBOX_ITEMS = "insert_listbox_items"
     HANDLE_SUBTRACT_INDEX = "handle_subtract_index"
     HANDLE_SUBTRACT_SELECTION = "handle_subtract_selection"
     CANCEL_UPDATE_LISTBOX = "cancel_update_listbox"
     UPDATE_TREE_ITEM_TO_PAGE_WIDGET = "update_tree_item_to_page_widget"
+    DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
 
 class ConfigValueType(Enum):
     STRING = "str"

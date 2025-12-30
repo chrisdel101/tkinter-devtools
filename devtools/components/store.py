@@ -63,17 +63,18 @@ class Store:
     def listbox_manager_state_set(self, enum_key: ListboxManagerStateKey, state_to_set: Any):
         self.listbox_manager_state[enum_key.value] = state_to_set 
         self._observable.notify_observers(
-            Action(type=ActionType.INSERT_ALL_LISTBOX.name,
+            Action(type=ActionType.INSERT_LISTBOX_ITEMS.name,
             data=self.listbox_manager_state.get(enum_key.value))
         )
 
     @property
     def allow_input_focus_out_logic(self):
-        return self._allow_focus_out_logic
+        return self._allow_input_focus_out_logic
     
     @allow_input_focus_out_logic.setter
     def allow_input_focus_out_logic(self, value):
-        self._allow_focus_out_logic = value
+        logging.debug(f'SETTING allow_input_focus_out_logic TO {value}')
+        self._allow_input_focus_out_logic = value
 
     @property
     def devtools_window_in_focus(self):

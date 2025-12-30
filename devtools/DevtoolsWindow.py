@@ -18,13 +18,11 @@ class DevtoolsWindow(tk.Toplevel):
         self.root = root
         self._observable = Observable()
         self._store = Store(observable=self._observable)
-        # state
         # right window - create first it can be passed to listbox manager as owner
         self.right_window = RightWindowFrame(
             master=self,
             observable=self._observable,
             store=self._store)
-
         # listbox for the conf`ig entries - sends dict of config values up when updated
         self.config_listbox_mngr = ConfigListboxManager(
             master=self.right_window, 
@@ -52,7 +50,7 @@ class DevtoolsWindow(tk.Toplevel):
         # self.poll_for_changes()
 
 
-    def on_focus_out(self, e):
+    def on_focus_out(self, _):
         if self._store.devtools_window_in_focus:
             self._store.devtools_window_in_focus = False
             if len(self._store.existing_combobox_wrappers) > 0:
@@ -64,7 +62,7 @@ class DevtoolsWindow(tk.Toplevel):
                     self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
                 self._store.block_active_adding = False
         
-    def on_focus_in(self, e):
+    def on_focus_in(self, _):
         # if state if false
         if not self._store.devtools_window_in_focus:
             # if focus on window
@@ -72,10 +70,6 @@ class DevtoolsWindow(tk.Toplevel):
                 logging.debug("focus back")
                 # set state to true
                 self._store.devtools_window_in_focus = True
-    
-    # def update_current_selected_item_node(self, changes_dict: dict[str, str]):
-    #     self.left_window.tree.update_tree_item(changes_dict)
-    
 
     def poll_for_changes(self):
         # poll tree for changes

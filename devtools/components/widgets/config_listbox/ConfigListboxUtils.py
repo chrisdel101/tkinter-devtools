@@ -203,17 +203,30 @@ class ConfigListboxUtils:
         for arg in filter(None, args):
             arg.destroy()
     
-    def _delete(self):
-        self.delete(0, tk.END)
+    # def _delete(self):
+        # self.delete(0, tk.END)
+
     # on init - load selected tree items attrs into listbox
     # runs from treeview
-    def insert_all_listbox(self, config_dict):
-         for key in config_dict:
-            # insert selected node into styles_window_listbox window
-            display = f"{key}: {config_dict[key]}"
-            # this auto sizes w/o adding styles
-            self.insert(tk.END, display)
-    # runs from treeview
+    def insert_listbox_items(self, config_dict):
+        try:
+                
+            for key in config_dict:
+                # insert selected node into styles_window_listbox window
+                display = f"{key}: {config_dict[key]}"
+                # this auto sizes w/o adding styles
+                # end inserts at the end of the LB
+                self.insert_listbox_item(tk.END, display)
+        except Exception as e:
+            logging.error(f"Error insert_listbox_items: {e}", exc_info=True)
+            
+    def insert_listbox_item(self, index, value):
+        try:
+            self.insert(index, value)
+        except Exception as e:
+            logging.error(f"Error insert_listbox_item: {e}", exc_info=True)
+
+    # delete all items from listbox
     def delete_all_listbox_items(self):
         self.delete(0, tk.END)
 
@@ -225,10 +238,10 @@ class ConfigListboxUtils:
         # activate on keyboard
         self.activate(index)
 
-    def _translate_y_coord(self, index:int) -> int:
+    def listbox_in_parent_y_coord(self) -> int:
         try: 
-            # widget_in_listbox_coord = self.bbox(index)[1]
+            # pos of listbox within the parent win
             lisbox_in_parent_coord = self.winfo_y()
             return  lisbox_in_parent_coord
         except Exception as e:
-            logging.error(f"Error _translate_y_coord: {e}", exc_info=True)
+            logging.error(f"Error listbox_in_parent_y_coord: {e}", exc_info=True)

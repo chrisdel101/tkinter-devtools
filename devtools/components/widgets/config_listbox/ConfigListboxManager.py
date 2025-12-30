@@ -37,8 +37,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
         self.bind("<Double-1>", self.start_update)
         # self.scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.key_var = tk.StringVar()
-        self.val_var = tk.StringVar()
         self.list_var = tk.Variable(value=[])
         self.value_box_wrapper = None
         self.key_box_wrapper = None
@@ -88,10 +86,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
         self._store.block_active_adding = False
         self._store.allow_input_focus_out_logic = True
-        # print("insert_value_output_and_apply_to_page block_active_adding FALSE")
-        # return value_entry_value
-    
-    # @toggle_block_focus_out_key_logic
+        
+    @toggle_block_focus_out_key_logic
      # return and place value_option_box from key_option_box
     def handle_build_value_option_box_from_key_option_box(
         self,
@@ -107,7 +103,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             )
             
         value_option_box.pack(fill='x')
-        self.value_box_wrapper.place(relx=0.5, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
+        self.value_box_wrapper.place(relx=0.5, y=self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.value_box_wrapper)
         # self.allow_input_focus_out_logic = True
         value_option_box.focus_set()
@@ -115,7 +111,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
         self._set_selected_by_index(index)
 
-    # @toggle_block_focus_out_key_logic
+    @toggle_block_focus_out_key_logic
     def handle_build_value_entry_from_key_entry(
             self,
             index: int, 
@@ -191,7 +187,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_option_vals_list=item_option_vals_list
             )
             value_option_box.pack(fill='x')
-            self.value_box_wrapper.place(relx=0.45, y=y_coord + self._translate_y_coord(0), relwidth=0.5, width=-1)
+            self.value_box_wrapper.place(relx=0.45, y=y_coord + self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.value_box_wrapper)
             # self.allow_input_focus_out_logic = True
             value_option_box.focus_set()
@@ -205,7 +201,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 y_coord=y_coord
             )
     # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
-    @toggle_block_focus_out_key_logic
     def handle_entry_input_create(
         self, 
         index: int):
@@ -220,7 +215,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_option_vals_list=current_item_options_list
         )
         key_option_box.pack(fill='x')
-        self.key_box_wrapper.place(relx=0, y=self._translate_y_coord(0), relwidth=0.5, width=-1)
+        self.key_box_wrapper.place(relx=0, y=self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
         # move focus to key combo
         key_option_box.focus_set()
