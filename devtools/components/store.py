@@ -1,28 +1,16 @@
+from __future__ import annotations
 import logging
 import tkinter as tk
-from typing import Any, TypedDict
+from typing import Any
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerStateKey, TreeStateKey
+# from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxManagerStateKey, ListboxPageInsertType, TreeState, TreeStateKey
+from typing import TYPE_CHECKING
 
-class MemIdWidgetStore(TypedDict):
-    tree_id: str
-    # is the active widget
-    widget: tk.Widget
-    widget_config_init_frozen: dict[str, Any]
-
-class TreeState(TypedDict):
-    # widgets tracked using tree ids 'I001'
-    selected_widget_item: tk.Widget | None
-    # use Treeview.insert id like 'I001'
-    widgets_by_tree_insert_id: dict[str, tk.Widget] = {}
-    # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
-    mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore] = {}
-
-class ListboxManagerState(TypedDict):
-    # widgets tracked using tree ids 'I001'
-    selected_index: int| None
-    current_values_state: dict[str, str] | None
+if TYPE_CHECKING:
+    # ONLY for type checkers
+    from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager  
 
 class Store:
     """A simple store to hold key-value pairs."""
@@ -42,7 +30,9 @@ class Store:
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT.value: {},
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }  
-        self.listbox_manager_state: ListboxManagerState = {
+        self.listbox_page_insert_type: ListboxPageInsertType = ListboxPageInsertType.ATTRIBUTES
+        self.current_listbox_insert: ConfigListboxManager | None = None
+        self.current_listbox_insert_internal_state: ListboxManagerState = {
             ListboxManagerStateKey.SELECTED_INDEX.value: None,
             ListboxManagerStateKey.CURRENT_VALUES_STATE.value: None
         }  
@@ -56,15 +46,15 @@ class Store:
         
     # get single value from listbox manager state
     def listbox_manager_state_get_value(self, enum_key: ListboxManagerStateKey):
-        return self.listbox_manager_state.get(enum_key.value)
+        return self.current_listbox_insert_internal_state.get(enum_key.value)
     
-    # key for name listbox_manager_state, value is dict of values
+    # key for name current_listbox_insert_internal_state, value is dict of values
     # - updates whole dict whenever a change occurs
     def listbox_manager_state_set(self, enum_key: ListboxManagerStateKey, state_to_set: Any):
-        self.listbox_manager_state[enum_key.value] = state_to_set 
+        self.current_listbox_insert_internal_state[enum_key.value] = state_to_set 
         self._observable.notify_observers(
             Action(type=ActionType.INSERT_LISTBOX_ITEMS.name,
-            data=self.listbox_manager_state.get(enum_key.value))
+            data=self.current_listbox_insert_internal_state.get(enum_key.value))
         )
 
     @property
@@ -83,6 +73,14 @@ class Store:
     @devtools_window_in_focus.setter
     def devtools_window_in_focus(self, value):
         self._devtools_window_in_focus = value
+        
+    @property
+    def listbox_page_insert_type(self):
+        return self._listbox_page_insert_type
+    
+    @listbox_page_insert_type.setter
+    def listbox_page_insert_type(self, value):
+        self._listbox_page_insert_type = value
 
     @property
     def editting_item_index(self):

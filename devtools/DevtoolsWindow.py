@@ -5,7 +5,6 @@ from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
 from devtools.constants import ActionType, ListBoxEntryInputAction
 from devtools.style import Style
-from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 
@@ -23,7 +22,7 @@ class DevtoolsWindow(tk.Toplevel):
             master=self,
             observable=self._observable,
             store=self._store)
-        # listbox for the conf`ig entries - sends dict of config values up when updated
+        # listbox for the config entries - sends dict of config values up when updated
         # self.config_listbox_mngr = ConfigListboxManager(
         #     master=self.right_window, 
         #     observable=self._observable,
@@ -56,7 +55,7 @@ class DevtoolsWindow(tk.Toplevel):
                 self._observable.notify_observers(Action(type=ActionType.CANCEL_UPDATE_LISTBOX.name,
                     data=self._store.existing_combobox_wrappers))
                 # remove all comboxes from the page
-                # self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
+                self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
                 # remove all comboxes from state
                 self._store.remove_existing_store_wrappers()
                 if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:

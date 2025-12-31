@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import Any, TypedDict
+import tkinter as tk
 
 
 MAX_KEY_WIDTH = 30  # adjust as needed
@@ -12,6 +14,11 @@ class TreeStateKey(Enum):
 class ListboxManagerStateKey(Enum):
     SELECTED_INDEX = "selected_index"
     CURRENT_VALUES_STATE = "current_values_state"
+
+# use to display specific listbox in frame
+class ListboxPageInsertType(Enum):
+    ATTRIBUTES = 1
+    GEOMETRY = 2
 
 class ActionType(Enum):
     INSERT_LISTBOX_ITEM = "insert_listbox_item"
@@ -67,3 +74,24 @@ class OptionBoxState(Enum):
 class ListBoxEntryInputAction(Enum):
     CREATE = 1
     UPDATE = 2
+
+class MemIdWidgetStore(TypedDict):
+    tree_id: str
+    # is the active widget
+    widget: tk.Widget
+    widget_config_init_frozen: dict[str, Any]
+
+class TreeState(TypedDict):
+    # widgets tracked using tree ids 'I001'
+    selected_widget_item: tk.Widget | None
+    # use Treeview.insert id like 'I001'
+    widgets_by_tree_insert_id: dict[str, tk.Widget] = {}
+    # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
+    mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore] = {}
+
+class ListboxManagerState(TypedDict):
+    # widgets tracked using tree ids 'I001'
+    selected_index: int| None
+    current_values_state: dict[str, str] | None
+    listbox_page_insert_type: ListboxPageInsertType | None
+    

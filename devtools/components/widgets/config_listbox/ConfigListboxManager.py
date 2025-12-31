@@ -5,7 +5,7 @@ from tkinter import ttk
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxManagerStateKey, Store
-from devtools.constants import ActionType, ListBoxEntryInputAction, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxPageInsertType, TreeStateKey
 from devtools.decorators import toggle_block_focus_out_key_logic
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
@@ -22,25 +22,25 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
     def __init__(self, 
             master, 
+            listbox_page_insert_type: ListboxPageInsertType,
             observable: Observable,
             store: Store,
             **styles
         ): 
         tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
-        self._observable = observable
-        self._store = store
+        self._observable: Observable = observable
+        self._store: Store = store
         self._observable.register_observer(self)
-
+        self.listbox_page_insert_type: ListboxPageInsertType = listbox_page_insert_type
         # self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         # self.config(yscrollcommand=self.scroll_bar.set)
-        self.styles = styles
+        self.styles: dict = styles
 
         self.bind("<Double-1>", self.start_update)
         # self.scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.list_var = tk.Variable(value=[])
-        self.value_box_wrapper = None
-        self.key_box_wrapper = None
-        # focus guard - blocks
+        self.list_var: tk.Variable = tk.Variable(value=[])
+        self.value_box_wrapper: tk.Frame | None = None
+        self.key_box_wrapper: tk.Frame | None = None
 
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
@@ -209,7 +209,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.editting_item_index = index
         current_treeview_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
         # use same stored state as listbox - already filtered extracted
-        current_item_options_list = list(self._store.listbox_manager_state.get(ListboxManagerStateKey.CURRENT_VALUES_STATE.value).keys())
+        current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(ListboxManagerStateKey.CURRENT_VALUES_STATE.value).keys())
         key_option_box = self.build_key_option_box(
             index=index,
             item_option_vals_list=current_item_options_list
