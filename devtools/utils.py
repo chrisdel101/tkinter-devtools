@@ -197,15 +197,22 @@ class Utils:
     @staticmethod
     # universal fn called in class notify methods
     def dispatch_action(self, action: Action):
-        # check if action maps to a method on this class
-        fn = getattr(self, ACTION_REGISTRY.get(action.type), None)
-        if fn:
-            if isinstance(action.data, (list, tuple)):
-                fn(*action.data)
-            elif isinstance(action.data, (dict)):
-                fn(**action.data)
-            else:
-                # don't input anything if no data
-                fn(action.data) if action.data is not None else fn()
+        try:
+            # check any targets match the current obj - for multi instance
+            if action.target is not None and action.target is not self:
+                logging.debug(f"Target set. Ignoring mismatch to {action.target.name}.")
+                return
+            # check if action maps to a method on this class
+            fn = getattr(self, ACTION_REGISTRY.get(action.type.name), None)
+            if fn:
+                if isinstance(action.data, (list, tuple)):
+                    fn(*action.data)
+                elif isinstance(action.data, (dict)):
+                    fn(**action.data)
+                else:
+                    # don't input anything if no data
+                    fn(action.data) if action.data is not None else fn()
+        except Exception as e:
+            logging.error(f"Error dispatch_action {action.type}: {e}", exc_info=True)
             
         

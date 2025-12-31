@@ -39,7 +39,7 @@ class ConfigListboxUtils:
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
             print('value box escape'),
-            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0)) if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0)) if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
             setattr(self._store, 'block_active_adding', False),
             setattr(self._store, 'allow_input_focus_out_logic', True),
             setattr(self._store, 'listbox_entry_input_action', None)
@@ -99,7 +99,7 @@ class ConfigListboxUtils:
             ))            
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_combo_box.bind("<Escape>", lambda _: 
-                (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)), 
+                (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)), 
                 self.cancel_update_listbox(self.key_box_wrapper),
                 print("keybox escape"),
                 setattr(self._store, 'block_active_adding', False))) 
@@ -167,7 +167,7 @@ class ConfigListboxUtils:
             return  # internal focus change → ignore
         print("listbox_key_focus_out build_key_option_box block_active_adding FALSE")
         self._store.block_active_adding =  False
-        self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+        self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
         setattr(self._store, 'listbox_entry_input_action', None)
 
         self.cancel_update_listbox(*args)
@@ -183,7 +183,7 @@ class ConfigListboxUtils:
         self._store.block_active_adding =  False
         self._store.allow_input_focus_out_logic = True
         if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
-            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
         setattr(self._store, 'listbox_entry_input_action', None)
         self.cancel_update_listbox(*args)
 
@@ -217,6 +217,7 @@ class ConfigListboxUtils:
                 # this auto sizes w/o adding styles
                 # end inserts at the end of the LB
                 self.insert_listbox_item(index=tk.END, value=display)
+            pass
         except Exception as e:
             logging.error(f"Error insert_listbox_items: {e}", exc_info=True)
     # kwargs is index, value

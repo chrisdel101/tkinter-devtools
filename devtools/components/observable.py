@@ -9,6 +9,8 @@ from devtools.constants import ActionType
 class Action:
     type: ActionType
     data: Any | None = None
+    # isolate instances 
+    target: Any | None = None
 
 # this is the Subject
 class Observable:

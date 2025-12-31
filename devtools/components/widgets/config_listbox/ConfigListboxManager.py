@@ -81,7 +81,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         
         self.after_idle(lambda: self.yview_moveto(y0))
         # UPDATE THE PAGE WIDGET - calls tree update_tree_item_to_page_widget
-        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET.name, data={
+        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET, data={
             'key': key_entry_value,
             'value': value_entry_value
         }))
@@ -143,12 +143,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         )
         if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
             value_entry.bind("<Escape>", lambda e: (
-                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)),
+                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)),
                 self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
                 print("escape entry create"),
                 setattr(self._store, 'block_active_adding', False)))
             value_entry.bind("<FocusOut>", lambda e: (
-                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=index)),
+                self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)),
                 self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
                 setattr(self._store, 'block_active_adding', False)))
         else:

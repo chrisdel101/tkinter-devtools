@@ -139,7 +139,7 @@ class TreeView(ttk.Treeview):
                 if self._store.tree_state_get(TreeStateKey.SELECTED_ITEM):
                     try:
                         # delete prev content in listbox
-                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS.name))
+                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
                         # config used to populate listbox
                         original_config = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM).configure()
                         # filter out unwanted config values - keep original format
@@ -154,9 +154,9 @@ class TreeView(ttk.Treeview):
                         err_msg = f"error handle_tree_select: {e}"
                         logging.error(err_msg, exc_info=True)
                         # delete all listbox
-                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS.name))
+                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
                         # post the error to the screen
-                        self._observable.notify_observers(Action(type=ActionType.INSERT_LISTBOX_ITEM.name, data={'index': tk.END, 'value': err_msg}))  
+                        self._observable.notify_observers(Action(type=ActionType.INSERT_LISTBOX_ITEM, data={'index': tk.END, 'value': err_msg}))  
                         
         except Exception as e:
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)

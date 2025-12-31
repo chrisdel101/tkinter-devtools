@@ -52,14 +52,14 @@ class DevtoolsWindow(tk.Toplevel):
         if self._store.devtools_window_in_focus:
             self._store.devtools_window_in_focus = False
             if len(self._store.existing_combobox_wrappers) > 0:
-                self._observable.notify_observers(Action(type=ActionType.CANCEL_UPDATE_LISTBOX.name,
+                self._observable.notify_observers(Action(type=ActionType.CANCEL_UPDATE_LISTBOX,
                     data=self._store.existing_combobox_wrappers))
                 # remove all comboxes from the page
                 self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
                 # remove all comboxes from state
                 self._store.remove_existing_store_wrappers()
                 if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
-                    self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX.name, data=0))
+                    self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
                 self._store.block_active_adding = False
         
     def on_focus_in(self, _):
