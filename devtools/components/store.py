@@ -5,8 +5,10 @@ from typing import Any
 
 from devtools.components.observable import Action
 # from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxManagerStateKey, ListboxPageInsertType, TreeState, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxManagerStateKey, ListboxPageInsert, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
+
+from devtools.decorators import try_except_catcher
 
 if TYPE_CHECKING:
     # ONLY for type checkers
@@ -14,8 +16,7 @@ if TYPE_CHECKING:
 
 
 class Store:
-    """A simple store to hold key-value pairs."""
-
+    @try_except_catcher
     def __init__(self, observable):
         self._observable = observable
         self.block_active_adding: bool = False
@@ -34,50 +35,55 @@ class Store:
         }
         self.current_listbox_insert: ConfigListboxManager | None = None
         self.current_listbox_insert_internal_state: ListboxManagerState = {
-            ListboxPageInsertType.ATTRIBUTES: {
+            ListboxPageInsert.ATTRIBUTES: {
                 ListboxManagerStateKey.SELECTED_INDEX.value: None,
                 ListboxManagerStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxManagerStateKey.LISTBOX_PAGE_INSERT_TYPE.value: ListboxPageInsertType.ATTRIBUTES
+                ListboxManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsert.ATTRIBUTES
             },
-            ListboxPageInsertType.GEOMETRY: {
+            ListboxPageInsert.GEOMETRY: {
                 ListboxManagerStateKey.SELECTED_INDEX.value: None,
                 ListboxManagerStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxManagerStateKey.LISTBOX_PAGE_INSERT_TYPE.value: ListboxPageInsertType.GEOMETRY
+                ListboxManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsert.GEOMETRY
             }
         }
-
+    @try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
         return self.tree_state.get(enum_key.value)
 
     # handles tracking store state or tree - i.e. selected item
+    @try_except_catcher
     def tree_state_set(self, enum_key: TreeStateKey, state_to_set: Any):
         self.tree_state[enum_key.value] = state_to_set
 
     # get single value from listbox manager state
-    def listbox_manager_state_get_value(self, enum_key: ListboxManagerStateKey):
-        return self.current_listbox_insert_internal_state.get(enum_key.value)
+    @try_except_catcher
+    def listbox_manager_state_get_value(self, enum_key: ListboxManagerStateKey, page_insert_override: ListboxPageInsert | None = None):
+        page_insert = page_insert_override if page_insert_override else self.current_listbox_insert.listbox_page_insert
+        return self.current_listbox_insert_internal_state.get(page_insert).get(enum_key.value)
 
     # key for name current_listbox_insert_internal_state, value is dict of values
     # - updates whole dict whenever a change occurs
-    def listbox_manager_state_set(self, enum_key: ListboxManagerStateKey, state_to_set: Any):
-        match self.current_listbox_insert.listbox_page_insert_type:
-            # set one of the ListboxManagerStateKey values by ListboxPageInsertType
-            case ListboxPageInsertType.ATTRIBUTES:
+    @try_except_catcher
+    def listbox_manager_state_set(self, enum_key: ListboxManagerStateKey, state_to_set: Any, page_insert_override: ListboxPageInsert | None = None):
+        # use current page insert or param if set
+        match page_insert_override if page_insert_override else self.current_listbox_insert.listbox_page_insert:
+            # set one of the ListboxManagerStateKey values by ListboxPageInsert
+            case ListboxPageInsert.ATTRIBUTES:
                 print("U1")
                 self.current_listbox_insert_internal_state[
-                    ListboxPageInsertType.ATTRIBUTES][enum_key.value] = state_to_set
+                    ListboxPageInsert.ATTRIBUTES][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_insert_internal_state[ListboxPageInsertType.ATTRIBUTES].get(enum_key.value, 
+                           data=self.current_listbox_insert_internal_state[ListboxPageInsert.ATTRIBUTES].get(enum_key.value, 
                            ),
                            target=self.current_listbox_insert)
                 )
-            case ListboxPageInsertType.GEOMETRY:
+            case ListboxPageInsert.GEOMETRY:
                 self.current_listbox_insert_internal_state[
-                    ListboxPageInsertType.GEOMETRY][enum_key.value] = state_to_set
+                    ListboxPageInsert.GEOMETRY][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_insert_internal_state[ListboxPageInsertType.GEOMETRY].get(enum_key.value),
+                           data=self.current_listbox_insert_internal_state[ListboxPageInsert.GEOMETRY].get(enum_key.value),
                            target=self.current_listbox_insert)
                 )
 

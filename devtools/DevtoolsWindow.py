@@ -4,6 +4,7 @@ import tkinter as tk
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
 from devtools.constants import ActionType, ListBoxEntryInputAction
+from devtools.decorators import try_except_catcher
 from devtools.style import Style
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -47,7 +48,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.bind("<FocusIn>", self.on_focus_in)
         # self.poll_for_changes()
 
-
+    @try_except_catcher
     def on_focus_out(self, _):
         if self._store.devtools_window_in_focus:
             self._store.devtools_window_in_focus = False
@@ -55,13 +56,14 @@ class DevtoolsWindow(tk.Toplevel):
                 self._observable.notify_observers(Action(type=ActionType.CANCEL_UPDATE_LISTBOX,
                     data=self._store.existing_combobox_wrappers))
                 # remove all comboxes from the page
-                self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
+                # self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
                 # remove all comboxes from state
                 self._store.remove_existing_store_wrappers()
                 if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
                     self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
                 self._store.block_active_adding = False
         
+    @try_except_catcher
     def on_focus_in(self, _):
         # if state if false
         if not self._store.devtools_window_in_focus:

@@ -5,8 +5,8 @@ from tkinter import ttk
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxManagerStateKey, Store
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxPageInsertType, TreeStateKey
-from devtools.decorators import toggle_block_focus_out_key_logic
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxPageInsert, TreeStateKey
+from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -22,17 +22,17 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
     def __init__(self, 
             master, 
-            listbox_page_insert_type: ListboxPageInsertType,
+            listbox_page_insert: ListboxPageInsert,
             observable: Observable,
             store: Store,
             **styles
         ): 
         tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
-        self.name = f"{listbox_page_insert_type.name} listbox"
+        self.name = f"{listbox_page_insert.name} listbox"
         self._observable: Observable = observable
         self._store: Store = store
         self._observable.register_observer(self)
-        self.listbox_page_insert_type: ListboxPageInsertType = listbox_page_insert_type
+        self.listbox_page_insert: ListboxPageInsert = listbox_page_insert
         # self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         # self.config(yscrollcommand=self.scroll_bar.set)
         self.styles: dict = styles
@@ -62,6 +62,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         )
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
+    @try_except_catcher
     def insert_value_output_and_apply_to_page(
             self, 
             current_widget: tk.Entry | tk.OptionMenu, 
@@ -89,7 +90,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.block_active_adding = False
         self._store.allow_input_focus_out_logic = True
         
-    @toggle_block_focus_out_key_logic
+    @block_allow_input_focus_out_logic
+    @try_except_catcher
      # return and place value_option_box from key_option_box
     def handle_build_value_option_box_from_key_option_box(
         self,
@@ -113,7 +115,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
         self._set_selected_by_index(index)
 
-    @toggle_block_focus_out_key_logic
+    @block_allow_input_focus_out_logic
+    @try_except_catcher
     def handle_build_value_entry_from_key_entry(
             self,
             index: int, 
@@ -161,7 +164,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 print("focusout entry update"),
                 setattr(self._store, 'block_active_adding', False)))
     # run funcs for entering row update - called from double click on row
-    @toggle_block_focus_out_key_logic
+    @block_allow_input_focus_out_logic
+    @try_except_catcher
     def handle_entry_input_update(
         self, 
         index: int, 
@@ -203,6 +207,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 y_coord=y_coord
             )
     # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
+    @try_except_catcher
     def handle_entry_input_create(
         self, 
         index: int):
@@ -210,8 +215,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # store current editting index
         self._store.editting_item_index = index
         current_treeview_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
-        # have listbox state stored - already filtered/extracted
-        current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(ListboxManagerStateKey.CURRENT_VALUES_STATE.value).keys())
+        # using listbox state stored - already filtered/extracted
+        page_insert = self._store.current_listbox_insert.listbox_page_insert
+        current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(page_insert).get(ListboxManagerStateKey.CURRENT_VALUES_STATE.value).keys())
         key_option_box = self.build_key_option_box(
             index=index,
             item_option_vals_list=current_item_options_list

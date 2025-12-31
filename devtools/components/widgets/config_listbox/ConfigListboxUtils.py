@@ -4,11 +4,12 @@ from tkinter import ttk
 
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListBoxEntryInputAction
+from devtools.decorators import try_except_catcher
 from devtools.maps import CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 
 class ConfigListboxUtils:
-
+    @try_except_catcher
     def build_value_option_box(self, 
         index: int,
         key_entry_widget: tk.Entry | ttk.Combobox,
@@ -61,7 +62,7 @@ class ConfigListboxUtils:
 
         return value_combobox
         
-
+    @try_except_catcher
     def build_key_option_box(self, 
         index: int,
         item_option_vals_list: list[str]):

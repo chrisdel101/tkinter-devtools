@@ -14,10 +14,10 @@ class TreeStateKey(Enum):
 class ListboxManagerStateKey(Enum):
     SELECTED_INDEX = "selected_index"
     CURRENT_VALUES_STATE = "current_values_state"
-    LISTBOX_PAGE_INSERT_TYPE = "listbox_page_insert_type"
+    LISTBOX_PAGE_INSERT = "listbox_page_insert"
 
-# use to display specific listbox in frame
-class ListboxPageInsertType(Enum):
+# name to use to display specific listbox insert within frame
+class ListboxPageInsert(Enum):
     ATTRIBUTES = 1
     GEOMETRY = 2
 
@@ -94,5 +94,5 @@ class ListboxManagerState(TypedDict):
     # widgets tracked using tree ids 'I001'
     selected_index: int| None
     current_values_state: dict[str, str] | None
-    listbox_page_insert_type: ListboxPageInsertType | None
+    listbox_page_insert: ListboxPageInsert | None
     

@@ -3,7 +3,7 @@ import logging
 from tkinter import ttk
 from unittest import case
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxManagerStateKey, ListboxPageInsertType, TreeStateKey
+from devtools.constants import ActionType, ListboxManagerStateKey, ListboxPageInsert, TreeStateKey
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -20,7 +20,7 @@ class RightWindowFrame(tk.Frame):
         self._store = store
         self._attr_config_listbox_mngr = ConfigListboxManager(
             master=self, 
-            listbox_page_insert_type=ListboxPageInsertType.ATTRIBUTES,
+            listbox_page_insert=ListboxPageInsert.ATTRIBUTES,
             observable=self._observable,
             store=self._store,           
             **Style.config_listbox_manager)
@@ -28,7 +28,7 @@ class RightWindowFrame(tk.Frame):
 
         self._geometry_config_listbox_mngr = ConfigListboxManager(
             master=self, 
-            listbox_page_insert_type=ListboxPageInsertType.GEOMETRY,
+            listbox_page_insert=ListboxPageInsert.GEOMETRY,
             observable=self._observable,
             store=self._store,           
             **Style.config_listbox_manager)
@@ -45,8 +45,8 @@ class RightWindowFrame(tk.Frame):
 
         attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['attr_button_text'])
         geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
-        attr_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert  (insert_type=ListboxPageInsertType.ATTRIBUTES))
-        geo_button.bind("<Button-1>", lambda e: self.manual_pack_listbox_page_insert(insert_type=ListboxPageInsertType.GEOMETRY))
+        attr_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert  (insert_type=ListboxPageInsert.ATTRIBUTES))
+        geo_button.bind("<Button-1>", lambda e: self.manual_pack_listbox_page_insert(insert_type=ListboxPageInsert.GEOMETRY))
        
         self.add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda:self.handle_add(index=0), width=2, height=2)
         
@@ -63,20 +63,20 @@ class RightWindowFrame(tk.Frame):
         #  pack header
         self.header_frame.pack(fill='both')
         # load attr listbox by default
-        self.pack_listbox_page_insert(insert_type=ListboxPageInsertType.ATTRIBUTES)
+        self.pack_listbox_page_insert(insert_type=ListboxPageInsert.ATTRIBUTES)
     
-    def pack_listbox_page_insert(self, insert_type: ListboxPageInsertType):
+    def pack_listbox_page_insert(self, insert_type: ListboxPageInsert):
         try:
             if self._store.current_listbox_insert:
                 self._store.current_listbox_insert.pack_forget()
             match insert_type:
-                case ListboxPageInsertType.ATTRIBUTES:
+                case ListboxPageInsert.ATTRIBUTES:
                      self._store.current_listbox_insert = self._attr_config_listbox_mngr
                      self._attr_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
-                case ListboxPageInsertType.GEOMETRY:
+                case ListboxPageInsert.GEOMETRY:
                      print("XXX")
                      self._store.current_listbox_insert = self._geometry_config_listbox_mngr
-                     self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set={"hello":f"{self._store.current_listbox_insert.listbox_page_insert_type}"})
+                     self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set={"hello":f"{self._store.current_listbox_insert.listbox_page_insert}"})
                      self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
                 case _:
                     logging.error(f"Error pack_listbox_page_insert: No listbox packed", exc_info=True)
@@ -84,13 +84,13 @@ class RightWindowFrame(tk.Frame):
         except Exception as e:
             logging.error(f"Error pack_listbox_page_insert: {e}", exc_info=True)
     
-    def manual_pack_listbox_page_insert(self, insert_type: ListboxPageInsertType):
+    def manual_pack_listbox_page_insert(self, insert_type: ListboxPageInsert):
         try:
             if self._store.current_listbox_insert:
                 self._store.current_listbox_insert.pack_forget()
             print("XXX")
             self._store.current_listbox_insert = self._geometry_config_listbox_mngr
-            self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set={"hello":f"{self._store.current_listbox_insert.listbox_page_insert_type}"})
+            self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set={"hello":f"{self._store.current_listbox_insert.listbox_page_insert}"})
             self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
         except Exception as e:
             logging.error(f"Error pack_listbox_page_insert: {e}", exc_info=True)

@@ -4,7 +4,7 @@ import logging
 
 # focus out guard - if true block any logic that runs on key_combo_box focus out - listbox_key_focus_out
 # mostly to handle focusset from key-value option
-def toggle_block_focus_out_key_logic(func):
+def block_allow_input_focus_out_logic(func):
     try:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -15,4 +15,13 @@ def toggle_block_focus_out_key_logic(func):
                     
         return wrapper
     except Exception as e:
-        logging.error("Error in toggle_block_focus_out_key_logic decorator.", exc_info=True)
+        logging.error("Error in block_allow_input_focus_out_logic decorator.", exc_info=True)
+
+def try_except_catcher(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
+    return wrapper
