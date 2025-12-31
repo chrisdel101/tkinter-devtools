@@ -147,11 +147,11 @@ class TreeView(ttk.Treeview):
                         # extract the actual set value from value tuples - is key val str pairs
                         key_value_config_dict: dict[str, str] = Utils.extract_current_config_key_values(filtered_config_dict)
                         key_value_config_sorted_dict = Utils.sorted_dict(key_value_config_dict)
-                        # set store current listbox value state
+                        # save listbox state - diff than listbox insert into UI
                         self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
 
                     except Exception as e:
-                        err_msg = f"rror handle_tree_select: {e}"
+                        err_msg = f"error handle_tree_select: {e}"
                         logging.error(err_msg, exc_info=True)
                         # delete all listbox
                         self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS.name))

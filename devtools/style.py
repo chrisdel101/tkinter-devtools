@@ -33,8 +33,8 @@ class Style:
                 'frame': {
                     'bg': 'grey'
                 },
-                'btn1_text': 'Attributes',
-                'btn2_text': 'Geometry'
+                'attr_button_text': 'Attributes',
+                'geo_button_text': 'Geometry'
             },
             'bottom_row':{
                 'bg': 'grey'

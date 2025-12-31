@@ -14,6 +14,7 @@ class TreeStateKey(Enum):
 class ListboxManagerStateKey(Enum):
     SELECTED_INDEX = "selected_index"
     CURRENT_VALUES_STATE = "current_values_state"
+    LISTBOX_PAGE_INSERT_TYPE = "listbox_page_insert_type"
 
 # use to display specific listbox in frame
 class ListboxPageInsertType(Enum):

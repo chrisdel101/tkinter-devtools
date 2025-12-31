@@ -28,6 +28,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             **styles
         ): 
         tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
+        self.name = f"{listbox_page_insert_type.name} listbox"
         self._observable: Observable = observable
         self._store: Store = store
         self._observable.register_observer(self)
@@ -41,6 +42,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.list_var: tk.Variable = tk.Variable(value=[])
         self.value_box_wrapper: tk.Frame | None = None
         self.key_box_wrapper: tk.Frame | None = None
+            # focus guard - blocks
 
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
@@ -208,7 +210,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # store current editting index
         self._store.editting_item_index = index
         current_treeview_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
-        # use same stored state as listbox - already filtered extracted
+        # have listbox state stored - already filtered/extracted
         current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(ListboxManagerStateKey.CURRENT_VALUES_STATE.value).keys())
         key_option_box = self.build_key_option_box(
             index=index,
