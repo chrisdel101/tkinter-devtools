@@ -1,15 +1,21 @@
 from enum import Enum
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 import tkinter as tk
 
 
 MAX_KEY_WIDTH = 30  # adjust as needed
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
+class GeometryType(Enum ):
+    PACK = "pack"
+    GRID = "grid"
+    PLACE = "place"
+    
+
 class TreeStateKey(Enum):
-    SELECTED_ITEM =  "selected_item"
-    WIDGETS_BY_TREE_INSERT_ID_DICT = "widgets_by_tree_insert_id"
-    MEM_WIDGET_STORE_BY_PY_MEM_ID= "mem_widget_store_by_py_mem_id"
+    SELECTED_ITEM_WIDGET =  1
+    WIDGETS_BY_TREE_INSERT_ID_DICT = 2
+    MEM_WIDGET_STORE_BY_PY_MEM_ID= 3
 
 class ListboxManagerStateKey(Enum):
     SELECTED_INDEX = "selected_index"

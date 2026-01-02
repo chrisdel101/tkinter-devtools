@@ -1,9 +1,10 @@
 from __future__ import annotations
 import logging
+import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import COMBOBOX_ARROW_OFFSET, ValidConfigAttr
+from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr
 from devtools.maps import ACTION_REGISTRY, CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
 class Utils:
@@ -200,7 +201,7 @@ class Utils:
         try:
             # check any targets match the current obj - for multi instance
             if action.target is not None and action.target is not self:
-                logging.debug(f"Target set. Ignoring mismatch to {action.target.name}.")
+                logging.debug(f"Target set to {action.target.name}. Ignoring mismatch to {self}.")
                 return
             # check if action maps to a method on this class
             fn = getattr(self, ACTION_REGISTRY.get(action.type.name), None)
@@ -214,5 +215,16 @@ class Utils:
                     fn(action.data) if action.data is not None else fn()
         except Exception as e:
             logging.error(f"Error dispatch_action {action.type}: {e}", exc_info=True)
-            
-        
+    @staticmethod    
+    def get_geometry_info(widget: tk.Widget):
+        geometry_type = widget.winfo_manager()
+        match geometry_type:
+            case GeometryType.PACK.value:
+                return widget.pack_info()
+            case GeometryType.GRID.value:
+                return widget.grid_info()
+            case GeometryType.PLACE.value:       
+                return widget.place_info()
+            case _:
+                logging.debug(f"get_geometry_info: Widget {widget} has no geometry manager.")
+                return None

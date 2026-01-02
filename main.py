@@ -18,5 +18,5 @@ tk.Button(root_inner_frame, text="Quit").grid(column=1, row=0)
 root_inner_frame.grid()
 # force geometry live changes   
 root_inner_frame.grid_propagate(False)
-DevtoolsWindow(root)
+DevtoolsWindow(root_inner_frame)
 root.mainloop()

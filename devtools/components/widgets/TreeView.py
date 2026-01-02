@@ -12,7 +12,6 @@ class TreeView(ttk.Treeview):
     def __init__(self, root, master, observable, store): 
         super().__init__(master, show="tree", style="My.Treeview")
         self.root = root
-        self.selected_item = None
         self._observable = observable
         self._store = store
         self._observable.register_observer(self)
@@ -128,28 +127,30 @@ class TreeView(ttk.Treeview):
             collect_widgets = self.collect_widgets(self.root)
             # get selected tree item via tree api
             selected = self.selection()
-            if selected and selected != self._store.tree_state_get(TreeStateKey.SELECTED_ITEM):    
+            if selected and selected != self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):    
                 # .selection give tree insert item ID
                 item_id = selected[0]
                 # set tree state selected item
-                self._store.tree_state_set(TreeStateKey.SELECTED_ITEM, self.get_widget_by_tree_insert_id(item_id))
+                self._store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, self.get_widget_by_tree_insert_id(item_id))
                 # mem_obj_id = self.get_widget_by_obj_mem_id(id(self._store.tree_state_get('selected_item')))
                 
                 # TODO check if current select is already selected
-                if self._store.tree_state_get(TreeStateKey.SELECTED_ITEM):
+                if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     try:
                         # delete prev content in listbox
                         self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
                         # config used to populate listbox
-                        original_config = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM).configure()
-                        # filter out unwanted config values - keep original format
-                        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(original_config)
+                        original_attrs_config:dict = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET).configure()
+                            # filter out unwanted config values not in ValidConfigAttr - keep original dict formating
+                        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(original_attrs_config)
                         # extract the actual set value from value tuples - is key val str pairs
                         key_value_config_dict: dict[str, str] = Utils.extract_current_config_key_values(filtered_config_dict)
                         key_value_config_sorted_dict = Utils.sorted_dict(key_value_config_dict)
                         # save listbox state - diff than listbox insert into UI
                         self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
-
+    
+                        geo_manager = Utils.get_geometry_info(selected_item_widget)
+                        pass
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"
                         logging.error(err_msg, exc_info=True)
@@ -166,7 +167,7 @@ class TreeView(ttk.Treeview):
     def update_tree_item_to_page_widget(self, **changes_dict):
         try:
             # self is the page widget - updates the config
-            current_tree_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM)
+            current_tree_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
             current_tree_item.config(**{changes_dict['key']: changes_dict['value']})
         except Exception as e:
             logging.error(f"Error update_tree_item_to_page_widget: {e}", exc_info=True)

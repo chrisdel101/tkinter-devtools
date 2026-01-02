@@ -4,7 +4,6 @@ import tkinter as tk
 from typing import Any
 
 from devtools.components.observable import Action
-# from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxManagerStateKey, ListboxPageInsert, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
@@ -29,11 +28,11 @@ class Store:
         self.editting_item_index: int | None = None
         self.allow_input_focus_out_logic: bool = True
         self.tree_state: TreeState = {
-            TreeStateKey.SELECTED_ITEM.value: None,
+            TreeStateKey.SELECTED_ITEM_WIDGET.value: None,
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT.value: {},
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }
-        self.current_listbox_insert: ConfigListboxManager | None = None
+        self.current_listbox: ConfigListboxManager | None = None
         self.current_listbox_insert_internal_state: ListboxManagerState = {
             ListboxPageInsert.ATTRIBUTES: {
                 ListboxManagerStateKey.SELECTED_INDEX.value: None,
@@ -58,7 +57,7 @@ class Store:
     # get single value from listbox manager state
     @try_except_catcher
     def listbox_manager_state_get_value(self, enum_key: ListboxManagerStateKey, page_insert_override: ListboxPageInsert | None = None):
-        page_insert = page_insert_override if page_insert_override else self.current_listbox_insert.listbox_page_insert
+        page_insert = page_insert_override if page_insert_override else self.current_listbox.listbox_page_insert
         return self.current_listbox_insert_internal_state.get(page_insert).get(enum_key.value)
 
     # key for name current_listbox_insert_internal_state, value is dict of values
@@ -66,7 +65,7 @@ class Store:
     @try_except_catcher
     def listbox_manager_state_set(self, enum_key: ListboxManagerStateKey, state_to_set: Any, page_insert_override: ListboxPageInsert | None = None):
         # use current page insert or param if set
-        match page_insert_override if page_insert_override else self.current_listbox_insert.listbox_page_insert:
+        match page_insert_override if page_insert_override else self.current_listbox.listbox_page_insert:
             # set one of the ListboxManagerStateKey values by ListboxPageInsert
             case ListboxPageInsert.ATTRIBUTES:
                 print("U1")
@@ -76,16 +75,16 @@ class Store:
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
                            data=self.current_listbox_insert_internal_state[ListboxPageInsert.ATTRIBUTES].get(enum_key.value, 
                            ),
-                           target=self.current_listbox_insert)
+                           target=self.current_listbox)
                 )
             case ListboxPageInsert.GEOMETRY:
                 self.current_listbox_insert_internal_state[
                     ListboxPageInsert.GEOMETRY][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_insert_internal_state[ListboxPageInsert.GEOMETRY].get(enum_key.value),
-                           target=self.current_listbox_insert)
-                )
+                        data=self.current_listbox_insert_internal_state[ListboxPageInsert.GEOMETRY].get(enum_key.value),
+                        target=self.current_listbox)
+                    )
 
     @property
     def allow_input_focus_out_logic(self):
@@ -105,11 +104,11 @@ class Store:
         self._devtools_window_in_focus = value
 
     @property
-    def current_listbox_insert(self):
+    def current_listbox(self):
         return self._current_listbox_insert
 
-    @current_listbox_insert.setter
-    def current_listbox_insert(self, value):
+    @current_listbox.setter
+    def current_listbox(self, value):
         self._current_listbox_insert = value
 
     @property
