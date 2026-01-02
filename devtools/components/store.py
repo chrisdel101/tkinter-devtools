@@ -4,7 +4,7 @@ import tkinter as tk
 from typing import Any
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxManagerStateKey, ListboxPageInsert, TreeState, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxInsertManagerStateKey, ListboxPageInsertEnum, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
 from devtools.decorators import try_except_catcher
@@ -32,17 +32,20 @@ class Store:
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT.value: {},
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }
-        self.current_listbox: ConfigListboxManager | None = None
+        # store the listbox manager inserts
+        self.listbox_inserts: dict[ListboxPageInsertEnum, ConfigListboxManager] = {} 
+        # listbox being shown in frame 
+        self.current_listbox_insert: ConfigListboxManager | None = None
         self.current_listbox_insert_internal_state: ListboxManagerState = {
-            ListboxPageInsert.ATTRIBUTES: {
-                ListboxManagerStateKey.SELECTED_INDEX.value: None,
-                ListboxManagerStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsert.ATTRIBUTES
+            ListboxPageInsertEnum.ATTRIBUTES: {
+                ListboxInsertManagerStateKey.SELECTED_INDEX.value: None,
+                ListboxInsertManagerStateKey.CURRENT_VALUES_STATE.value: None,
+                ListboxInsertManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.ATTRIBUTES
             },
-            ListboxPageInsert.GEOMETRY: {
-                ListboxManagerStateKey.SELECTED_INDEX.value: None,
-                ListboxManagerStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsert.GEOMETRY
+            ListboxPageInsertEnum.GEOMETRY: {
+                ListboxInsertManagerStateKey.SELECTED_INDEX.value: None,
+                ListboxInsertManagerStateKey.CURRENT_VALUES_STATE.value: None,
+                ListboxInsertManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.GEOMETRY
             }
         }
     @try_except_catcher
@@ -56,34 +59,37 @@ class Store:
 
     # get single value from listbox manager state
     @try_except_catcher
-    def listbox_manager_state_get_value(self, enum_key: ListboxManagerStateKey, page_insert_override: ListboxPageInsert | None = None):
-        page_insert = page_insert_override if page_insert_override else self.current_listbox.listbox_page_insert
+    def listbox_manager_state_get_value(self, enum_key: ListboxInsertManagerStateKey, page_insert_override: ListboxPageInsertEnum | None = None):
+        # ge current insert key ListboxPageInsertEnum or manual param
+        page_insert = page_insert_override if page_insert_override else self.current_listbox_insert.listbox_page_insert
         return self.current_listbox_insert_internal_state.get(page_insert).get(enum_key.value)
 
     # key for name current_listbox_insert_internal_state, value is dict of values
     # - updates whole dict whenever a change occurs
     @try_except_catcher
-    def listbox_manager_state_set(self, enum_key: ListboxManagerStateKey, state_to_set: Any, page_insert_override: ListboxPageInsert | None = None):
-        # use current page insert or param if set
-        match page_insert_override if page_insert_override else self.current_listbox.listbox_page_insert:
-            # set one of the ListboxManagerStateKey values by ListboxPageInsert
-            case ListboxPageInsert.ATTRIBUTES:
+    def listbox_manager_state_set(self, enum_key: ListboxInsertManagerStateKey, state_to_set: Any, page_insert_override: ListboxPageInsertEnum | None = None):
+        # use current page insert or override param - get listbox by enum key
+        current_target_listbox = self.listbox_inserts.get(page_insert_override) if page_insert_override else self.current_listbox_insert
+        current_target_listbox_enum = current_target_listbox._listbox_page_insert_enum
+        
+        match current_target_listbox_enum:
+            # set one of the ListboxInsertManagerStateKey values by ListboxPageInsertEnum
+            case ListboxPageInsertEnum.ATTRIBUTES:
                 print("U1")
                 self.current_listbox_insert_internal_state[
-                    ListboxPageInsert.ATTRIBUTES][enum_key.value] = state_to_set
+                    ListboxPageInsertEnum.ATTRIBUTES][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_insert_internal_state[ListboxPageInsert.ATTRIBUTES].get(enum_key.value, 
-                           ),
-                           target=self.current_listbox)
+                           data=self.current_listbox_insert_internal_state[ListboxPageInsertEnum.ATTRIBUTES].get(enum_key.value),
+                           target=current_target_listbox)
                 )
-            case ListboxPageInsert.GEOMETRY:
+            case ListboxPageInsertEnum.GEOMETRY:
                 self.current_listbox_insert_internal_state[
-                    ListboxPageInsert.GEOMETRY][enum_key.value] = state_to_set
+                    ListboxPageInsertEnum.GEOMETRY][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                        data=self.current_listbox_insert_internal_state[ListboxPageInsert.GEOMETRY].get(enum_key.value),
-                        target=self.current_listbox)
+                        data=self.current_listbox_insert_internal_state[ListboxPageInsertEnum.GEOMETRY].get(enum_key.value),
+                        target=current_target_listbox)
                     )
 
     @property
@@ -104,12 +110,20 @@ class Store:
         self._devtools_window_in_focus = value
 
     @property
-    def current_listbox(self):
+    def current_listbox_insert(self):
         return self._current_listbox_insert
 
-    @current_listbox.setter
-    def current_listbox(self, value):
+    @current_listbox_insert.setter
+    def current_listbox_insert(self, value):
         self._current_listbox_insert = value
+
+    @property
+    def listbox_inserts(self):
+        return self._listbox_inserts
+
+    @listbox_inserts.setter
+    def listbox_inserts(self, value):
+        self._listbox_inserts = value
 
     @property
     def editting_item_index(self):

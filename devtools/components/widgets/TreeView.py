@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxManagerStateKey, TreeStateKey
+from devtools.constants import ActionType, ListboxInsertManagerStateKey, ListboxPageInsertEnum, TreeStateKey
 from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
@@ -147,10 +147,12 @@ class TreeView(ttk.Treeview):
                         key_value_config_dict: dict[str, str] = Utils.extract_current_config_key_values(filtered_config_dict)
                         key_value_config_sorted_dict = Utils.sorted_dict(key_value_config_dict)
                         # save listbox state - diff than listbox insert into UI
-                        self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
     
                         geo_manager = Utils.get_geometry_info(selected_item_widget)
-                        pass
+                        geo_manager_dict = Utils.merge_dicts({"geometry_type": geo_manager.geometry_type}, geo_manager.geometry_type_info)
+
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=geo_manager_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"
                         logging.error(err_msg, exc_info=True)

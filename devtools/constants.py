@@ -17,13 +17,13 @@ class TreeStateKey(Enum):
     WIDGETS_BY_TREE_INSERT_ID_DICT = 2
     MEM_WIDGET_STORE_BY_PY_MEM_ID= 3
 
-class ListboxManagerStateKey(Enum):
+class ListboxInsertManagerStateKey(Enum):
     SELECTED_INDEX = "selected_index"
     CURRENT_VALUES_STATE = "current_values_state"
     LISTBOX_PAGE_INSERT = "listbox_page_insert"
 
 # name to use to display specific listbox insert within frame
-class ListboxPageInsert(Enum):
+class ListboxPageInsertEnum(Enum):
     ATTRIBUTES = 1
     GEOMETRY = 2
 
@@ -97,8 +97,10 @@ class TreeState(TypedDict):
     mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore] = {}
 
 class ListboxManagerState(TypedDict):
-    # widgets tracked using tree ids 'I001'
-    selected_index: int| None
-    current_values_state: dict[str, str] | None
-    listbox_page_insert: ListboxPageInsert | None
-    
+    listbox_page_insert: ListboxPageInsertEnum
+
+class ListboxInsertManagerState(TypedDict):
+    selected_index: int | None
+    current_values_state: list[str] | None
+    listbox_page_insert: ListboxPageInsertEnum | None
+

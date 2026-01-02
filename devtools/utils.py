@@ -5,6 +5,7 @@ from tkinter import ttk
 
 from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr
+from devtools.geometry_info import GeometryInfo
 from devtools.maps import ACTION_REGISTRY, CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
 class Utils:
@@ -220,11 +221,11 @@ class Utils:
         geometry_type = widget.winfo_manager()
         match geometry_type:
             case GeometryType.PACK.value:
-                return widget.pack_info()
+                return GeometryInfo(GeometryType.PACK, widget.pack_info())
             case GeometryType.GRID.value:
-                return widget.grid_info()
+                return GeometryInfo(GeometryType.GRID, widget.grid_info())
             case GeometryType.PLACE.value:       
-                return widget.place_info()
+                return GeometryInfo(GeometryType.PLACE, widget.place_info())
             case _:
                 logging.debug(f"get_geometry_info: Widget {widget} has no geometry manager.")
                 return None

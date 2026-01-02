@@ -4,8 +4,8 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action, Observable
-from devtools.components.store import ListboxManagerStateKey, Store
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxPageInsert, TreeStateKey
+from devtools.components.store import ListboxInsertManagerStateKey, Store
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
@@ -22,17 +22,17 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
     def __init__(self, 
             master, 
-            listbox_page_insert: ListboxPageInsert,
+            listbox_page_insert_enum: ListboxPageInsertEnum,
             observable: Observable,
             store: Store,
             **styles
         ): 
         tk.Listbox.__init__(self, master=master, **Style.config_listbox_manager.get('listbox'))
-        self.name = f"{listbox_page_insert.name} listbox"
+        self.name = f"{listbox_page_insert_enum.name} listbox"
         self._observable: Observable = observable
         self._store: Store = store
         self._observable.register_observer(self)
-        self.listbox_page_insert: ListboxPageInsert = listbox_page_insert
+        self._listbox_page_insert_enum: ListboxPageInsertEnum = listbox_page_insert_enum
         # self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         # self.config(yscrollcommand=self.scroll_bar.set)
         self.styles: dict = styles
@@ -75,10 +75,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         value_entry_value = current_widget.get() if getattr(current_widget, 'get', None) else value_entry_value
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
-        current_value_state_dict  = self._store.listbox_manager_state_get_value(ListboxManagerStateKey.CURRENT_VALUES_STATE)
+        current_value_state_dict  = self._store.listbox_manager_state_get_value(ListboxInsertManagerStateKey.CURRENT_VALUES_STATE)
         # overwrite - stops duplicates
         updated_value_state_sorted_dict = Utils.sorted_dict(Utils.merge_dicts(current_value_state_dict, {key_entry_value: value_entry_value}))
-        self._store.listbox_manager_state_set(enum_key=ListboxManagerStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
+        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
         
         self.after_idle(lambda: self.yview_moveto(y0))
         # UPDATE THE PAGE WIDGET - calls tree update_tree_item_to_page_widget
@@ -216,8 +216,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.editting_item_index = index
         current_treeview_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
         # using listbox state stored - already filtered/extracted
-        page_insert = self._store.current_listbox.listbox_page_insert
-        current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(page_insert).get(ListboxManagerStateKey.CURRENT_VALUES_STATE.value).keys())
+        page_insert = self._store.current_listbox_insert.listbox_page_insert
+        current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(page_insert).get(ListboxInsertManagerStateKey.CURRENT_VALUES_STATE.value).keys())
         key_option_box = self.build_key_option_box(
             index=index,
             item_option_vals_list=current_item_options_list
