@@ -35,6 +35,7 @@ class ActionType(Enum):
     CANCEL_UPDATE_LISTBOX = "cancel_update_listbox"
     UPDATE_TREE_ITEM_TO_PAGE_WIDGET = "update_tree_item_to_page_widget"
     DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
+    TOGGLE_GEO_BUTTON_VISIBLE = "toggle_geo_button_visible"
 
 class ConfigValueType(Enum):
     STRING = "str"

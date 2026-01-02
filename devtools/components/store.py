@@ -48,6 +48,17 @@ class Store:
                 ListboxInsertManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.GEOMETRY
             }
         }
+        self.hidden_widgets = None
+        self.show_geometry_button = tk.BooleanVar(value=False)
+        self.show_geometry_button.trace_add('write', self.on_geometry_var_change)
+    
+    def on_geometry_var_change(self, *_):
+        logging.debug(f'Geometry button var changed to: {self.show_geometry_button.get()}')
+        self._observable.notify_observers(Action(
+            type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
+        data=self.show_geometry_button.get()
+        ))
+
     @try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
         return self.tree_state.get(enum_key.value)
@@ -70,7 +81,7 @@ class Store:
     def listbox_manager_state_set(self, enum_key: ListboxInsertManagerStateKey, state_to_set: Any, page_insert_override: ListboxPageInsertEnum | None = None):
         # use current page insert or override param - get listbox by enum key
         current_target_listbox = self.listbox_inserts.get(page_insert_override) if page_insert_override else self.current_listbox_insert
-        current_target_listbox_enum = current_target_listbox._listbox_page_insert_enum
+        current_target_listbox_enum = current_target_listbox._listbox_page_insert_enum if current_target_listbox else None
         
         match current_target_listbox_enum:
             # set one of the ListboxInsertManagerStateKey values by ListboxPageInsertEnum
@@ -100,6 +111,14 @@ class Store:
     def allow_input_focus_out_logic(self, value):
         logging.debug(f'SETTING allow_input_focus_out_logic TO {value}')
         self._allow_input_focus_out_logic = value
+
+    @property
+    def hidden_widgets(self):
+        return self._hidden_widgets
+
+    @hidden_widgets.setter
+    def hidden_widgets(self, value):
+        self._hidden_widgets = value
 
     @property
     def devtools_window_in_focus(self):

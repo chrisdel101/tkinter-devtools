@@ -18,27 +18,17 @@ class DevtoolsWindow(tk.Toplevel):
         self.root = root
         self._observable = Observable()
         self._store = Store(observable=self._observable)
-        # right window - create first it can be passed to listbox manager as owner
-        self.right_window = RightWindowFrame(
-            master=self,
-            observable=self._observable,
-            store=self._store)
-        # listbox for the config entries - sends dict of config values up when updated
-        # self.config_listbox_mngr = ConfigListboxManager(
-        #     master=self.right_window, 
-        #     observable=self._observable,
-        #     store=self._store,           
-        #     **Style.config_listbox_manager)
-        # pack listbox inside right window after the fact
-        # self.right_window.set_listbox_manager(self.config_listbox_mngr)
-
         # left window - sends currently selected node up when changed - pass down listbox to apply updates
         self.left_window = LeftWindowFrame(
             root=root, 
             master=self,
             observable=self._observable,
             store=self._store)
-
+    # right window - create first it can be passed to listbox manager as owner
+        self.right_window = RightWindowFrame(
+            master=self,
+            observable=self._observable,
+            store=self._store)
         # pack left window
         self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
         # pack right window

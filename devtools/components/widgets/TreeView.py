@@ -1,15 +1,16 @@
 from __future__ import annotations
 import tkinter as tk
-from tkinter import ttk 
+from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListboxInsertManagerStateKey, ListboxPageInsertEnum, TreeStateKey
 from devtools.utils import Utils
 
+
 class TreeView(ttk.Treeview):
-    
-    def __init__(self, root, master, observable, store): 
+
+    def __init__(self, root, master, observable, store):
         super().__init__(master, show="tree", style="My.Treeview")
         self.root = root
         self._observable = observable
@@ -23,57 +24,69 @@ class TreeView(ttk.Treeview):
         # main listener for tree item selects
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
         self.build_tree(root)
-        # on init use tree selection_set api - triggers lb load
-        self.selection_set(self.get_children()[0])
+        # tree selection_set api - triggers lb load
+        # does not run until after all widgets created
+        iid = self.get_children()[0]
+        self.selection_set(iid)
+        # self.event_generate("<<TreeviewSelect>>")
+
+        # self.selection_set(self.get_children()[0])
 
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
         """Store the widget by Treeview.insert ID."""
-        current_widget_id_dict = self._store.tree_state_get(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT) 
+        current_widget_id_dict = self._store.tree_state_get(
+            TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT)
         new_dict = {**current_widget_id_dict, **{item_id: widget}}
-        
-        self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, new_dict)
+
+        self._store.tree_state_set(
+            TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, new_dict)
         # self.store_widget_by_tree_insert_id[item_id] = widget
 
     # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
     def add_tree_item_to_obj_mem_id_store(self, memory_id: int, tree_insert_id: str, widget: tk.Widget):
         # """Store the widget by Treeview.insert ID."""
         # self.store_widget_by_obj_mem_id[memory_id] = {
-        #     "tree_id": tree_insert_id, 
+        #     "tree_id": tree_insert_id,
         #      "widget": widget
         #     }
-        current_mem_id_widget_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) 
+        current_mem_id_widget_store = self._store.tree_state_get(
+            TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
         new_dict = Utils.merge_dicts(
-            current_mem_id_widget_store, 
+            current_mem_id_widget_store,
             {memory_id: {
-                "tree_id": tree_insert_id, 
+                "tree_id": tree_insert_id,
                 "widget": widget,
                 "widget_config_init_frozen": Utils.extract_current_config_key_values(Utils.filter_non_used_config_attrs(widget.configure()))
             }})
-        self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
+        self._store.tree_state_set(
+            TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
 
     def get_widget_by_tree_insert_id(self, item_id: str):
         return self._store.tree_state_get(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT).get(item_id)
 
     def get_widget_by_obj_mem_id(self, item_id: int):
         return self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(item_id).get("widget")
-    
+
     # on first call insert widget and get insert id - recurse
-    # on next calls used vals passed in 
-    def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str=""):
+    # on next calls used vals passed in
+    def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
         try:
             # no parent node it's first call - no id to use yet
             if not parent_widget_insert_id:
                 parent_memory_id = id(parent_widget)
                 # manual insert -get insert id
                 # set using blank str   - used for first level tree node
-                insert_parent_memory_id = self.insert("", "end", text=parent_widget.winfo_class())
+                insert_parent_memory_id = self.insert(
+                    "", "end", text=parent_widget.winfo_class())
                 # add using mem id {4579038880: {tree_id:'I002', widget:tk.Widget}}
-                self.add_tree_item_to_obj_mem_id_store(parent_memory_id, insert_parent_memory_id, parent_widget)
-                self.add_tree_item_to_tree_insert_id_store(insert_parent_memory_id, parent_widget) 
-               
+                self.add_tree_item_to_obj_mem_id_store(
+                    parent_memory_id, insert_parent_memory_id, parent_widget)
+                self.add_tree_item_to_tree_insert_id_store(
+                    insert_parent_memory_id, parent_widget)
+
             else:
-            # parent node - so use id passed from prev call
+                # parent node - so use id passed from prev call
                 insert_parent_memory_id = parent_widget_insert_id
             # method gives all child widgets of tk obj
             for child in parent_widget.winfo_children():
@@ -81,28 +94,31 @@ class TreeView(ttk.Treeview):
                 if isinstance(child, tk.Toplevel):
                     continue
                 child_memory_id = id(child)
-                  # check not already stored - build the tree
-                  # if it is stored = no change just move on
-               
+                # check not already stored - build the tree
+                # if it is stored = no change just move on
+
                 # ID of place in tree - insert returns ID of inserted widget
-                insert_child_memory_id = self.insert(insert_parent_memory_id, tk.END, text=child.winfo_class())
-                self.add_tree_item_to_obj_mem_id_store(child_memory_id, insert_child_memory_id, child)
-                # dict store id: widget 
-                self.add_tree_item_to_tree_insert_id_store(insert_child_memory_id, child)
+                insert_child_memory_id = self.insert(
+                    insert_parent_memory_id, tk.END, text=child.winfo_class())
+                self.add_tree_item_to_obj_mem_id_store(
+                    child_memory_id, insert_child_memory_id, child)
+                # dict store id: widget
+                self.add_tree_item_to_tree_insert_id_store(
+                    insert_child_memory_id, child)
                 self.build_tree(child, insert_child_memory_id)
-              
+
         except Exception as e:
             logging.error(f"Error build_tree: {e}")
 
+    # walk the tree and get all the widgets
 
-    # walk the tree and get all the widgets  
     def collect_widgets(self, widget, acc=None):
         try:
             if acc is None:
                 acc = set()
             if not self.get_widget_by_obj_mem_id(id(widget)):
                 self.delete_tree()
-                # change - rebuild tree 
+                # change - rebuild tree
                 self.build_tree(self.root)
                 return
             else:
@@ -110,57 +126,71 @@ class TreeView(ttk.Treeview):
 
             for child in widget.winfo_children():
                 if not isinstance(child, tk.Toplevel):
-                    if not self.get_widget_by_obj_mem_id(id(child)):   
+                    if not self.get_widget_by_obj_mem_id(id(child)):
                         self.delete_tree()
-                        # change - rebuild tree 
+                        # change - rebuild tree
                         self.build_tree(self.root)
-                        return  
+                        return
                     else:
                         self.collect_widgets(child, acc)
 
             return acc
         except Exception as e:
-            logging.error(f"Error collect_widgets: {e}") 
+            logging.error(f"Error collect_widgets: {e}")
 
     def handle_tree_select(self, _,):
         try:
             collect_widgets = self.collect_widgets(self.root)
-            # get selected tree item via tree api
+            # get selected tree item via     tree api
             selected = self.selection()
-            if selected and selected != self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):    
+            if selected and selected != self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                 # .selection give tree insert item ID
                 item_id = selected[0]
                 # set tree state selected item
-                self._store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, self.get_widget_by_tree_insert_id(item_id))
+                self._store.tree_state_set(
+                    TreeStateKey.SELECTED_ITEM_WIDGET, self.get_widget_by_tree_insert_id(item_id))
                 # mem_obj_id = self.get_widget_by_obj_mem_id(id(self._store.tree_state_get('selected_item')))
-                
+
                 # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     try:
                         # delete prev content in listbox
-                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
+                        self._observable.notify_observers(
+                            Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
                         # config used to populate listbox
-                        original_attrs_config:dict = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET).configure()
-                            # filter out unwanted config values not in ValidConfigAttr - keep original dict formating
-                        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(original_attrs_config)
+                        original_attrs_config: dict = self._store.tree_state_get(
+                            TreeStateKey.SELECTED_ITEM_WIDGET).configure()
+                        # filter out unwanted config values not in ValidConfigAttr - keep original dict formating
+                        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(
+                            original_attrs_config)
                         # extract the actual set value from value tuples - is key val str pairs
-                        key_value_config_dict: dict[str, str] = Utils.extract_current_config_key_values(filtered_config_dict)
-                        key_value_config_sorted_dict = Utils.sorted_dict(key_value_config_dict)
+                        key_value_config_dict: dict[str, str] = Utils.extract_current_config_key_values(
+                            filtered_config_dict)
+                        key_value_config_sorted_dict = Utils.sorted_dict(
+                            key_value_config_dict)
                         # save listbox state - diff than listbox insert into UI
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict)
-    
-                        geo_manager = Utils.get_geometry_info(selected_item_widget)
-                        geo_manager_dict = Utils.merge_dicts({"geometry_type": geo_manager.geometry_type}, geo_manager.geometry_type_info)
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES
+                                                              )
 
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=geo_manager_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
+                        geo_manager = Utils.get_geometry_info(
+                            selected_item_widget)
+                        if geo_manager:
+                            geo_manager_dict = Utils.merge_dicts(
+                                {"geometry_type": geo_manager.geometry_type}, geo_manager.geometry_type_info)
+                        else:
+                            geo_manager_dict = {}
+                        self._store.show_geometry_button.set(bool(geo_manager_dict))
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE,state_to_set=geo_manager_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"
                         logging.error(err_msg, exc_info=True)
                         # delete all listbox
-                        self._observable.notify_observers(Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
+                        self._observable.notify_observers(
+                            Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
                         # post the error to the screen
-                        self._observable.notify_observers(Action(type=ActionType.INSERT_LISTBOX_ITEM, data={'index': tk.END, 'value': err_msg}))  
-                        
+                        self._observable.notify_observers(Action(
+                            type=ActionType.INSERT_LISTBOX_ITEM, data={'index': tk.END, 'value': err_msg}))
+
         except Exception as e:
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
@@ -169,10 +199,13 @@ class TreeView(ttk.Treeview):
     def update_tree_item_to_page_widget(self, **changes_dict):
         try:
             # self is the page widget - updates the config
-            current_tree_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
-            current_tree_item.config(**{changes_dict['key']: changes_dict['value']})
+            current_tree_item = self._store.tree_state_get(
+                TreeStateKey.SELECTED_ITEM_WIDGET)
+            current_tree_item.config(
+                **{changes_dict['key']: changes_dict['value']})
         except Exception as e:
-            logging.error(f"Error update_tree_item_to_page_widget: {e}", exc_info=True)
+            logging.error(
+                f"Error update_tree_item_to_page_widget: {e}", exc_info=True)
 
     # delete tree and all branches
     def delete_tree(self):

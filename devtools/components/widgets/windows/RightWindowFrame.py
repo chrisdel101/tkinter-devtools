@@ -12,7 +12,7 @@ import tkinter as tk
 
 class RightWindowFrame(tk.Frame):
     def __init__(self, 
-                master, 
+                master,     
                 observable, 
                 store 
                 ):
@@ -48,17 +48,17 @@ class RightWindowFrame(tk.Frame):
         self.bottom_row_wrapper = tk.Frame(self.header_frame, **Style.right_window['header']['bottom_row'])
         self.bottom_row_wrapper.grid(row=1, column=0, sticky="w")
 
-        attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['attr_button_text'])
-        geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
-        attr_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert  (insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES))
-        geo_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.GEOMETRY))
+        self.attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['attr_button_text'])
+        self.geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
+        self.attr_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert  (insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES))
+        self.geo_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.GEOMETRY))
        
         self.add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda:self.handle_add(index=0), width=2, height=2)
         
         self.subtract_config_button = tk.Button(self.bottom_row_wrapper, text="-", command=self.handle_subtract_selection, width=2, height=2)
 
-        attr_button.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
-        geo_button.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
+        self.attr_button.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
+        self.geo_button.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         # pack add button
         self.add_config_button.grid(row=1, column=0, padx=5, pady=5, sticky='sw')
         # pack subtract button
@@ -70,6 +70,14 @@ class RightWindowFrame(tk.Frame):
         # load attr listbox by default
         self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES)
 
+    
+    @try_except_catcher
+    def toggle_geo_button_visible(self, visible: bool):
+        if visible:
+            Utils.show_widget(self.geo_button, self._store)
+        else:
+            Utils.hide_widget(self.geo_button, self._store)
+    
     @try_except_catcher
     def pack_listbox_page_insert(self, insert_type_enum: ListboxPageInsertEnum):
         if current_listbox_insert_enum := (self._store.current_listbox_insert and self._store.current_listbox_insert._listbox_page_insert_enum):
