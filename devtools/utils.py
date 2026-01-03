@@ -4,9 +4,9 @@ import logging
 import tkinter as tk
 from tkinter import ttk
 
-from devtools import geometry_info
 from devtools.components.observable import Action
-from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr
+from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr, ValidGridGeometryAttr, ValidGridGeometryAttr, ValidPackGeometryAttr, ValidPlaceGeometryAttr
+from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryInfo
 from devtools.maps import ACTION_REGISTRY, CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
@@ -92,6 +92,24 @@ class Utils:
         except Exception as e:
             logging.error(f"Error removing junk config items: {e}", exc_info=True)
             raise e
+    @staticmethod
+    @try_except_catcher
+    # remove any non standard unusable attrs like screen, use
+    def build_geometry_attrs_dict(geo_manager: GeometryInfo):
+        match geo_manager.geometry_type:
+            case GeometryType.PACK:
+                common_attributes = [e.value for e in ValidPackGeometryAttr]
+            case GeometryType.GRID:
+                common_attributes = [e.value for e in ValidGridGeometryAttr]
+            case GeometryType.PLACE:
+                common_attributes = [e.value for e in ValidPlaceGeometryAttr]
+            
+        # value can be tuple or str/int
+        for key in list(geo_manager.geometry_type_info.keys()):
+        # delete unwanted config values from dict in place using list
+            if key not in common_attributes:
+                del geo_manager.geometry_type_info[key]
+        return geo_manager.geometry_type_info
     @staticmethod
     # check for tuple length. if 5 it's last item, if 2 it's an alias
     # This is a tk inter standard for all configs objs
@@ -258,3 +276,14 @@ class Utils:
                 widget.grid(**widget_state.geometry_type_info)
             case GeometryType.PLACE:
                 widget.place(**widget_state.geometry_type_info)
+
+    @staticmethod
+    @try_except_catcher
+    def geo_manager_dict(widget) -> bool:
+        geo_manager:GeometryInfo = Utils.get_geometry_info(widget)
+        if geo_manager:
+            attrs_dict = Utils.build_geometry_attrs_dict(geo_manager)
+            geo_manager_dict = Utils.merge_dicts(
+                {"geometry_type": geo_manager.geometry_type}, attrs_dict)
+            return geo_manager_dict
+        return {}

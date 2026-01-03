@@ -20,7 +20,7 @@ class TreeStateKey(Enum):
 class ListboxInsertManagerStateKey(Enum):
     SELECTED_INDEX = "selected_index"
     CURRENT_VALUES_STATE = "current_values_state"
-    LISTBOX_PAGE_INSERT = "listbox_page_insert"
+    LISTBOX_PAGE_INSERT = "listbox_page_insert_enum"
 
 # name to use to display specific listbox insert within frame
 class ListboxPageInsertEnum(Enum):
@@ -44,6 +44,42 @@ class ConfigValueType(Enum):
     FLOAT = "float"
     TUPLE = "tuple"
     LIST = "list"
+
+class ValidGridGeometryAttr(Enum):
+    PADX = "padx"
+    PADY = "pady"
+    ROWSPAN = "rowspan"
+    COLUMNSPAN = "columnspan"
+    ROW = "row"
+    COLUMN = "column"
+    IN_ = "in"
+    IPADX = "ipadx"
+    IPADY = "ipady"
+    STICKY = "sticky"
+
+class ValidPlaceGeometryAttr(Enum):
+    IN_ = "in_"
+    X = "x"
+    Y = "y"
+    RELX = "relx"
+    RELY = "rely"
+    WIDTH = "width"
+    HEIGHT = "height"
+    RELWIDTH = "relwidth"
+    RELHEIGHT = "relheight"
+    ANCHOR = "anchor"
+    BORDERMODE = "bordermode"
+
+
+class ValidPackGeometryAttr(Enum):
+    PADX = "padx"
+    PADY = "pady"
+    EXPAND = "expand"
+    FILL = "fill"
+    IN_ = "in"
+    IPADX = "ipadx"
+    IPADY = "ipady"
+    SIDE = "side"
 
 class ValidConfigAttr(Enum):
     RELIEF = "relief"
@@ -98,10 +134,10 @@ class TreeState(TypedDict):
     mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore] = {}
 
 class ListboxManagerState(TypedDict):
-    listbox_page_insert: ListboxPageInsertEnum
+    listbox_page_insert_enum: ListboxPageInsertEnum
 
 class ListboxInsertManagerState(TypedDict):
     selected_index: int | None
     current_values_state: list[str] | None
-    listbox_page_insert: ListboxPageInsertEnum | None
+    listbox_page_insert_enum: ListboxPageInsertEnum | None
 

@@ -49,11 +49,11 @@ class Store:
             }
         }
         self.hidden_widgets = None
-        self.show_geometry_button = tk.BooleanVar(value=False)
+        self.show_geometry_button = tk.BooleanVar()
         self.show_geometry_button.trace_add('write', self.on_geometry_var_change)
-    
+        self.show_geometry_button.set(False)
+        
     def on_geometry_var_change(self, *_):
-        logging.debug(f'Geometry button var changed to: {self.show_geometry_button.get()}')
         self._observable.notify_observers(Action(
             type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
         data=self.show_geometry_button.get()
@@ -72,7 +72,7 @@ class Store:
     @try_except_catcher
     def listbox_manager_state_get_value(self, enum_key: ListboxInsertManagerStateKey, page_insert_override: ListboxPageInsertEnum | None = None):
         # ge current insert key ListboxPageInsertEnum or manual param
-        page_insert = page_insert_override if page_insert_override else self.current_listbox_insert.listbox_page_insert
+        page_insert = page_insert_override if page_insert_override else self.current_listbox_insert._listbox_page_insert_enum
         return self.current_listbox_insert_internal_state.get(page_insert).get(enum_key.value)
 
     # key for name current_listbox_insert_internal_state, value is dict of values

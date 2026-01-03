@@ -18,13 +18,13 @@ class DevtoolsWindow(tk.Toplevel):
         self.root = root
         self._observable = Observable()
         self._store = Store(observable=self._observable)
-        # left window - sends currently selected node up when changed - pass down listbox to apply updates
+        
         self.left_window = LeftWindowFrame(
             root=root, 
             master=self,
             observable=self._observable,
             store=self._store)
-    # right window - create first it can be passed to listbox manager as owner
+    
         self.right_window = RightWindowFrame(
             master=self,
             observable=self._observable,

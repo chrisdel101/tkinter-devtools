@@ -24,13 +24,9 @@ class TreeView(ttk.Treeview):
         # main listener for tree item selects
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
         self.build_tree(root)
-        # tree selection_set api - triggers lb load
-        # does not run until after all widgets created
-        iid = self.get_children()[0]
-        self.selection_set(iid)
+      
+        self.selection_set(self.get_children()[0])
         # self.event_generate("<<TreeviewSelect>>")
-
-        # self.selection_set(self.get_children()[0])
 
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
@@ -154,6 +150,7 @@ class TreeView(ttk.Treeview):
                 # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     try:
+                        # HANDLE ATTRIBUTE LISTBOX INSERT
                         # delete prev content in listbox
                         self._observable.notify_observers(
                             Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
@@ -169,18 +166,20 @@ class TreeView(ttk.Treeview):
                         key_value_config_sorted_dict = Utils.sorted_dict(
                             key_value_config_dict)
                         # save listbox state - diff than listbox insert into UI
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES
-                                                              )
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES)
+                        # HANDLE GEOMETRY LISTBOX INSERT
+                        # if widget has no geometry set false to hide button
+                        self._store.show_geometry_button.set(bool(Utils.get_geometry_info(selected_item_widget)))
+                        # set geometry listbox state
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE,
+                        state_to_set=Utils.geo_manager_dict(selected_item_widget), page_insert_override=ListboxPageInsertEnum.GEOMETRY)
+                        # # rerun which listbox insert to show
+                        # self._observable.notify_observers(Action(
+                        #     type=ActionType.PACK_LISTBOX_PAGE_INSERT,
+                        #     data=self._store.current_listbox_insert._listbox_page_insert_enum
+                        # ))
 
-                        geo_manager = Utils.get_geometry_info(
-                            selected_item_widget)
-                        if geo_manager:
-                            geo_manager_dict = Utils.merge_dicts(
-                                {"geometry_type": geo_manager.geometry_type}, geo_manager.geometry_type_info)
-                        else:
-                            geo_manager_dict = {}
-                        self._store.show_geometry_button.set(bool(geo_manager_dict))
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE,state_to_set=geo_manager_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
+                        
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"
                         logging.error(err_msg, exc_info=True)

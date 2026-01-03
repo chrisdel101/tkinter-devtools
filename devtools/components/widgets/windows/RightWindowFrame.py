@@ -50,17 +50,17 @@ class RightWindowFrame(tk.Frame):
 
         self.attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['attr_button_text'])
         self.geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
-        self.attr_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert  (insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES))
-        self.geo_button.bind("<Button-1>", lambda e: self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.GEOMETRY))
+        self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click  (insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES))
+        self.geo_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageInsertEnum.GEOMETRY))
        
-        self.add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda:self.handle_add(index=0), width=2, height=2)
+        add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda: self.handle_add(0), width=2, height=2)
         
         self.subtract_config_button = tk.Button(self.bottom_row_wrapper, text="-", command=self.handle_subtract_selection, width=2, height=2)
 
         self.attr_button.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
         self.geo_button.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         # pack add button
-        self.add_config_button.grid(row=1, column=0, padx=5, pady=5, sticky='sw')
+        add_config_button.grid(row=1, column=0, padx=5, pady=5, sticky='sw')
         # pack subtract button
         self.subtract_config_button.grid(row=1, column=1, padx=5, pady=5, sticky='sw')
         # add focus on click - allows focus out from listbox to work
@@ -69,7 +69,6 @@ class RightWindowFrame(tk.Frame):
         self.header_frame.pack(fill='both')
         # load attr listbox by default
         self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES)
-
     
     @try_except_catcher
     def toggle_geo_button_visible(self, visible: bool):
@@ -79,12 +78,18 @@ class RightWindowFrame(tk.Frame):
             Utils.hide_widget(self.geo_button, self._store)
     
     @try_except_catcher
-    def pack_listbox_page_insert(self, insert_type_enum: ListboxPageInsertEnum):
+    # run pack_listbox_page_insert with check to no repack same insert
+    def handle_pack_listbox_page_insert_click(self, insert_type_enum: ListboxPageInsertEnum):
+        # guard logic - block re-packing same listbox
         if current_listbox_insert_enum := (self._store.current_listbox_insert and self._store.current_listbox_insert._listbox_page_insert_enum):
             if current_listbox_insert_enum == insert_type_enum:
                 # button clicked on current - already packed 
                 return
             self._store.current_listbox_insert.pack_forget()
+        self.pack_listbox_page_insert(insert_type_enum=insert_type_enum)
+
+    @try_except_catcher
+    def pack_listbox_page_insert(self, insert_type_enum: ListboxPageInsertEnum):
         match insert_type_enum:
             case ListboxPageInsertEnum.ATTRIBUTES:
                     # set new current list

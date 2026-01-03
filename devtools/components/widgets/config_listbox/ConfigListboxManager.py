@@ -216,7 +216,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.editting_item_index = index
         current_treeview_item = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
         # using listbox state stored - already filtered/extracted
-        page_insert = self._store.current_listbox_insert.listbox_page_insert
+        page_insert = self._store.current_listbox_insert._listbox_page_insert_enum
         current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(page_insert).get(ListboxInsertManagerStateKey.CURRENT_VALUES_STATE.value).keys())
         key_option_box = self.build_key_option_box(
             index=index,
