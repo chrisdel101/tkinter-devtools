@@ -32,7 +32,10 @@ class ActionType(Enum):
     HANDLE_SUBTRACT_INDEX = "handle_subtract_index"
     HANDLE_SUBTRACT_SELECTION = "handle_subtract_selection"
     CANCEL_UPDATE_LISTBOX = "cancel_update_listbox"
-    UPDATE_TREE_ITEM_TO_PAGE_WIDGET = "update_tree_item_to_page_widget"
+    UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG = "update_tree_item_to_page_widget_grid_config"
+    UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG = "update_tree_item_to_page_widget_pack_config"
+    UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG = "update_tree_item_to_page_widget_place_config"
+    UPDATE_TREE_ITEM_TO_PAGE_WIDGET_ATTR_CONFIG = "update_tree_item_to_page_widget_attr_config"
     DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
     TOGGLE_GEO_BUTTON_VISIBLE = "toggle_geo_button_visible"
 
@@ -112,6 +115,9 @@ class AliasRename(Enum):
     PARENT_WIDGET = "parent widget" 
     GEOMETRY_TYPE = "geometry type"
 
+class GeometryAttrAddition(Enum):
+    ROW_CONFIGURE = "rowconfigure" 
+    COLUMN_CONFIGURE = "columnconfigure"
 
 class ComboBoxState(Enum):
     NORMAL = "normal"

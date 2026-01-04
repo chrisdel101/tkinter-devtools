@@ -30,7 +30,7 @@ class ConfigListboxUtils:
         for event in ["<<ComboboxSelected>>", "<Return>"]:
             value_combobox.bind(event, 
                 lambda _: (self.insert_value_output_and_apply_to_page
-                (current_widget=value_combobox, 
+                (value_entry_widget=value_combobox, 
                 key_entry_value=key_entry_value,
                 value_entry_value=value_inside.get(), 
                 ),

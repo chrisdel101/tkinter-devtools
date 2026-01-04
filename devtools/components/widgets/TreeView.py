@@ -4,7 +4,8 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, GeometryAttrAddition, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
+from devtools.decorators import try_except_catcher
 from devtools.utils import Utils
 
 
@@ -169,17 +170,12 @@ class TreeView(ttk.Treeview):
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES)
                         # HANDLE GEOMETRY LISTBOX INSERT
                         # if widget has no geometry set false to hide window button
+                        GeometryAttrAddition
                         self._store.show_geometry_button.set(bool(Utils.get_geometry_info(selected_item_widget)))
                         widget_geometry_dict: dict = Utils.combine_widget_geometry(selected_item_widget)
                         # set geometry listbox state
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
                         state_to_set=Utils.combine_widget_geometry(selected_item_widget), page_insert_override=ListboxPageInsertEnum.GEOMETRY)
-                        # # rerun which listbox insert to show
-                        # self._observable.notify_observers(Action(
-                        #     type=ActionType.PACK_LISTBOX_PAGE_INSERT,
-                        #     data=self._store.current_listbox_insert._listbox_page_insert_enum
-                        # ))
-
                         
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"
@@ -194,18 +190,40 @@ class TreeView(ttk.Treeview):
         except Exception as e:
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
+
+    @try_except_catcher
+    def update_tree_item_to_page_widget_grid_config(self, **changes_dict):
+        # self is the page widget - updates the config
+        current_tree_item = self._store.tree_state_get(
+            TreeStateKey.SELECTED_ITEM_WIDGET)
+        current_tree_item.grid_configure(
+            **{changes_dict['key']: changes_dict['value']})
+        
+    @try_except_catcher
+    def update_tree_item_to_page_widget_place_config(self, **changes_dict):
+        # self is the page widget - updates the config
+        current_tree_item = self._store.tree_state_get(
+            TreeStateKey.SELECTED_ITEM_WIDGET)
+        current_tree_item.place_configure(
+            **{changes_dict['key']: changes_dict['value']})
+        
+    @try_except_catcher
+    def update_tree_item_to_page_widget_pack_config(self, **changes_dict):
+        # self is the page widget - updates the config
+        current_tree_item = self._store.tree_state_get(
+            TreeStateKey.SELECTED_ITEM_WIDGET)
+        current_tree_item.pack_configure(
+            **{changes_dict['key']: changes_dict['value']})
+        
     # takes a dict and applies it to widget config
     # - UPDATE THE PAGE WIDGET HERE
-    def update_tree_item_to_page_widget(self, **changes_dict):
-        try:
-            # self is the page widget - updates the config
-            current_tree_item = self._store.tree_state_get(
-                TreeStateKey.SELECTED_ITEM_WIDGET)
-            current_tree_item.config(
-                **{changes_dict['key']: changes_dict['value']})
-        except Exception as e:
-            logging.error(
-                f"Error update_tree_item_to_page_widget: {e}", exc_info=True)
+    @try_except_catcher
+    def update_tree_item_to_page_widget_attr_config(self, **changes_dict):
+        # self is the page widget - updates the config
+        current_tree_item = self._store.tree_state_get(
+            TreeStateKey.SELECTED_ITEM_WIDGET)
+        current_tree_item.config(
+            **{changes_dict['key']: changes_dict['value']})
 
     # delete tree and all branches
     def delete_tree(self):

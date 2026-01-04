@@ -160,7 +160,7 @@ class RightWindowFrame(tk.Frame):
                 original_config_value = lookup_by_id_frozen_config.get(changes_dict['key'])
                 # updates the page widget - notify tree - sets config to zero
                 self._observable.notify_observers(
-                    Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET, 
+                    Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_ATTR_CONFIG, 
                     data={
                         "key": changes_dict['key'],
                         "value": original_config_value

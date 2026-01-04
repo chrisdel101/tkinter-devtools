@@ -5,8 +5,9 @@ from tkinter import ttk
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxInsertNotifyStateKey, Store
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
+from devtools.geometry_info import GeometryInfo
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -65,14 +66,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     @try_except_catcher
     def insert_value_output_and_apply_to_page(
             self, 
-            current_widget: tk.Entry | tk.OptionMenu, 
+            value_entry_widget: tk.Entry | tk.OptionMenu, 
             key_entry_value: str,
             value_entry_value: str,
         ):
         # store the current y position in listbox  
         y0, _ = self.yview()
         # check for .get method  - use .get for new entry else val correct option box  
-        value_entry_value = current_widget.get() if getattr(current_widget, 'get', None) else value_entry_value
+        value_entry_value = value_entry_widget.get() if getattr(value_entry_widget, 'get', None) else value_entry_value
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
         current_listbox_insert_widget = self._store.current_listbox_insert
@@ -82,11 +83,32 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
         
         self.after_idle(lambda: self.yview_moveto(y0))
-        # UPDATE THE PAGE WIDGET - calls tree update_tree_item_to_page_widget
-        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET, data={
-            'key': key_entry_value,
-            'value': value_entry_value
-        }))
+        # UPDATE THE PAGE WIDGETS HERE - calls tree 
+        if self._listbox_page_insert_enum == ListboxPageInsertEnum.ATTRIBUTES:
+            # run update_tree_item_to_page_widget_attr_config on widget.config
+            self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_ATTR_CONFIG, data={
+                'key': key_entry_value,
+                'value': value_entry_value
+            }))
+        else:
+            # GEOMETRY UPDATE HANDLING
+            geo_manager = self._store.tree_state.get(TreeStateKey.SELECTED_ITEM_WIDGET.value).winfo_manager()
+            match geo_manager:
+                case GeometryType.PACK.value:
+                    self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
+                        'key': key_entry_value,
+                        'value': value_entry_value
+                    }))
+                case GeometryType.GRID.value:
+                    self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG, data={
+                        'key': key_entry_value,
+                        'value': value_entry_value
+                    }))
+                case GeometryType.PLACE.value:       
+                    self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG, data={
+                        'key': key_entry_value,
+                        'value': value_entry_value
+                    }))
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
         self._store.block_active_adding = False
         self._store.allow_input_focus_out_logic = True
@@ -140,7 +162,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._set_selected_by_index(index)
         value_entry.bind("<Return>", lambda e: 
             self.insert_value_output_and_apply_to_page(
-            current_widget=e.widget, 
+            value_entry_widget=e.widget, 
             key_entry_value=key_entry_value,
             value_entry_value=value_entry_value
             )
