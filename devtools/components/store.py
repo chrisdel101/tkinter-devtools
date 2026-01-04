@@ -4,7 +4,7 @@ import tkinter as tk
 from typing import Any
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxInsertManagerStateKey, ListboxPageInsertEnum, TreeState, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
 from devtools.decorators import try_except_catcher
@@ -38,14 +38,14 @@ class Store:
         self.current_listbox_insert: ConfigListboxManager | None = None
         self.current_listbox_insert_internal_state: ListboxManagerState = {
             ListboxPageInsertEnum.ATTRIBUTES: {
-                ListboxInsertManagerStateKey.SELECTED_INDEX.value: None,
-                ListboxInsertManagerStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxInsertManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.ATTRIBUTES
+                ListboxInsertNotifyStateKey.SELECTED_INDEX.value: None,
+                ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE.value: None,
+                ListboxInsertNotifyStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.ATTRIBUTES
             },
             ListboxPageInsertEnum.GEOMETRY: {
-                ListboxInsertManagerStateKey.SELECTED_INDEX.value: None,
-                ListboxInsertManagerStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxInsertManagerStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.GEOMETRY
+                ListboxInsertNotifyStateKey.SELECTED_INDEX.value: None,
+                ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE.value: None,
+                ListboxInsertNotifyStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.GEOMETRY
             }
         }
         self.hidden_widgets = None
@@ -70,7 +70,7 @@ class Store:
 
     # get single value from listbox manager state
     @try_except_catcher
-    def listbox_manager_state_get_value(self, enum_key: ListboxInsertManagerStateKey, page_insert_override: ListboxPageInsertEnum | None = None):
+    def listbox_manager_state_get_value(self, enum_key: ListboxInsertNotifyStateKey, page_insert_override: ListboxPageInsertEnum | None = None):
         # ge current insert key ListboxPageInsertEnum or manual param
         page_insert = page_insert_override if page_insert_override else self.current_listbox_insert._listbox_page_insert_enum
         return self.current_listbox_insert_internal_state.get(page_insert).get(enum_key.value)
@@ -78,13 +78,13 @@ class Store:
     # key for name current_listbox_insert_internal_state, value is dict of values
     # - updates whole dict whenever a change occurs
     @try_except_catcher
-    def listbox_manager_state_set(self, enum_key: ListboxInsertManagerStateKey, state_to_set: Any, page_insert_override: ListboxPageInsertEnum | None = None):
+    def listbox_manager_state_set(self, enum_key: ListboxInsertNotifyStateKey, state_to_set: Any, page_insert_override: ListboxPageInsertEnum | None = None):
         # use current page insert or override param - get listbox by enum key
         current_target_listbox = self.listbox_inserts.get(page_insert_override) if page_insert_override else self.current_listbox_insert
         current_target_listbox_enum = current_target_listbox._listbox_page_insert_enum if current_target_listbox else None
         
         match current_target_listbox_enum:
-            # set one of the ListboxInsertManagerStateKey values by ListboxPageInsertEnum
+            # set one of the ListboxInsertNotifyStateKey values by ListboxPageInsertEnum
             case ListboxPageInsertEnum.ATTRIBUTES:
                 print("U1")
                 self.current_listbox_insert_internal_state[

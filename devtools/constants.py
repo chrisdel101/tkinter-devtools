@@ -10,14 +10,13 @@ class GeometryType(Enum ):
     PACK = "pack"
     GRID = "grid"
     PLACE = "place"
-    
 
 class TreeStateKey(Enum):
     SELECTED_ITEM_WIDGET =  1
     WIDGETS_BY_TREE_INSERT_ID_DICT = 2
     MEM_WIDGET_STORE_BY_PY_MEM_ID= 3
 
-class ListboxInsertManagerStateKey(Enum):
+class ListboxInsertNotifyStateKey(Enum):
     SELECTED_INDEX = "selected_index"
     CURRENT_VALUES_STATE = "current_values_state"
     LISTBOX_PAGE_INSERT = "listbox_page_insert_enum"
@@ -46,19 +45,19 @@ class ConfigValueType(Enum):
     LIST = "list"
 
 class ValidGridGeometryAttr(Enum):
+    IN_ = "in"
     PADX = "padx"
     PADY = "pady"
     ROWSPAN = "rowspan"
     COLUMNSPAN = "columnspan"
     ROW = "row"
     COLUMN = "column"
-    IN_ = "in"
     IPADX = "ipadx"
     IPADY = "ipady"
     STICKY = "sticky"
 
 class ValidPlaceGeometryAttr(Enum):
-    IN_ = "in_"
+    IN_ = "in"
     X = "x"
     Y = "y"
     RELX = "relx"
@@ -72,14 +71,18 @@ class ValidPlaceGeometryAttr(Enum):
 
 
 class ValidPackGeometryAttr(Enum):
+    IN = "in" # dupe remove  
     PADX = "padx"
     PADY = "pady"
     EXPAND = "expand"
     FILL = "fill"
-    IN_ = "in"
     IPADX = "ipadx"
     IPADY = "ipady"
     SIDE = "side"
+
+class AllValidGeometryAttr(Enum):
+    GEOMETRY_TYPE = "geometry_type"
+    IN = "in"
 
 class ValidConfigAttr(Enum):
     RELIEF = "relief"
@@ -105,15 +108,15 @@ class ValidConfigAttr(Enum):
     WIDTH = "width"
     HEIGHT = "height"
 
-KEYS_TO_REMOVE = ['class']
+class AliasRename(Enum):
+    PARENT_WIDGET = "parent widget" 
+    GEOMETRY_TYPE = "geometry type"
+
 
 class ComboBoxState(Enum):
     NORMAL = "normal"
     READONLY = "readonly"
 
-class OptionBoxState(Enum):
-    OPEN = "open"
-    CLOSED = "closed"
 # create used when adding and no val is being input
 class ListBoxEntryInputAction(Enum):
     CREATE = 1

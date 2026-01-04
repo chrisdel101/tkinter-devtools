@@ -1,4 +1,4 @@
-from devtools.constants import ActionType, ValidConfigAttr, ConfigValueType
+from devtools.constants import ActionType, AliasRename, ValidConfigAttr, ConfigValueType, AllValidGeometryAttr
 
 CONFIG_SETTING_VALUES = {
     # relief
@@ -69,6 +69,9 @@ CONFIG_SETTING_VALUES = {
 }
 
 CONFIG_ALIASES = {
+    AllValidGeometryAttr.GEOMETRY_TYPE.value: AliasRename.GEOMETRY_TYPE.value,
+    AllValidGeometryAttr.IN.value: AliasRename.PARENT_WIDGET.value,
+    ValidConfigAttr.BD.value: ValidConfigAttr.BORDERWIDTH.value,
     ValidConfigAttr.BD.value: ValidConfigAttr.BORDERWIDTH.value,
     ValidConfigAttr.BG.value: ValidConfigAttr.BACKGROUND.value,
     ValidConfigAttr.FG.value: ValidConfigAttr.FOREGROUND.value,

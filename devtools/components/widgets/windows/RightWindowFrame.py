@@ -1,9 +1,8 @@
 from __future__ import annotations
 import logging
 from tkinter import ttk
-from unittest import case
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxInsertManagerStateKey, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.style import Style
 from devtools.utils import Utils
@@ -111,7 +110,10 @@ class RightWindowFrame(tk.Frame):
             return
         # setter for state store
         self._store.block_active_adding = True
-        current_listbox_selection = self._attr_config_listbox_mngr.curselection()
+        current_listbox_insert_widget = self._store.current_listbox_insert
+        current_listbox_insert_enum = ListboxPageInsertEnum
+        # if current_listbox_insert_widget._listbox_page_insert_enum == ListboxPageInsertEnum.ATTRIBUTES:
+        current_listbox_selection = current_listbox_insert_widget.curselection()
         # current_treeview_item = self._store.tree_state_get('selected_item')
         if index is not None:
             insert_at_index = index
@@ -123,9 +125,10 @@ class RightWindowFrame(tk.Frame):
             current_selection_index = current_listbox_selection[0]
             insert_at_index = current_selection_index + 1
         print("Inserting at index:", insert_at_index)
-        self._attr_config_listbox_mngr.insert_listbox_item(index=insert_at_index, value="")
-        # called on the child listbox
-        self._attr_config_listbox_mngr.handle_entry_input_create(
+        # insert into listbox
+        current_listbox_insert_widget.insert_listbox_item(index=insert_at_index, value="")
+        # init entry input process
+        current_listbox_insert_widget.handle_entry_input_create(
             index=insert_at_index
         )
         

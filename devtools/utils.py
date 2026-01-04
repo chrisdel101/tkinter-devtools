@@ -5,12 +5,19 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr, ValidGridGeometryAttr, ValidGridGeometryAttr, ValidPackGeometryAttr, ValidPlaceGeometryAttr
+from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr, AllValidGeometryAttr, ValidGridGeometryAttr, ValidGridGeometryAttr, ValidPackGeometryAttr, ValidPlaceGeometryAttr
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryInfo
 from devtools.maps import ACTION_REGISTRY, CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
 class Utils:
+    @staticmethod
+    # Check false but excluding zero
+    def non_zero_falsey(value) -> bool:
+        # true for None and ""
+        if not isinstance(value, (int, float)) and not value:
+            return True
+        return False
     @staticmethod
     # loops over widget config options and applies any matches - skips invalid options
     def match_safe_kwargs(widget_cls, master, **kwargs):
@@ -105,22 +112,30 @@ class Utils:
                 common_attributes = [e.value for e in ValidPlaceGeometryAttr]
             
         # value can be tuple or str/int
-        for key in list(geo_manager.geometry_type_info.keys()):
+        for key, val in list(geo_manager.geometry_type_info.items()):
         # delete unwanted config values from dict in place using list
-            if key not in common_attributes:
+            if Utils.non_zero_falsey(val):
+                del geo_manager.geometry_type_info[key]
+            elif key not in common_attributes:
                 del geo_manager.geometry_type_info[key]
         return geo_manager.geometry_type_info
+    
     @staticmethod
-    # check for tuple length. if 5 it's last item, if 2 it's an alias
+    def conform_geometry_listbox_config(config):
+        key_val_dict = {}
+        # use names from enum values
+        valid_names = {e.value for e in ValidConfigAttr}
+    @staticmethod
+    # check for each tuple length. if 5 it's last item, if 2 it's an alias
     # This is a tk inter standard for all configs objs
-    def extract_current_config_key_values(config):
+    def conform_attr_lisbox_config(config):
         try:
             key_val_dict = {}
             # use names from enum values
             valid_names = {e.value for e in ValidConfigAttr}
             for key, val in config.items():
                 # resolve alias to full name - or just return name ie borderwidth
-                canonical = Utils.config_attr_resolver(key)
+                canonical = Utils.listbox_attr_alias_resolver(key)
                 # check that name is part is one if valid ones - stop if not
                 if canonical not in valid_names:
                     continue             
@@ -195,7 +210,7 @@ class Utils:
           
     @staticmethod 
     # resolve aliases to call matching value          
-    def config_attr_resolver(attr_str: str):
+    def listbox_attr_alias_resolver(attr_str: str):
     # check if it's alias mapping to a full config attr - else return as is
         resolved = CONFIG_ALIASES.get(attr_str, attr_str)
         return resolved
@@ -279,11 +294,20 @@ class Utils:
 
     @staticmethod
     @try_except_catcher
-    def geo_manager_dict(widget) -> bool:
-        geo_manager:GeometryInfo = Utils.get_geometry_info(widget)
+    def combine_widget_geometry(widget) -> dict:
+        geo_manager: GeometryInfo = Utils.get_geometry_info(widget)
+        resolved_combined_widget_geometry ={}
         if geo_manager:
             attrs_dict = Utils.build_geometry_attrs_dict(geo_manager)
-            geo_manager_dict = Utils.merge_dicts(
-                {"geometry_type": geo_manager.geometry_type}, attrs_dict)
-            return geo_manager_dict
+            combined_widget_geometry = Utils.merge_dicts(
+                {
+                    AllValidGeometryAttr.GEOMETRY_TYPE.value: geo_manager.geometry_type
+                }, 
+                attrs_dict
+            )
+            for key, val in combined_widget_geometry.items(): 
+                # resolve alias or keep key as is
+                canonical = Utils.listbox_attr_alias_resolver(key)
+                resolved_combined_widget_geometry[canonical] = val
+            return resolved_combined_widget_geometry
         return {}

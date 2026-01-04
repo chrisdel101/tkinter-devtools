@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxInsertManagerStateKey, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
 from devtools.utils import Utils
 
 
@@ -53,7 +53,7 @@ class TreeView(ttk.Treeview):
             {memory_id: {
                 "tree_id": tree_insert_id,
                 "widget": widget,
-                "widget_config_init_frozen": Utils.extract_current_config_key_values(Utils.filter_non_used_config_attrs(widget.configure()))
+                "widget_config_init_frozen": Utils.conform_attr_lisbox_config(Utils.filter_non_used_config_attrs(widget.configure()))
             }})
         self._store.tree_state_set(
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
@@ -161,18 +161,19 @@ class TreeView(ttk.Treeview):
                         filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(
                             original_attrs_config)
                         # extract the actual set value from value tuples - is key val str pairs
-                        key_value_config_dict: dict[str, str] = Utils.extract_current_config_key_values(
+                        key_value_config_dict: dict[str, str] = Utils.conform_attr_lisbox_config(
                             filtered_config_dict)
                         key_value_config_sorted_dict = Utils.sorted_dict(
                             key_value_config_dict)
                         # save listbox state - diff than listbox insert into UI
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES)
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES)
                         # HANDLE GEOMETRY LISTBOX INSERT
-                        # if widget has no geometry set false to hide button
+                        # if widget has no geometry set false to hide window button
                         self._store.show_geometry_button.set(bool(Utils.get_geometry_info(selected_item_widget)))
+                        widget_geometry_dict: dict = Utils.combine_widget_geometry(selected_item_widget)
                         # set geometry listbox state
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertManagerStateKey.CURRENT_VALUES_STATE,
-                        state_to_set=Utils.geo_manager_dict(selected_item_widget), page_insert_override=ListboxPageInsertEnum.GEOMETRY)
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
+                        state_to_set=Utils.combine_widget_geometry(selected_item_widget), page_insert_override=ListboxPageInsertEnum.GEOMETRY)
                         # # rerun which listbox insert to show
                         # self._observable.notify_observers(Action(
                         #     type=ActionType.PACK_LISTBOX_PAGE_INSERT,
