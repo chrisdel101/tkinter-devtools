@@ -8,7 +8,7 @@ from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr, AllValidGeometryAttr, ValidGridGeometryAttr, ValidGridGeometryAttr, ValidPackGeometryAttr, ValidPlaceGeometryAttr
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryInfo
-from devtools.maps import ACTION_REGISTRY, CONFIG_SETTING_VALUES, CONFIG_ALIASES
+from devtools.maps import ACTION_REGISTRY, ATTR_CONFIG_SETTING_VALUES, CONFIG_ALIASES
 
 class Utils:
     @staticmethod
@@ -183,7 +183,7 @@ class Utils:
         except Exception as e:
             logging.error(f"Error sorting_dict: {e}", exc_info=True)
             raise e
-    @staticmethod
+    @staticmethod # NOT USED
     # compare L1 - L2 return the differences - check if a difference is valid as a setting value
     def get_valid_key_value_differences(config):
         try:
@@ -194,14 +194,14 @@ class Utils:
                     differences = [item for item in val if (isinstance(item, str) and (item or "").lower()) != (key or "").lower()]
                     # for each difference check if it an an actual setting value - we want these
                     for difference in differences:
-                        if (setting_value := CONFIG_SETTING_VALUES.get(key)):
+                        if (setting_value := ATTR_CONFIG_SETTING_VALUES.get(key)):
                             type_allowed = setting_value.get('type')
                         # check if current setting matches a type that's allowed
                             if ((type(difference).__name__ or "").lower() == type_allowed and difference) != "":
                                 if key_val_config.get(key) == None:
                                     key_val_config[key] = difference
                 elif isinstance(val, (str, int, float)):
-                    if CONFIG_SETTING_VALUES.get(key):
+                    if ATTR_CONFIG_SETTING_VALUES.get(key):
                         key_val_config[key] = val
             return key_val_config
         except Exception as e:

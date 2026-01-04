@@ -5,7 +5,7 @@ from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListBoxEntryInputAction
 from devtools.decorators import try_except_catcher
-from devtools.maps import CONFIG_SETTING_VALUES
+from devtools.maps import ATTR_CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 
 class ConfigListboxUtils:
@@ -86,9 +86,9 @@ class ConfigListboxUtils:
                         index=index,
                         key_option_box=key_combo_box,
                     value_inside=value_inside,
-                    item_option_vals_list=self._get_config_value_options(value_inside.get())
+                    item_option_vals_list=self.get_attr_config_mapped_vals(value_inside.get())
                 ) 
-                if self._get_config_value_options(value_inside.get()) else 
+                if self.get_attr_config_mapped_vals(value_inside.get()) else 
                 self.handle_build_value_entry_from_key_entry(
                     index=index,
                     key_entry_widget=key_combo_box,
@@ -190,13 +190,13 @@ class ConfigListboxUtils:
 
     # get options of config properties to use in dropdown - if they exist
     @staticmethod
-    def _get_config_value_options(key_str_value:str=None) -> list| str:
+    def get_attr_config_mapped_vals(key_str_value:str=None) -> list| str:
         if not key_str_value:
             return 
         # check for options in map
-        options_list = (CONFIG_SETTING_VALUES.get(key_str_value) or {}).get('values')
+        options_list = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {}).get('values')
         if options_list is None:
-            logging.debug(f"_get_config_value_options: {key_str_value} not mapped. Either it's not a list value or it was missed in Utils.filter_non_used_config_attrs.", exc_info=True)
+            logging.debug(f"get_attr_config_mapped_vals: {key_str_value} not mapped. Either it's not a list value or it was missed in Utils.filter_non_used_config_attrs.", exc_info=True)
         return options_list
     
     @staticmethod
@@ -204,9 +204,6 @@ class ConfigListboxUtils:
         for arg in filter(None, args):
             arg.destroy()
     
-    # def _delete(self):
-        # self.delete(0, tk.END)
-
     # on init - load selected tree items attrs into listbox
     # runs from treeview
     def insert_listbox_items(self, **config_dict):

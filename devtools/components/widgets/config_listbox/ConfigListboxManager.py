@@ -206,8 +206,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         key_entry.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
-
-        item_option_vals_list: list[str] | None = self._get_config_value_options(changes_dict.get('key'))
+        # get any mapped vals for config attribute
+        item_option_vals_list: list[str] | None = self.get_attr_config_mapped_vals(changes_dict.get('key'))
         if item_option_vals_list:
             value_option_box = self.build_value_option_box(
             index=index,

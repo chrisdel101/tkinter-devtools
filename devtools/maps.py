@@ -1,6 +1,6 @@
 from devtools.constants import ActionType, AliasRename, ValidConfigAttr, ConfigValueType, AllValidGeometryAttr
 
-CONFIG_SETTING_VALUES = {
+ATTR_CONFIG_SETTING_VALUES = {
     # relief
     ValidConfigAttr.RELIEF.value: {
         'values': ["flat","raised","sunken","groove","ridge","solid"],

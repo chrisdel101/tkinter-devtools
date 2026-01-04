@@ -198,6 +198,9 @@ class TreeView(ttk.Treeview):
             TreeStateKey.SELECTED_ITEM_WIDGET)
         current_tree_item.grid_configure(
             **{changes_dict['key']: changes_dict['value']})
+        current_tree_item.update_idletasks()
+        # saved_grid_state = current_tree_item.grid_info()
+        # current_tree_item.grid(**saved_grid_state)
         
     @try_except_catcher
     def update_tree_item_to_page_widget_place_config(self, **changes_dict):
