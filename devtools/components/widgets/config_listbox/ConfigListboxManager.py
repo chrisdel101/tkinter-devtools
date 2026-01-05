@@ -5,7 +5,7 @@ from tkinter import ttk
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxInsertNotifyStateKey, Store
-from devtools.constants import ActionType, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, ConfigAttrValueType, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.geometry_info import GeometryInfo
 from devtools.utils import Utils
@@ -41,7 +41,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.bind("<Double-1>", self.start_update)
         # self.scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
         self.list_var: tk.Variable = tk.Variable(value=[])
+        self.spinbox_var: tk.Variable = tk.IntVar(value=[])
         self.value_box_wrapper: tk.Frame | None = None
+        self.spin_box_wrapper: tk.Frame | None = None
         self.key_box_wrapper: tk.Frame | None = None
             # focus guard - blocks
 
@@ -206,21 +208,32 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         key_entry.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
-        # get any mapped vals for config attribute
-        item_option_vals_list: list[str] | None = self.get_attr_config_mapped_vals(changes_dict.get('key'))
-        if item_option_vals_list:
+        item_attr_type: ConfigAttrValueType = self.get_attr_config_mapped_type(changes_dict.get('key'))
+        # if type is number show spinbox
+        if item_attr_type == int or item_attr_type == float:
+            self.spin_box_wrapper = tk.Frame(self)
+            spinbox = self.build_value_spin_box(
+            key_entry_widget=key_entry,
+            key_entry_value=changes_dict.get('key'),  
+            index=index)
+            spinbox.pack(fill='x')
+            self.spin_box_wrapper.place(relx=0.45, y=y_coord, relwidth=0.5, width=-1)
+            self._store.add_existing_store_wrapper(self.spin_box_wrapper)
+            # self.allow_input_focus_out_logic = True
+            spinbox.focus_set()
+        # get any mapped vals for config attribute show combobox
+        elif item_attr_vals_list:= self.get_attr_config_mapped_vals(changes_dict.get('key')):
             value_option_box = self.build_value_option_box(
             index=index,
             key_entry_widget=key_entry,
             key_entry_value=changes_dict.get('key'),
-            item_option_vals_list=item_option_vals_list
+            item_option_vals_list=item_attr_vals_list
             )
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.45, y=y_coord + self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.value_box_wrapper)
             # self.allow_input_focus_out_logic = True
             value_option_box.focus_set()
-            # self.allow_input_focus_out_logic = False
         else:
             self.handle_build_value_entry_from_key_entry(
                 index=index,

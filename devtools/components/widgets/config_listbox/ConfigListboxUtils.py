@@ -10,6 +10,33 @@ from devtools.utils import Utils
 
 class ConfigListboxUtils:
     @try_except_catcher
+    def build_value_spin_box(self, 
+        index: int,
+        key_entry_widget: tk.Entry | ttk.Combobox,
+        key_entry_value: str):        
+        spinbox = tk.Spinbox(self.spin_box_wrapper, 
+            from_=0, 
+            to=100, 
+            increment=1,
+            textvariable=self.spinbox_var,
+            **self.styles['entry'])
+        spinbox.bind('<Return>', lambda _: (self.insert_value_output_and_apply_to_page
+                (value_entry_widget=spinbox, 
+                key_entry_value=key_entry_value,
+                value_entry_value=spinbox.get(), 
+                ),
+                setattr(self._store, 'listbox_entry_input_action', None)
+            ))
+        # self.spinbox_var.trace_add('write', lambda: (self.insert_value_output_and_apply_to_page
+        #         (value_entry_widget=spinbox, 
+        #         key_entry_value=key_entry_value,
+        #         value_entry_value=spinbox.get(), 
+        #         ),
+        #         setattr(self._store, 'listbox_entry_input_action', None)
+        #     ))
+        return spinbox
+
+    @try_except_catcher
     def build_value_option_box(self, 
         index: int,
         key_entry_widget: tk.Entry | ttk.Combobox,
@@ -188,10 +215,20 @@ class ConfigListboxUtils:
         setattr(self._store, 'listbox_entry_input_action', None)
         self.cancel_update_listbox(*args)
 
-    # get options of config properties to use in dropdown - if they exist
+    # get options of config properties type if exists
+    @staticmethod
+    def get_attr_config_mapped_type(key_str_value:str=None) -> list| str:
+        mapped_values = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {})
+        mapped_type = mapped_values.get('type')
+        return mapped_type
+     # get options of config properties to use in dropdown - if they exist
     @staticmethod
     def get_attr_config_mapped_vals(key_str_value:str=None) -> list| str:
         if not key_str_value:
+            return 
+        mapped_values = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {})
+        mapped_type = mapped_values.get('type')
+        if mapped_type != str:
             return 
         # check for options in map
         options_list = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {}).get('values')

@@ -36,6 +36,7 @@ class DevtoolsWindow(tk.Toplevel):
 
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
+        self.geometry("+300+0")
         # self.poll_for_changes()
 
     @try_except_catcher
