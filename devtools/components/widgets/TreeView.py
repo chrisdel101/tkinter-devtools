@@ -47,15 +47,18 @@ class TreeView(ttk.Treeview):
         #     "tree_id": tree_insert_id,
         #      "widget": widget
         #     }
-        current_mem_id_widget_store = self._store.tree_state_get(
+        # get current id(widget) state 
+        current_mem_id_widget_state = self._store.tree_state_get(
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
+        # merge new state with exising state
         new_dict = Utils.merge_dicts(
-            current_mem_id_widget_store,
+            current_mem_id_widget_state,
             {memory_id: {
                 "tree_id": tree_insert_id,
                 "widget": widget,
                 "widget_config_init_frozen": Utils.conform_attr_lisbox_config(Utils.filter_non_used_config_attrs(widget.configure()))
             }})
+        # overwrite existing state with new
         self._store.tree_state_set(
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
 
@@ -201,6 +204,7 @@ class TreeView(ttk.Treeview):
         current_tree_item.update_idletasks()
         # saved_grid_state = current_tree_item.grid_info()
         # current_tree_item.grid(**saved_grid_state)
+        pass
         
     @try_except_catcher
     def update_tree_item_to_page_widget_place_config(self, **changes_dict):

@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListBoxEntryInputAction
+from devtools.constants import ActionType, AttributeMapSetting, ListBoxEntryInputAction, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.maps import ATTR_CONFIG_SETTING_VALUES
 from devtools.utils import Utils
@@ -13,9 +13,10 @@ class ConfigListboxUtils:
     def build_value_spin_box(self, 
         index: int,
         key_entry_widget: tk.Entry | ttk.Combobox,
-        key_entry_value: str, changes_dict_value: str):        
+        key_entry_value: str, 
+        current_option_value: str):        
         spinbox = tk.Spinbox(self.spin_box_wrapper, 
-            from_=changes_dict_value or 0,
+            from_=current_option_value or 0,
             to=9999, 
             increment=1,
             textvariable=self.spinbox_var,
@@ -110,7 +111,7 @@ class ConfigListboxUtils:
             key_combo_box = ttk.Combobox(self.key_box_wrapper,
                 textvariable=value_inside,
                 values=self.list_var.get(),
-                )
+            )
             # on select - build and pack value option box if list values
             for event in ["<<ComboboxSelected>>", "<Return>"]:
                 key_combo_box.bind(event, 
@@ -119,15 +120,20 @@ class ConfigListboxUtils:
                         index=index,
                         key_option_box=key_combo_box,
                     value_inside=value_inside,
-                    item_option_vals_list=self.get_attr_config_mapped_vals(value_inside.get())
+                    item_option_vals_list=config_setting.get('values')
                 ) 
-                if self.get_attr_config_mapped_vals(value_inside.get()) else 
-                self.handle_build_value_entry_from_key_entry(
+                if 
+                  # if mapped attr values send to combobox
+                    (config_setting := self.map_config_attr_to_map_setting(value_inside.get())) and config_setting.get('values')
+                else 
+                    # if non-mapped attr values entry or spingbox
+                    self.handle_build_value_entry_from_key_entry(
                     index=index,
                     key_entry_widget=key_combo_box,
                     key_entry_value=value_inside.get(),
-                    value_entry_value="",
-                    y_coord=0,                   
+                    y_coord=0,    
+                    config_setting=config_setting,           
+                    current_option_val=Utils.conform_attr_lisbox_config(self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET).config()).get(value_inside.get()),
                     entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
             ))            
@@ -223,24 +229,21 @@ class ConfigListboxUtils:
 
     # get options of config properties type if exists
     @staticmethod
-    def get_attr_config_mapped_type(key_str_value:str=None) -> list| str:
+    def map_config_attr_to_setting_type(key_str_value:str=None) -> list| str:
         mapped_values = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {})
         mapped_type = mapped_values.get('type')
         return mapped_type
-     # get options of config properties to use in dropdown - if they exist
+     # map widget config output val to any possible setting vals - colors, positions, etc
     @staticmethod
-    def get_attr_config_mapped_vals(key_str_value:str=None) -> list| str:
-        if not key_str_value:
-            return 
-        mapped_values = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {})
-        mapped_type = mapped_values.get('type')
-        if mapped_type != str:
+    @try_except_catcher
+    def map_config_attr_to_map_setting(option_name: str=None) -> AttributeMapSetting:
+        if not option_name:
             return 
         # check for options in map
-        options_list = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {}).get('values')
-        if options_list is None:
-            logging.debug(f"get_attr_config_mapped_vals: {key_str_value} not mapped. Either it's not a list value or it was missed in Utils.filter_non_used_config_attrs.", exc_info=True)
-        return options_list
+        options_map_setting: list[str] = ATTR_CONFIG_SETTING_VALUES.get(option_name)
+        if options_map_setting.get('values') is None:
+            logging.debug(f"No setting map for {option_name}", exc_info=True)
+        return options_map_setting or {}
     
     @staticmethod
     def cancel_update_listbox(*args):
