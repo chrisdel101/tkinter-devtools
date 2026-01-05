@@ -13,10 +13,10 @@ class ConfigListboxUtils:
     def build_value_spin_box(self, 
         index: int,
         key_entry_widget: tk.Entry | ttk.Combobox,
-        key_entry_value: str):        
+        key_entry_value: str, changes_dict_value: str):        
         spinbox = tk.Spinbox(self.spin_box_wrapper, 
-            from_=0, 
-            to=100, 
+            from_=changes_dict_value or 0,
+            to=9999, 
             increment=1,
             textvariable=self.spinbox_var,
             **self.styles['entry'])
@@ -25,15 +25,21 @@ class ConfigListboxUtils:
                 key_entry_value=key_entry_value,
                 value_entry_value=spinbox.get(), 
                 ),
-                setattr(self._store, 'listbox_entry_input_action', None)
+                setattr(self._store, 'listbox_entry_input_action', None),
+                # reset spinbox var
+                setattr(self, 'spinbox_var', None)
+                
             ))
-        # self.spinbox_var.trace_add('write', lambda: (self.insert_value_output_and_apply_to_page
-        #         (value_entry_widget=spinbox, 
-        #         key_entry_value=key_entry_value,
-        #         value_entry_value=spinbox.get(), 
-        #         ),
-        #         setattr(self._store, 'listbox_entry_input_action', None)
-        #     ))
+        spinbox.bind("<Escape>", lambda e: (
+            self.cancel_update_listbox(self.key_box_wrapper, self.spin_box_wrapper), 
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0)) if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
+            setattr(self._store, 'block_active_adding', False),
+            setattr(self._store, 'allow_input_focus_out_logic', True),
+            setattr(self._store, 'listbox_entry_input_action', None),
+             # reset spinbox var
+            setattr(self, 'spinbox_var', None)
+            )
+        )
         return spinbox
 
     @try_except_catcher

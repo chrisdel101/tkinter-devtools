@@ -39,13 +39,13 @@ class ActionType(Enum):
     DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
     TOGGLE_GEO_BUTTON_VISIBLE = "toggle_geo_button_visible"
 
-class ConfigValueType(Enum):
-    STRING = "str"
-    INTEGER = "int"
-    BOOLEAN = "boolean"
-    FLOAT = "float"
-    TUPLE = "tuple"
-    LIST = "list"
+class ConfigAttrValueType(Enum):
+    STRING = str
+    INTEGER = int
+    BOOLEAN = bool
+    FLOAT = float
+    TUPLE = tuple
+    LIST = list
 
 class ValidGridGeometryAttr(Enum):
     IN_ = "in"
@@ -150,3 +150,7 @@ class ListboxInsertManagerState(TypedDict):
     current_values_state: list[str] | None
     listbox_page_insert_enum: ListboxPageInsertEnum | None
 
+# entry inside ATTR_CONFIG_SETTING_VALUES
+class AttributeMapSetting(TypedDict):
+    values: str
+    type: str | int | bool | tuple | list

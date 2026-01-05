@@ -213,9 +213,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         if item_attr_type == int or item_attr_type == float:
             self.spin_box_wrapper = tk.Frame(self)
             spinbox = self.build_value_spin_box(
-            key_entry_widget=key_entry,
-            key_entry_value=changes_dict.get('key'),  
-            index=index)
+                key_entry_widget=key_entry,
+                key_entry_value=changes_dict.get('key'),  
+                changes_dict_value=changes_dict.get('value'),
+                index=index
+            )
             spinbox.pack(fill='x')
             self.spin_box_wrapper.place(relx=0.45, y=y_coord, relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.spin_box_wrapper)
