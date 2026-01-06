@@ -47,8 +47,11 @@ class ConfigOptionValueTypeEnum(Enum):
     TUPLE = tuple
     LIST = list
 
-class GridGeometryOption(Enum):
-    IN_ = "in"
+class CommonGeometryOption:
+    GEOMETRY_TYPE = "geometry_type"
+    IN = "in"
+
+class GridGeometryOption(CommonGeometryOption):
     PADX = "padx"
     PADY = "pady"
     ROWSPAN = "rowspan"
@@ -59,8 +62,7 @@ class GridGeometryOption(Enum):
     IPADY = "ipady"
     STICKY = "sticky"
 
-class PlaceGeometryOption(Enum):
-    IN_ = "in"
+class PlaceGeometryOption(CommonGeometryOption):
     X = "x"
     Y = "y"
     RELX = "relx"
@@ -72,9 +74,9 @@ class PlaceGeometryOption(Enum):
     ANCHOR = "anchor"
     BORDERMODE = "bordermode"
 
-
-class PackGeometryOption(Enum):
-    IN = "in" # dupe remove  
+class PackGeometryOptionName(CommonGeometryOption):
+    AFTER = "after"
+    BEFORE = "before"
     PADX = "padx"
     PADY = "pady"
     EXPAND = "expand"
@@ -82,10 +84,7 @@ class PackGeometryOption(Enum):
     IPADX = "ipadx"
     IPADY = "ipady"
     SIDE = "side"
-
-class CommonGeometryOption(Enum):
-    GEOMETRY_TYPE = "geometry_type"
-    IN = "in"
+    ANCHOR = "anchor"
 
 class ConfigOptionName(Enum):
     RELIEF = "relief"

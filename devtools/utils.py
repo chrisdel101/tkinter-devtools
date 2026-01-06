@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionName, CommonGeometryOption, GridGeometryOption, GridGeometryOption, PackGeometryOption, PlaceGeometryOption
+from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionName, CommonGeometryOption, GridGeometryOption, GridGeometryOption, PackGeometryOptionName, PlaceGeometryOption
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryInfo
 from devtools.maps import ACTION_REGISTRY, CONFIG_OPTION_SETTINGS, CONFIG_ALIASES
@@ -105,11 +105,11 @@ class Utils:
     def build_geometry_attrs_dict(geo_manager: GeometryInfo):
         match geo_manager.geometry_type:
             case GeometryType.PACK:
-                common_attributes = [e.value for e in PackGeometryOption]
+                common_attributes = attrs = [getattr(PackGeometryOptionName, k) for k in filter(str.isupper, dir(PackGeometryOptionName))]
             case GeometryType.GRID:
-                common_attributes = [e.value for e in GridGeometryOption]
+                common_attributes = [getattr(GridGeometryOption, k) for k in filter(str.isupper, dir(GridGeometryOption))]
             case GeometryType.PLACE:
-                common_attributes = [e.value for e in PlaceGeometryOption]
+                common_attributes = attrs = [getattr(PlaceGeometryOption, k) for k in filter(str.isupper, dir(PlaceGeometryOption))]
             
         # value can be tuple or str/int
         for key, val in list(geo_manager.geometry_type_info.items()):
@@ -301,7 +301,7 @@ class Utils:
             attrs_dict = Utils.build_geometry_attrs_dict(geo_manager)
             combined_widget_geometry = Utils.merge_dicts(
                 {
-                    CommonGeometryOption.GEOMETRY_TYPE.value: geo_manager.geometry_type
+                    CommonGeometryOption.GEOMETRY_TYPE: geo_manager.geometry_type
                 }, 
                 attrs_dict
             )

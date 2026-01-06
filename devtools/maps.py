@@ -1,8 +1,80 @@
-from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption
+from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption, GridGeometryOption, PackGeometryOptionName
 from devtools.schemas import ConfigOptionMapSetting
 
-ATTR_CONFIG_SETTING_VALUES = {
-
+PACK_GEOMETRY_CONFIG_SETTING_VALUES = {
+    PackGeometryOptionName.PADX: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PackGeometryOptionName.PADY: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PackGeometryOptionName.IPADX: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PackGeometryOptionName.IPADY: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PackGeometryOptionName.FILL: {
+        'values': ['none', 'x', 'y', 'both'],
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    },
+    PackGeometryOptionName.EXPAND: {
+        'values': [True, False],
+        'type': ConfigOptionValueTypeEnum.BOOLEAN.value,
+    },
+    PackGeometryOptionName.ANCHOR: {
+        'values': ["n","ne","e","se","s","sw","w","nw","center"],
+        'type': ConfigOptionValueTypeEnum.BOOLEAN.value,
+    },
+    PackGeometryOptionName.SIDE: {
+        'values': ['top', 'bottom', 'left', 'right'],
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    },
+    # readonly options
+    PackGeometryOptionName.IN: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    }
+}
+GRID_GEOMETRY_CONFIG_SETTING_VALUES = {
+     GridGeometryOption.PADX: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    GridGeometryOption.PADY: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    GridGeometryOption.COLUMNSPAN: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    GridGeometryOption.ROWSPAN: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    GridGeometryOption.COLUMN: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    GridGeometryOption.ROW: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    GridGeometryOption.STICKY: {
+        'values': ["","N","S","E","W","NS","EW","NE","NW","SE","SW","NSE","NSW","NEW","SEW","NSEW"],
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    },
+    # readonly options
+    PackGeometryOptionName.IN: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    }
+}
 
 CONFIG_OPTION_SETTINGS: dict[dict[str,ConfigOptionMapSetting]] = {
     # relief

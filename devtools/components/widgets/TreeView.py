@@ -173,7 +173,7 @@ class TreeView(ttk.Treeview):
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES)
                         # HANDLE GEOMETRY LISTBOX INSERT
                         # if widget has no geometry set false to hide window button
-                        GeometryOptionAddition
+                        # GeometryOptionAddition
                         self._store.show_geometry_button.set(bool(Utils.get_geometry_info(selected_item_widget)))
                         widget_geometry_dict: dict = Utils.combine_widget_geometry(selected_item_widget)
                         # set geometry listbox state
