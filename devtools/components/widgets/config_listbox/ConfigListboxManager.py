@@ -5,9 +5,8 @@ from typing import Any
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxInsertNotifyStateKey, Store
-from devtools.constants import ActionType, AttributeMapSetting, ConfigAttrValueType, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, AttributeMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
-from devtools.geometry_info import GeometryInfo
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -70,12 +69,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             self, 
             value_entry_widget: tk.Entry | tk.OptionMenu, 
             key_entry_value: str,
-            value_entry_value: str,
+            updated_option_value: str | int | float,
         ):
         # store the current y position in listbox  
         y0, _ = self.yview()
         # check for .get method  - use .get for new entry else val correct option box  
-        value_entry_value = value_entry_widget.get() if getattr(value_entry_widget, 'get', None) else value_entry_value
+        value_entry_value = value_entry_widget.get() if getattr(value_entry_widget, 'get', None) else updated_option_value
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
         current_listbox_insert_widget = self._store.current_listbox_insert
@@ -146,13 +145,24 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     def handle_build_value_entry_from_key_entry(
             self,
             index: int, 
-            key_entry_widget: tk.OptionMenu | tk.Entry, 
+            key_entry_widget: ttk.Combobox | tk.Entry, 
             key_entry_value: str, 
             y_coord: int,
-            config_setting: AttributeMapSetting,
             current_option_val: Any,
-            value_entry_value: str | None = None,
+            config_setting: AttributeMapSetting | None=None,
             **kwargs):
+        ''' 
+        build value entry when output from key entry has no mapping options
+        :param key_entry_widget: ttk.Combobox | tk.Entry
+        :param key_entry_value: str
+        - option value from key entry
+        :param y_coord: int
+        - bbox(index)[1] update; 0 on create
+        :param current_option_val: str | None = None
+        - value of current widget config option
+        :param config_setting: AttributeMapSetting | None=None
+        - dict with type and values when options maps 
+        '''
         # check  mapping for int type - spinbox
         if config_setting and config_setting.get("type") in (int, float):
             self.spin_box_wrapper = tk.Frame(self)
@@ -168,10 +178,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # self.allow_input_focus_out_logic = True
             spinbox.focus_set()
         else:
-            # entry widget for value entry
+            # no mapping or values - empty entry widget for value entry
             self.value_box_wrapper = tk.Frame(self)
             value_entry = tk.Entry(self.value_box_wrapper, **self.styles['entry'])
-            value_entry.insert(0, value_entry_value)
+            # fill in entry with current val
+            value_entry.insert(0, current_option_val)
             value_entry.selection_from(0)
             value_entry.selection_to("end")
             value_entry.pack(fill='x')
@@ -185,7 +196,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 self.insert_value_output_and_apply_to_page(
                 value_entry_widget=e.widget, 
                 key_entry_value=key_entry_value,
-                value_entry_value=value_entry_value
+                updated_option_value=current_option_val
                 )
             )
             if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
@@ -227,7 +238,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         key_entry.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
-        item_attr_type: ConfigAttrValueType = self.map_config_attr_to_setting_type(changes_dict.get('key'))
+        item_attr_type: ConfigOptionValueTypeEnum = self.map_config_attr_to_setting_type(changes_dict.get('key'))
         # check mapping for int type - spinbox
         if item_attr_type == int or item_attr_type == float:
             self.spin_box_wrapper = tk.Frame(self)
@@ -243,7 +254,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # self.allow_input_focus_out_logic = True
             spinbox.focus_set()
         # check mapping for attribute config value options - combobox
-        elif item_attr_vals_list:= self.map_config_attr_to_map_setting(changes_dict.get('key')):
+        elif (item_attr_vals_list := self.map_config_attr_to_map_setting(changes_dict.get('key')) and self.map_config_attr_to_map_setting(changes_dict.get('key')).get('values')):
             value_option_box = self.build_value_option_box(
             index=index,
             key_entry_widget=key_entry,
@@ -261,8 +272,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 index=index,
                 key_entry_widget=key_entry,
                 key_entry_value=changes_dict.get('key'),
-                value_entry_value=changes_dict.get('value'),
-                y_coord=y_coord
+                y_coord=y_coord,
+                current_option_val=changes_dict.get('value'),
             )
     # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
     @try_except_catcher

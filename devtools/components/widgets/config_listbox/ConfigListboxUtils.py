@@ -24,7 +24,7 @@ class ConfigListboxUtils:
         spinbox.bind('<Return>', lambda _: (self.insert_value_output_and_apply_to_page
                 (value_entry_widget=spinbox, 
                 key_entry_value=key_entry_value,
-                value_entry_value=spinbox.get(), 
+                updated_option_value=spinbox.get(), 
                 ),
                 setattr(self._store, 'listbox_entry_input_action', None),
                 # reset spinbox var
@@ -66,7 +66,7 @@ class ConfigListboxUtils:
                 lambda _: (self.insert_value_output_and_apply_to_page
                 (value_entry_widget=value_combobox, 
                 key_entry_value=key_entry_value,
-                value_entry_value=value_inside.get(), 
+                updated_option_value=value_inside.get(), 
                 ),
                 setattr(self._store, 'listbox_entry_input_action', None)
             ))
@@ -132,7 +132,7 @@ class ConfigListboxUtils:
                     key_entry_widget=key_combo_box,
                     key_entry_value=value_inside.get(),
                     y_coord=0,    
-                    config_setting=config_setting,           
+                    config_setting=config_setting,               # actual value of config option   
                     current_option_val=Utils.conform_attr_lisbox_config(self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET).config()).get(value_inside.get()),
                     entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
@@ -233,7 +233,7 @@ class ConfigListboxUtils:
         mapped_values = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {})
         mapped_type = mapped_values.get('type')
         return mapped_type
-     # map widget config output val to any possible setting vals - colors, positions, etc
+     # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
     @staticmethod
     @try_except_catcher
     def map_config_attr_to_map_setting(option_name: str=None) -> AttributeMapSetting:
@@ -241,8 +241,10 @@ class ConfigListboxUtils:
             return 
         # check for options in map
         options_map_setting: list[str] = ATTR_CONFIG_SETTING_VALUES.get(option_name)
-        if options_map_setting.get('values') is None:
-            logging.debug(f"No setting map for {option_name}", exc_info=True)
+        if options_map_setting is None:
+            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+        elif options_map_setting.get('values') is None:
+            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
     
     @staticmethod

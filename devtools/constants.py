@@ -39,7 +39,7 @@ class ActionType(Enum):
     DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
     TOGGLE_GEO_BUTTON_VISIBLE = "toggle_geo_button_visible"
 
-class ConfigAttrValueType(Enum):
+class ConfigOptionValueTypeEnum(Enum):
     STRING = str
     INTEGER = int
     BOOLEAN = bool
