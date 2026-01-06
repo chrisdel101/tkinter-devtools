@@ -5,10 +5,10 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ValidConfigAttr, AllValidGeometryAttr, ValidGridGeometryAttr, ValidGridGeometryAttr, ValidPackGeometryAttr, ValidPlaceGeometryAttr
+from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionName, CommonGeometryOption, GridGeometryOption, GridGeometryOption, PackGeometryOption, PlaceGeometryOption
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryInfo
-from devtools.maps import ACTION_REGISTRY, ATTR_CONFIG_SETTING_VALUES, CONFIG_ALIASES
+from devtools.maps import ACTION_REGISTRY, CONFIG_OPTION_SETTINGS, CONFIG_ALIASES
 
 class Utils:
     @staticmethod
@@ -89,7 +89,7 @@ class Utils:
     # remove any non standard unusable attrs like screen, use
     def filter_non_used_config_attrs(config):
         try:
-            common_attributes = [e.value for e in ValidConfigAttr]
+            common_attributes = [e.value for e in ConfigOptionName]
             # value can be tuple or str/int
             for key in list(config.keys()):
             # delete unwanted config values from dict in place using list
@@ -105,11 +105,11 @@ class Utils:
     def build_geometry_attrs_dict(geo_manager: GeometryInfo):
         match geo_manager.geometry_type:
             case GeometryType.PACK:
-                common_attributes = [e.value for e in ValidPackGeometryAttr]
+                common_attributes = [e.value for e in PackGeometryOption]
             case GeometryType.GRID:
-                common_attributes = [e.value for e in ValidGridGeometryAttr]
+                common_attributes = [e.value for e in GridGeometryOption]
             case GeometryType.PLACE:
-                common_attributes = [e.value for e in ValidPlaceGeometryAttr]
+                common_attributes = [e.value for e in PlaceGeometryOption]
             
         # value can be tuple or str/int
         for key, val in list(geo_manager.geometry_type_info.items()):
@@ -124,7 +124,7 @@ class Utils:
     def conform_geometry_listbox_config(config):
         key_val_dict = {}
         # use names from enum values
-        valid_names = {e.value for e in ValidConfigAttr}
+        valid_names = {e.value for e in ConfigOptionName}
     @staticmethod
     # check for each tuple length. if 5 it's last item, if 2 it's an alias
     # This is a tk inter standard for all configs objs
@@ -132,7 +132,7 @@ class Utils:
         try:
             key_val_dict = {}
             # use names from enum values
-            valid_names = {e.value for e in ValidConfigAttr}
+            valid_names = {e.value for e in ConfigOptionName}
             for key, val in config.items():
                 # resolve alias to full name - or just return name ie borderwidth
                 canonical = Utils.listbox_attr_alias_resolver(key)
@@ -194,14 +194,14 @@ class Utils:
                     differences = [item for item in val if (isinstance(item, str) and (item or "").lower()) != (key or "").lower()]
                     # for each difference check if it an an actual setting value - we want these
                     for difference in differences:
-                        if (setting_value := ATTR_CONFIG_SETTING_VALUES.get(key)):
+                        if (setting_value := CONFIG_OPTION_SETTINGS.get(key)):
                             type_allowed = setting_value.get('type')
                         # check if current setting matches a type that's allowed
                             if ((type(difference).__name__ or "").lower() == type_allowed and difference) != "":
                                 if key_val_config.get(key) == None:
                                     key_val_config[key] = difference
                 elif isinstance(val, (str, int, float)):
-                    if ATTR_CONFIG_SETTING_VALUES.get(key):
+                    if CONFIG_OPTION_SETTINGS.get(key):
                         key_val_config[key] = val
             return key_val_config
         except Exception as e:
@@ -301,7 +301,7 @@ class Utils:
             attrs_dict = Utils.build_geometry_attrs_dict(geo_manager)
             combined_widget_geometry = Utils.merge_dicts(
                 {
-                    AllValidGeometryAttr.GEOMETRY_TYPE.value: geo_manager.geometry_type
+                    CommonGeometryOption.GEOMETRY_TYPE.value: geo_manager.geometry_type
                 }, 
                 attrs_dict
             )

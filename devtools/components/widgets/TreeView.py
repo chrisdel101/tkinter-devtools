@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, GeometryAttrAddition, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, GeometryOptionAddition, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.utils import Utils
 
@@ -161,7 +161,7 @@ class TreeView(ttk.Treeview):
                         # config used to populate listbox
                         original_attrs_config: dict = self._store.tree_state_get(
                             TreeStateKey.SELECTED_ITEM_WIDGET).configure()
-                        # filter out unwanted config values not in ValidConfigAttr - keep original dict formating
+                        # filter out unwanted config values not in ConfigOptionName - keep original dict formating
                         filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(
                             original_attrs_config)
                         # extract the actual set value from value tuples - is key val str pairs
@@ -173,7 +173,7 @@ class TreeView(ttk.Treeview):
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES)
                         # HANDLE GEOMETRY LISTBOX INSERT
                         # if widget has no geometry set false to hide window button
-                        GeometryAttrAddition
+                        GeometryOptionAddition
                         self._store.show_geometry_button.set(bool(Utils.get_geometry_info(selected_item_widget)))
                         widget_geometry_dict: dict = Utils.combine_widget_geometry(selected_item_widget)
                         # set geometry listbox state

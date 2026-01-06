@@ -1,6 +1,6 @@
 from enum import Enum
-from typing import Any, Literal, TypedDict
 import tkinter as tk
+from typing import Any, TypedDict
 
 
 MAX_KEY_WIDTH = 30  # adjust as needed
@@ -47,7 +47,7 @@ class ConfigOptionValueTypeEnum(Enum):
     TUPLE = tuple
     LIST = list
 
-class ValidGridGeometryAttr(Enum):
+class GridGeometryOption(Enum):
     IN_ = "in"
     PADX = "padx"
     PADY = "pady"
@@ -59,7 +59,7 @@ class ValidGridGeometryAttr(Enum):
     IPADY = "ipady"
     STICKY = "sticky"
 
-class ValidPlaceGeometryAttr(Enum):
+class PlaceGeometryOption(Enum):
     IN_ = "in"
     X = "x"
     Y = "y"
@@ -73,7 +73,7 @@ class ValidPlaceGeometryAttr(Enum):
     BORDERMODE = "bordermode"
 
 
-class ValidPackGeometryAttr(Enum):
+class PackGeometryOption(Enum):
     IN = "in" # dupe remove  
     PADX = "padx"
     PADY = "pady"
@@ -83,11 +83,11 @@ class ValidPackGeometryAttr(Enum):
     IPADY = "ipady"
     SIDE = "side"
 
-class AllValidGeometryAttr(Enum):
+class CommonGeometryOption(Enum):
     GEOMETRY_TYPE = "geometry_type"
     IN = "in"
 
-class ValidConfigAttr(Enum):
+class ConfigOptionName(Enum):
     RELIEF = "relief"
     ANCHOR = "anchor"
     JUSTIFY = "justify"
@@ -115,7 +115,7 @@ class AliasRename(Enum):
     PARENT_WIDGET = "parent widget" 
     GEOMETRY_TYPE = "geometry type"
 
-class GeometryAttrAddition(Enum):
+class GeometryOptionAddition(Enum):
     ROW_CONFIGURE = "rowconfigure" 
     COLUMN_CONFIGURE = "columnconfigure"
 
@@ -150,7 +150,7 @@ class ListboxInsertManagerState(TypedDict):
     current_values_state: list[str] | None
     listbox_page_insert_enum: ListboxPageInsertEnum | None
 
-# entry inside ATTR_CONFIG_SETTING_VALUES
-class AttributeMapSetting(TypedDict):
+# entry inside CONFIG_OPTION_SETTINGS
+class ConfigOptionMapSetting(TypedDict):
     values: str
     type: str | int | bool | tuple | list

@@ -1,83 +1,84 @@
-from devtools.constants import ActionType, AliasRename, ValidConfigAttr, ConfigOptionValueTypeEnum, AllValidGeometryAttr
-from devtools.schemas import AttributeMapSetting
+from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption
+from devtools.schemas import ConfigOptionMapSetting
 
 ATTR_CONFIG_SETTING_VALUES = {
 
-ATTR_CONFIG_SETTING_VALUES: dict[dict[str,AttributeMapSetting]] = {
+
+CONFIG_OPTION_SETTINGS: dict[dict[str,ConfigOptionMapSetting]] = {
     # relief
-    ValidConfigAttr.RELIEF.value: {
+    ConfigOptionName.RELIEF.value: {
         'values': ["flat","raised","sunken","groove","ridge","solid"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.ANCHOR.value: {
+    ConfigOptionName.ANCHOR.value: {
         'values': ["n","ne","e","se","s","sw","w","nw","center"],
          'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.JUSTIFY.value: {
+    ConfigOptionName.JUSTIFY.value: {
         'values': ["left","center","right"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.FONT.value: {
+    ConfigOptionName.FONT.value: {
         'values': ["Arial","Helvetica","Times New Roman","Courier New","Verdana","Georgia","Comic Sans MS"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.CURSOR.value: {
+    ConfigOptionName.CURSOR.value: {
         'values': ["arrow","circle","clock","cross","dotbox","exchange","fleur","heart,pirate","plus","shuttle","sizing","spider","spraycan","star","target","tcross","trek","watch"],
          'type': ConfigOptionValueTypeEnum.STRING.value,  
     },
-    ValidConfigAttr.BACKGROUND.value: {
+    ConfigOptionName.BACKGROUND.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.FOREGROUND.value: {
+    ConfigOptionName.FOREGROUND.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
         'type': ConfigOptionValueTypeEnum.STRING.value,   
     },
-    ValidConfigAttr.HIGHLIGHTBACKGROUND.value: {
+    ConfigOptionName.HIGHLIGHTBACKGROUND.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.STATE.value: {
+    ConfigOptionName.STATE.value: {
         'values': ['active', 'disabled', 'normal'],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.TEXT.value: {
+    ConfigOptionName.TEXT.value: {
         'values': "",
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ValidConfigAttr.BORDERWIDTH.value: {
+    ConfigOptionName.BORDERWIDTH.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ValidConfigAttr.HIGHLIGHTTHICKNESS.value: {
+    ConfigOptionName.HIGHLIGHTTHICKNESS.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ValidConfigAttr.PADX.value: {
+    ConfigOptionName.PADX.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ValidConfigAttr.PADY.value: {
+    ConfigOptionName.PADY.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ValidConfigAttr.WIDTH.value: {
+    ConfigOptionName.WIDTH.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ValidConfigAttr.HEIGHT.value: {
+    ConfigOptionName.HEIGHT.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     }
 }
 
 CONFIG_ALIASES = {
-    AllValidGeometryAttr.GEOMETRY_TYPE.value: AliasRename.GEOMETRY_TYPE.value,
-    AllValidGeometryAttr.IN.value: AliasRename.PARENT_WIDGET.value,
-    ValidConfigAttr.BD.value: ValidConfigAttr.BORDERWIDTH.value,
-    ValidConfigAttr.BD.value: ValidConfigAttr.BORDERWIDTH.value,
-    ValidConfigAttr.BG.value: ValidConfigAttr.BACKGROUND.value,
-    ValidConfigAttr.FG.value: ValidConfigAttr.FOREGROUND.value,
+    CommonGeometryOption.GEOMETRY_TYPE.value: AliasRename.GEOMETRY_TYPE.value,
+    CommonGeometryOption.IN.value: AliasRename.PARENT_WIDGET.value,
+    ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
+    ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
+    ConfigOptionName.BG.value: ConfigOptionName.BACKGROUND.value,
+    ConfigOptionName.FG.value: ConfigOptionName.FOREGROUND.value,
 }
 
 # uses action type enums to make to func with same name

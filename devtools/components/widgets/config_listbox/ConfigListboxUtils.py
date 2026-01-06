@@ -3,9 +3,9 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, AttributeMapSetting, ListBoxEntryInputAction, TreeStateKey
+from devtools.constants import ActionType, ConfigOptionMapSetting, ListBoxEntryInputAction, TreeStateKey
 from devtools.decorators import try_except_catcher
-from devtools.maps import ATTR_CONFIG_SETTING_VALUES
+from devtools.maps import CONFIG_OPTION_SETTINGS
 from devtools.utils import Utils
 
 class ConfigListboxUtils:
@@ -230,17 +230,17 @@ class ConfigListboxUtils:
     # get options of config properties type if exists
     @staticmethod
     def map_config_attr_to_setting_type(key_str_value:str=None) -> list| str:
-        mapped_values = (ATTR_CONFIG_SETTING_VALUES.get(key_str_value) or {})
+        mapped_values = (CONFIG_OPTION_SETTINGS.get(key_str_value) or {})
         mapped_type = mapped_values.get('type')
         return mapped_type
-     # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
+    # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
     @staticmethod
     @try_except_catcher
-    def map_config_attr_to_map_setting(option_name: str=None) -> AttributeMapSetting:
+    def map_config_attr_to_map_setting(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
         # check for options in map
-        options_map_setting: list[str] = ATTR_CONFIG_SETTING_VALUES.get(option_name)
+        options_map_setting: list[str] = CONFIG_OPTION_SETTINGS.get(option_name)
         if options_map_setting is None:
             logging.debug(f"No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:

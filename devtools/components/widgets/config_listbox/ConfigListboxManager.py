@@ -5,7 +5,7 @@ from typing import Any
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxInsertNotifyStateKey, Store
-from devtools.constants import ActionType, AttributeMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
@@ -149,7 +149,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             key_entry_value: str, 
             y_coord: int,
             current_option_val: Any,
-            config_setting: AttributeMapSetting | None=None,
+            config_setting: ConfigOptionMapSetting | None=None,
             **kwargs):
         ''' 
         build value entry when output from key entry has no mapping options
@@ -160,7 +160,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         - bbox(index)[1] update; 0 on create
         :param current_option_val: str | None = None
         - value of current widget config option
-        :param config_setting: AttributeMapSetting | None=None
+        :param config_setting: ConfigOptionMapSetting | None=None
         - dict with type and values when options maps 
         '''
         # check  mapping for int type - spinbox
