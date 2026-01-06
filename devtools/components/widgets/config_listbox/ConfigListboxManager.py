@@ -58,9 +58,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         full_txt_str = self.get(updating_item_index)
     
         changes_dict  = Utils.build_split_str_pairs_dict(full_txt_str, ":")
+        config_setting_map = self.map_config_option_to_setting(changes_dict.get('key'))
         self.handle_entry_input_update(
             index=updating_item_index, 
-            changes_dict=changes_dict
+            changes_dict=changes_dict,
+            config_setting_map=config_setting_map
         )
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
@@ -149,7 +151,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             key_entry_value: str, 
             y_coord: int,
             current_option_val: Any,
-            config_setting: ConfigOptionMapSetting | None=None,
+            config_setting_map: ConfigOptionMapSetting | None=None,
             **kwargs):
         ''' 
         build value entry when output from key entry has no mapping options
@@ -160,11 +162,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         - bbox(index)[1] update; 0 on create
         :param current_option_val: str | None = None
         - value of current widget config option
-        :param config_setting: ConfigOptionMapSetting | None=None
+        :param config_setting_map: ConfigOptionMapSetting | None=None
         - dict with type and values when options maps 
         '''
         # check  mapping for int type - spinbox
-        if config_setting and config_setting.get("type") in (int, float):
+        if config_setting_map and config_setting_map.get("type") in (int, float):
             self.spin_box_wrapper = tk.Frame(self)
             spinbox = self.build_value_spin_box(
                 key_entry_widget=key_entry_widget,
@@ -224,6 +226,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     def handle_entry_input_update(
         self, 
         index: int, 
+        config_setting_map: ConfigOptionMapSetting | None, 
         changes_dict: dict = {}, 
     ):
         self._store.listbox_entry_input_action = ListBoxEntryInputAction.UPDATE
@@ -240,7 +243,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
         item_attr_type: ConfigOptionValueTypeEnum = self.map_config_attr_to_setting_type(changes_dict.get('key'))
         # check mapping for int type - spinbox
-        if item_attr_type == int or item_attr_type == float:
+        if config_setting_map and config_setting_map.get("type") == int or config_setting_map.get("type") == float:
             self.spin_box_wrapper = tk.Frame(self)
             spinbox = self.build_value_spin_box(
                 key_entry_widget=key_entry,
@@ -254,7 +257,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # self.allow_input_focus_out_logic = True
             spinbox.focus_set()
         # check mapping for attribute config value options - combobox
-        elif (item_attr_vals_list := self.map_config_attr_to_map_setting(changes_dict.get('key')) and self.map_config_attr_to_map_setting(changes_dict.get('key')).get('values')):
+        elif (item_attr_vals_list := config_setting_map and config_setting_map.get('values')):
             value_option_box = self.build_value_option_box(
             index=index,
             key_entry_widget=key_entry,

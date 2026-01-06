@@ -120,11 +120,11 @@ class ConfigListboxUtils:
                         index=index,
                         key_option_box=key_combo_box,
                     value_inside=value_inside,
-                    item_option_vals_list=config_setting.get('values')
+                    item_option_vals_list=config_setting_map.get('values')
                 ) 
                 if 
                   # if mapped attr values send to combobox
-                    (config_setting := self.map_config_attr_to_map_setting(value_inside.get())) and config_setting.get('values')
+                    (config_setting_map := self.map_config_option_to_setting(value_inside.get())) and config_setting_map.get('values')
                 else 
                     # if non-mapped attr values entry or spingbox
                     self.handle_build_value_entry_from_key_entry(
@@ -132,7 +132,7 @@ class ConfigListboxUtils:
                     key_entry_widget=key_combo_box,
                     key_entry_value=value_inside.get(),
                     y_coord=0,    
-                    config_setting=config_setting,               # actual value of config option   
+                    config_setting_map=config_setting_map,               # actual value of config option   
                     current_option_val=Utils.conform_attr_lisbox_config(self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET).config()).get(value_inside.get()),
                     entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
@@ -236,7 +236,7 @@ class ConfigListboxUtils:
     # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
     @staticmethod
     @try_except_catcher
-    def map_config_attr_to_map_setting(option_name: str=None) -> ConfigOptionMapSetting:
+    def map_config_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
         # check for options in map
