@@ -1,4 +1,4 @@
-from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption, GridGeometryOption, PackGeometryOptionName
+from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption, GridGeometryOption, PackGeometryOptionName, PlaceGeometryOption
 from devtools.schemas import ConfigOptionMapSetting
 
 PACK_GEOMETRY_CONFIG_SETTING_VALUES = {
@@ -41,6 +41,14 @@ PACK_GEOMETRY_CONFIG_SETTING_VALUES = {
     }
 }
 GRID_GEOMETRY_CONFIG_SETTING_VALUES = {
+    GridGeometryOption.IPADX: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    GridGeometryOption.IPADY: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
      GridGeometryOption.PADX: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
@@ -71,6 +79,53 @@ GRID_GEOMETRY_CONFIG_SETTING_VALUES = {
     },
     # readonly options
     PackGeometryOptionName.IN: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    }
+}
+PLACE_GEOMETRY_CONFIG_SETTING_VALUES = {
+    PlaceGeometryOption.X: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PlaceGeometryOption.Y: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PlaceGeometryOption.RELX: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.FLOAT.value,
+    },
+    PlaceGeometryOption.RELY: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.FLOAT.value,
+    },
+    PlaceGeometryOption.WIDTH: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PlaceGeometryOption.HEIGHT: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
+    PlaceGeometryOption.RELWIDTH: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.FLOAT.value,
+    },
+    PlaceGeometryOption.RELHEIGHT: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.FLOAT.value,
+    },
+    PlaceGeometryOption.ANCHOR: {
+        'values': ["n","ne","e","se","s","sw","w","nw","center"],
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    },
+    PlaceGeometryOption.BORDERMODE: {
+        'values': ["inside","outside"],
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    },
+    # readonly options
+    CommonGeometryOption.IN: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.STRING.value,
     }
@@ -145,8 +200,8 @@ CONFIG_OPTION_SETTINGS: dict[dict[str,ConfigOptionMapSetting]] = {
 }
 
 CONFIG_ALIASES = {
-    CommonGeometryOption.GEOMETRY_TYPE.value: AliasRename.GEOMETRY_TYPE.value,
-    CommonGeometryOption.IN.value: AliasRename.PARENT_WIDGET.value,
+    CommonGeometryOption.GEOMETRY_TYPE: AliasRename.GEOMETRY_TYPE.value,
+    CommonGeometryOption.IN: AliasRename.PARENT_WIDGET.value,
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BG.value: ConfigOptionName.BACKGROUND.value,

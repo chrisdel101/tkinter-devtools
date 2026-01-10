@@ -178,7 +178,7 @@ class TreeView(ttk.Treeview):
                         widget_geometry_dict: dict = Utils.combine_widget_geometry(selected_item_widget)
                         # set geometry listbox state
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
-                        state_to_set=Utils.combine_widget_geometry(selected_item_widget), page_insert_override=ListboxPageInsertEnum.GEOMETRY)
+                        state_to_set=widget_geometry_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
                         
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"
@@ -195,42 +195,42 @@ class TreeView(ttk.Treeview):
 
 
     @try_except_catcher
-    def update_tree_item_to_page_widget_grid_config(self, **changes_dict):
+    def update_tree_item_to_page_widget_grid_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
         current_tree_item.grid_configure(
-            **{changes_dict['key']: changes_dict['value']})
+            **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
         current_tree_item.update_idletasks()
         # saved_grid_state = current_tree_item.grid_info()
         # current_tree_item.grid(**saved_grid_state)
         pass
         
     @try_except_catcher
-    def update_tree_item_to_page_widget_place_config(self, **changes_dict):
+    def update_tree_item_to_page_widget_place_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
         current_tree_item.place_configure(
-            **{changes_dict['key']: changes_dict['value']})
+            **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
         
     @try_except_catcher
-    def update_tree_item_to_page_widget_pack_config(self, **changes_dict):
+    def update_tree_item_to_page_widget_pack_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
         current_tree_item.pack_configure(
-            **{changes_dict['key']: changes_dict['value']})
+            **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
         
     # takes a dict and applies it to widget config
     # - UPDATE THE PAGE WIDGET HERE
     @try_except_catcher
-    def update_tree_item_to_page_widget_attr_config(self, **changes_dict):
+    def update_tree_item_to_page_widget_attr_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
         current_tree_item.config(
-            **{changes_dict['key']: changes_dict['value']})
+            **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
 
     # delete tree and all branches
     def delete_tree(self):

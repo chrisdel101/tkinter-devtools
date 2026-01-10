@@ -1,12 +1,14 @@
 from __future__ import annotations
+import logging
 import tkinter as tk
 from tkinter import ttk
 from typing import Any
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxInsertNotifyStateKey, Store
-from devtools.constants import ActionType, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
+from devtools.geometry_info import GeometryInfo
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -57,12 +59,31 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # extract starting values from list item
         full_txt_str = self.get(updating_item_index)
     
-        changes_dict  = Utils.build_split_str_pairs_dict(full_txt_str, ":")
-        config_setting_map = self.map_config_option_to_setting(changes_dict.get('key'))
+        listbox_item_pairs_dict: ListboxItemPair  = Utils.build_split_str_pairs_dict(full_txt_str, ":")
+        # ListboxPageInsertEnum - {'values': None, 'type': <class 'int'>}
+        if self._listbox_page_insert_enum == ListboxPageInsertEnum.ATTRIBUTES:
+        # UPDATE CONFIG ATTTRIBUTES
+            option_setting_map = self.map_config_option_to_setting(listbox_item_pairs_dict.get('key'))
+        else:
+            # UPDATE GEOMETRY OPTIONS
+            current_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+            geometry_info: GeometryInfo = Utils.get_geometry_info(current_widget)
+            geometry_info_type = getattr(geometry_info, 'geometry_type', None)
+            if geometry_info_type == GeometryType.PACK:
+                option_setting_map = self.map_pack_geometry_option_to_setting(listbox_item_pairs_dict.get('key'))
+                pass
+            elif geometry_info_type == GeometryType.GRID:
+                option_setting_map = self.map_grid_geometry_option_to_setting(listbox_item_pairs_dict.get('key'))
+            elif geometry_info_type == GeometryType.PLACE:
+                option_setting_map = self.map_place_geometry_option_to_setting(listbox_item_pairs_dict.get('key'))
+                pass
+        if option_setting_map is None:
+            logging.debug(f"No option setting map found for {listbox_item_pairs_dict.get('key')}", exc_info=True)
+            return "break"
         self.handle_entry_input_update(
             index=updating_item_index, 
-            changes_dict=changes_dict,
-            config_setting_map=config_setting_map
+            listbox_item_pairs_dict=listbox_item_pairs_dict,
+            config_setting_map=option_setting_map
         )
     # handle entry within an entry inside listbox
     # - pass in callback - used in multiple places w diff callbacks
@@ -227,7 +248,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self, 
         index: int, 
         config_setting_map: ConfigOptionMapSetting | None, 
-        changes_dict: dict = {}, 
+        listbox_item_pairs_dict: dict = {}, 
     ):
         self._store.listbox_entry_input_action = ListBoxEntryInputAction.UPDATE
         self._store.editting_item_index = index
@@ -235,20 +256,19 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.key_box_wrapper = tk.Frame(self)
         key_entry = tk.Entry(self.key_box_wrapper, **self.styles['entry'], **self.styles['key_entry'])
         # add the text from the item into the key_entry - just place it but dont allow focus
-        key_entry.insert(0, changes_dict.get('key'))
+        key_entry.insert(0, listbox_item_pairs_dict.get('key'))
         key_entry.selection_from(0)
         key_entry.selection_to("end")
         key_entry.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
-        item_attr_type: ConfigOptionValueTypeEnum = self.map_config_attr_to_setting_type(changes_dict.get('key'))
         # check mapping for int type - spinbox
         if config_setting_map and config_setting_map.get("type") == int or config_setting_map.get("type") == float:
             self.spin_box_wrapper = tk.Frame(self)
             spinbox = self.build_value_spin_box(
                 key_entry_widget=key_entry,
-                key_entry_value=changes_dict.get('key'),  
-                current_option_value=changes_dict.get('value'),
+                key_entry_value=listbox_item_pairs_dict.get('key'),  
+                current_option_value=listbox_item_pairs_dict.get('value'),
                 index=index
             )
             spinbox.pack(fill='x')
@@ -261,7 +281,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             value_option_box = self.build_value_option_box(
             index=index,
             key_entry_widget=key_entry,
-            key_entry_value=changes_dict.get('key'),
+            key_entry_value=listbox_item_pairs_dict.get('key'),
             item_option_vals_list=item_attr_vals_list
             )
             value_option_box.pack(fill='x')
@@ -274,9 +294,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             self.handle_build_value_entry_from_key_entry(
                 index=index,
                 key_entry_widget=key_entry,
-                key_entry_value=changes_dict.get('key'),
+                key_entry_value=listbox_item_pairs_dict.get('key'),
                 y_coord=y_coord,
-                current_option_val=changes_dict.get('value'),
+                current_option_val=listbox_item_pairs_dict.get('value'),
             )
     # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
     @try_except_catcher

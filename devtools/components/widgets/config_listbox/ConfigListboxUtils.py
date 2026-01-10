@@ -5,7 +5,7 @@ from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ConfigOptionMapSetting, ListBoxEntryInputAction, TreeStateKey
 from devtools.decorators import try_except_catcher
-from devtools.maps import CONFIG_OPTION_SETTINGS
+from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 
 class ConfigListboxUtils:
@@ -226,13 +226,47 @@ class ConfigListboxUtils:
             self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
         setattr(self._store, 'listbox_entry_input_action', None)
         self.cancel_update_listbox(*args)
-
-    # get options of config properties type if exists
+    # map geometry options to any possible setting vals
     @staticmethod
-    def map_config_attr_to_setting_type(key_str_value:str=None) -> list| str:
-        mapped_values = (CONFIG_OPTION_SETTINGS.get(key_str_value) or {})
-        mapped_type = mapped_values.get('type')
-        return mapped_type
+    @try_except_catcher
+    def map_grid_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
+        if not option_name:
+            return 
+        # check for options in map
+        options_map_setting: ConfigOptionMapSetting|None = GRID_GEOMETRY_CONFIG_SETTING_VALUES.get(option_name)
+        if options_map_setting is None:
+            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+        elif options_map_setting.get('values') is None:
+            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+        return options_map_setting or {}
+    
+    # map geometry options to any possible setting vals
+    @staticmethod
+    @try_except_catcher
+    def map_pack_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
+        if not option_name:
+            return 
+        # check for options in map
+        options_map_setting: ConfigOptionMapSetting|None = PACK_GEOMETRY_CONFIG_SETTING_VALUES.get(option_name)
+        if options_map_setting is None:
+            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+        elif options_map_setting.get('values') is None:
+            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+        return options_map_setting or {}
+    
+    @staticmethod
+    @try_except_catcher
+    def map_place_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
+        if not option_name:
+            return 
+        # check for options in map
+        options_map_setting: ConfigOptionMapSetting|None = PLACE_GEOMETRY_CONFIG_SETTING_VALUES.get(option_name)
+        if options_map_setting is None:
+            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+        elif options_map_setting.get('values') is None:
+            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+        return options_map_setting or {}
+    
     # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
     @staticmethod
     @try_except_catcher
@@ -240,7 +274,7 @@ class ConfigListboxUtils:
         if not option_name:
             return 
         # check for options in map
-        options_map_setting: list[str] = CONFIG_OPTION_SETTINGS.get(option_name)
+        options_map_setting: ConfigOptionMapSetting|None = CONFIG_OPTION_SETTINGS.get(option_name)
         if options_map_setting is None:
             logging.debug(f"No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:

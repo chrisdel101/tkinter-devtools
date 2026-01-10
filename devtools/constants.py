@@ -127,6 +127,10 @@ class ListBoxEntryInputAction(Enum):
     CREATE = 1
     UPDATE = 2
 
+class ListboxItemPair(TypedDict):
+    key: str
+    value: str
+
 class MemIdWidgetStore(TypedDict):
     tree_id: str
     # is the active widget
@@ -150,6 +154,6 @@ class ListboxInsertManagerState(TypedDict):
     listbox_page_insert_enum: ListboxPageInsertEnum | None
 
 # entry inside CONFIG_OPTION_SETTINGS
-class ConfigOptionMapSetting(TypedDict):
+class   ConfigOptionMapSetting(TypedDict):
     values: str
     type: str | int | bool | tuple | list
