@@ -18,13 +18,13 @@ class RightWindowFrame(tk.Frame):
         super().__init__(master, **Style.right_window['frame'])
         self._observable = observable
         self._store = store
-        self._attr_config_listbox_mngr = ConfigListboxManager(
+        self._options_config_listbox_mngr = ConfigListboxManager(
             master=self, 
-            listbox_page_insert_enum=ListboxPageInsertEnum.ATTRIBUTES,
+            listbox_page_insert_enum=ListboxPageInsertEnum.OPTIONS,
             observable=self._observable,
             store=self._store,           
             **Style.config_listbox_manager)
-        # self._observable.register_observer(self._attr_config_listbox_mngr)
+        # self._observable.register_observer(self._options_config_listbox_mngr)
 
         self._geometry_config_listbox_mngr = ConfigListboxManager(
             master=self, 
@@ -33,10 +33,10 @@ class RightWindowFrame(tk.Frame):
             store=self._store,           
             **Style.config_listbox_manager)
         self._store.listbox_inserts = {
-            ListboxPageInsertEnum.ATTRIBUTES: self._attr_config_listbox_mngr,
+            ListboxPageInsertEnum.OPTIONS: self._options_config_listbox_mngr,
             ListboxPageInsertEnum.GEOMETRY: self._geometry_config_listbox_mngr  
         }
-        # self._attr_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+        # self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
         self._observable.register_observer(self)
         # button header
         self.header_frame = tk.Frame(self, **Style.right_window['header']['frame'])
@@ -47,9 +47,9 @@ class RightWindowFrame(tk.Frame):
         self.bottom_row_wrapper = tk.Frame(self.header_frame, **Style.right_window['header']['bottom_row'])
         self.bottom_row_wrapper.grid(row=1, column=0, sticky="w")
 
-        self.attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['attr_button_text'])
+        self.attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['option_button_text'])
         self.geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
-        self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click  (insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES))
+        self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click  (insert_type_enum=ListboxPageInsertEnum.OPTIONS))
         self.geo_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageInsertEnum.GEOMETRY))
        
         add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda: self.handle_add(0), width=2, height=2)
@@ -66,8 +66,8 @@ class RightWindowFrame(tk.Frame):
         self.header_frame.bind("<Button-1>", lambda e: self.header_frame.focus_set())
         #  pack header
         self.header_frame.pack(fill='both')
-        # load attr listbox by default
-        self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.ATTRIBUTES)
+        # load _options_config_listbox_mngr listbox by default
+        self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.OPTIONS)
     
     @try_except_catcher
     def toggle_geo_button_visible(self, visible: bool):
@@ -90,10 +90,10 @@ class RightWindowFrame(tk.Frame):
     @try_except_catcher
     def pack_listbox_page_insert(self, insert_type_enum: ListboxPageInsertEnum):
         match insert_type_enum:
-            case ListboxPageInsertEnum.ATTRIBUTES:
+            case ListboxPageInsertEnum.OPTIONS:
                     # set new current list
-                    self._store.current_listbox_insert = self._attr_config_listbox_mngr
-                    self._attr_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+                    self._store.current_listbox_insert = self._options_config_listbox_mngr
+                    self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
             case ListboxPageInsertEnum.GEOMETRY:
                     # set new current list
                     self._store.current_listbox_insert = self._geometry_config_listbox_mngr
@@ -112,7 +112,7 @@ class RightWindowFrame(tk.Frame):
         self._store.block_active_adding = True
         current_listbox_insert_widget = self._store.current_listbox_insert
         current_listbox_insert_enum = ListboxPageInsertEnum
-        # if current_listbox_insert_widget._listbox_page_insert_enum == ListboxPageInsertEnum.ATTRIBUTES:
+        # if current_listbox_insert_widget._listbox_page_insert_enum == ListboxPageInsertEnum.OPTIONS:
         current_listbox_selection = current_listbox_insert_widget.curselection()
         # current_treeview_item = self._store.tree_state_get('selected_item')
         if index is not None:
@@ -138,8 +138,9 @@ class RightWindowFrame(tk.Frame):
         if self._store.block_active_adding:
             logging.debug("addning state is blocked/in session. Cannot subtract.")
             return
+        current_listbox = self._store.current_listbox_insert
         # this is tuple format (3,)
-        curselection: tuple[int] = self._attr_config_listbox_mngr.curselection()
+        curselection: tuple[int] = current_listbox.curselection()
         # current_treeview_item = self._store.tree_state_get('selected_item')
 
         if len(curselection) == 0:
@@ -153,14 +154,14 @@ class RightWindowFrame(tk.Frame):
             lookup_by_id_frozen_config = mem_widget_store_dict.get(memory_id)['widget_config_init_frozen']
             
             # get value at listbox selected index
-            active_item_value =self._attr_config_listbox_mngr.get(tk.ACTIVE)
-            # if active send blank value to undo attr on widget
+            active_item_value = current_listbox.get(tk.ACTIVE)
+            # if active send blank value to undo _options_config_listbox_mngr on widget
             if active_item_value:
-                listbox_item_pairs_dict = Utils.build_split_str_pairs_dict(self._attr_config_listbox_mngr.get(tk.ACTIVE))
+                listbox_item_pairs_dict = Utils.build_split_str_pairs_dict(current_listbox.get(tk.ACTIVE))
                 original_config_value = lookup_by_id_frozen_config.get(listbox_item_pairs_dict['key'])
                 # updates the page widget - notify tree - sets config to zero
                 self._observable.notify_observers(
-                    Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_ATTR_CONFIG, 
+                    Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, 
                     data={
                         "key": listbox_item_pairs_dict['key'],
                         "value": original_config_value
@@ -168,13 +169,13 @@ class RightWindowFrame(tk.Frame):
             # unpack first item from tuple
             current_selection_index, = curselection
             # remove from listbox
-            self._attr_config_listbox_mngr.delete(current_selection_index)
+            current_listbox.delete(current_selection_index)
 
     # remove current session by index - not yet saved to tree or page
     @try_except_catcher
     def handle_subtract_index(self, index: int):
         try:
-            self._attr_config_listbox_mngr.delete(index)
+            self._options_config_listbox_mngr.delete(index)
         except Exception as e:
             logging.error(f"Error in handle_subtract_in_session: {e}", exc_info=True)
 

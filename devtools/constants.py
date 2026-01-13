@@ -23,7 +23,7 @@ class ListboxInsertNotifyStateKey(Enum):
 
 # name to use to display specific listbox insert within frame
 class ListboxPageInsertEnum(Enum):
-    ATTRIBUTES = 1
+    OPTIONS = 1
     GEOMETRY = 2
 
 class ActionType(Enum):
@@ -35,7 +35,7 @@ class ActionType(Enum):
     UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG = "update_tree_item_to_page_widget_grid_config"
     UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG = "update_tree_item_to_page_widget_pack_config"
     UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG = "update_tree_item_to_page_widget_place_config"
-    UPDATE_TREE_ITEM_TO_PAGE_WIDGET_ATTR_CONFIG = "update_tree_item_to_page_widget_attr_config"
+    UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG = "update_tree_item_to_page_widget_option_config"
     DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
     TOGGLE_GEO_BUTTON_VISIBLE = "toggle_geo_button_visible"
 

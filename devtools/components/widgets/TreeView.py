@@ -56,7 +56,7 @@ class TreeView(ttk.Treeview):
             {memory_id: {
                 "tree_id": tree_insert_id,
                 "widget": widget,
-                "widget_config_init_frozen": Utils.conform_attr_lisbox_config(Utils.filter_non_used_config_attrs(widget.configure()))
+                "widget_config_init_frozen": Utils.conform_option_lisbox_config(Utils.filter_non_used_config_options(widget.configure()))
             }})
         # overwrite existing state with new
         self._store.tree_state_set(
@@ -154,23 +154,23 @@ class TreeView(ttk.Treeview):
                 # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     try:
-                        # HANDLE ATTRIBUTE LISTBOX INSERT
+                        # HANDLE OPTION LISTBOX INSERT
                         # delete prev content in listbox
                         self._observable.notify_observers(
                             Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
                         # config used to populate listbox
-                        original_attrs_config: dict = self._store.tree_state_get(
+                        original_options_config: dict = self._store.tree_state_get(
                             TreeStateKey.SELECTED_ITEM_WIDGET).configure()
                         # filter out unwanted config values not in ConfigOptionName - keep original dict formating
-                        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_attrs(
-                            original_attrs_config)
+                        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_options(
+                            original_options_config)
                         # extract the actual set value from value tuples - is key val str pairs
-                        key_value_config_dict: dict[str, str] = Utils.conform_attr_lisbox_config(
+                        key_value_config_dict: dict[str, str] = Utils.conform_option_lisbox_config(
                             filtered_config_dict)
                         key_value_config_sorted_dict = Utils.sorted_dict(
                             key_value_config_dict)
                         # save listbox state - diff than listbox insert into UI
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.ATTRIBUTES)
+                        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.OPTIONS)
                         # HANDLE GEOMETRY LISTBOX INSERT
                         # if widget has no geometry set false to hide window button
                         # GeometryOptionAddition
@@ -221,11 +221,12 @@ class TreeView(ttk.Treeview):
     # takes a dict and applies it to widget config
     # - UPDATE THE PAGE WIDGET HERE
     @try_except_catcher
-    def update_tree_item_to_page_widget_attr_config(self, **listbox_item_pairs_dict):
+    def update_tree_item_to_page_widget_option_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
-        current_tree_item.config(
+        
+        Utils.safe_config(current_tree_item,
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
 
     # delete tree and all branches

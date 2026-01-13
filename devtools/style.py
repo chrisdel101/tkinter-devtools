@@ -33,7 +33,7 @@ class Style:
                 'frame': {
                     'bg': 'grey'
                 },
-                'attr_button_text': 'Attributes',
+                'option_button_text': 'Options',
                 'geo_button_text': 'Geometry'
             },
             'bottom_row':{

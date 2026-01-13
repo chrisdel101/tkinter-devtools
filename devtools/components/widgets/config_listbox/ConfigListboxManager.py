@@ -61,7 +61,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     
         listbox_item_pairs_dict: ListboxItemPair  = Utils.build_split_str_pairs_dict(full_txt_str, ":")
         # ListboxPageInsertEnum - {'values': None, 'type': <class 'int'>}
-        if self._listbox_page_insert_enum == ListboxPageInsertEnum.ATTRIBUTES:
+        if self._listbox_page_insert_enum == ListboxPageInsertEnum.OPTIONS:
         # UPDATE CONFIG ATTTRIBUTES
             option_setting_map = self.map_config_option_to_setting(listbox_item_pairs_dict.get('key'))
         else:
@@ -107,10 +107,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
         
         self.after_idle(lambda: self.yview_moveto(y0))
-        # UPDATE THE PAGE WIDGETS HERE - calls tree 
-        if self._listbox_page_insert_enum == ListboxPageInsertEnum.ATTRIBUTES:
-            # run update_tree_item_to_page_widget_attr_config on widget.config
-            self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_ATTR_CONFIG, data={
+        # UPDATE THE PAGE WIDGETS HERE - calls tree
+        # --- OPTION UPDATE HANDLING 
+        if self._listbox_page_insert_enum == ListboxPageInsertEnum.OPTIONS:
+            # run update_tree_item_to_page_widget_option_config on widget.config
+            self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, data={
                 'key': key_entry_value,
                 'value': value_entry_value
             }))
@@ -276,13 +277,13 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             self._store.add_existing_store_wrapper(self.spin_box_wrapper)
             # self.allow_input_focus_out_logic = True
             spinbox.focus_set()
-        # check mapping for attribute config value options - combobox
-        elif (item_attr_vals_list := config_setting_map and config_setting_map.get('values')):
+        # check mapping for option config value options - combobox
+        elif (item_option_vals_list := config_setting_map and config_setting_map.get('values')):
             value_option_box = self.build_value_option_box(
             index=index,
             key_entry_widget=key_entry,
             key_entry_value=listbox_item_pairs_dict.get('key'),
-            item_option_vals_list=item_attr_vals_list
+            item_option_vals_list=item_option_vals_list
             )
             value_option_box.pack(fill='x')
             self.value_box_wrapper.place(relx=0.45, y=y_coord + self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)

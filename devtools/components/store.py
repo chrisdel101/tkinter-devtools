@@ -37,10 +37,10 @@ class Store:
         # listbox being shown in frame 
         self.current_listbox_insert: ConfigListboxManager | None = None
         self.current_listbox_insert_internal_state: ListboxManagerState = {
-            ListboxPageInsertEnum.ATTRIBUTES: {
+            ListboxPageInsertEnum.OPTIONS: {
                 ListboxInsertNotifyStateKey.SELECTED_INDEX.value: None,
                 ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxInsertNotifyStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.ATTRIBUTES
+                ListboxInsertNotifyStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.OPTIONS
             },
             ListboxPageInsertEnum.GEOMETRY: {
                 ListboxInsertNotifyStateKey.SELECTED_INDEX.value: None,
@@ -71,7 +71,7 @@ class Store:
     # get single value from listbox manager state
     @try_except_catcher
     def listbox_manager_state_get_value(self, enum_key: ListboxInsertNotifyStateKey, page_insert_override: ListboxPageInsertEnum | None = None):
-        # ge current insert key ListboxPageInsertEnum or manual param
+        # get current insert key ListboxPageInsertEnum or manual param
         page_insert = page_insert_override if page_insert_override else self.current_listbox_insert._listbox_page_insert_enum
         return self.current_listbox_insert_internal_state.get(page_insert).get(enum_key.value)
 
@@ -85,13 +85,13 @@ class Store:
         
         match current_target_listbox_enum:
             # set one of the ListboxInsertNotifyStateKey values by ListboxPageInsertEnum
-            case ListboxPageInsertEnum.ATTRIBUTES:
+            case ListboxPageInsertEnum.OPTIONS:
                 print("U1")
                 self.current_listbox_insert_internal_state[
-                    ListboxPageInsertEnum.ATTRIBUTES][enum_key.value] = state_to_set
+                    ListboxPageInsertEnum.OPTIONS][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_insert_internal_state[ListboxPageInsertEnum.ATTRIBUTES].get(enum_key.value),
+                           data=self.current_listbox_insert_internal_state[ListboxPageInsertEnum.OPTIONS].get(enum_key.value),
                            target=current_target_listbox)
                 )
             case ListboxPageInsertEnum.GEOMETRY:
