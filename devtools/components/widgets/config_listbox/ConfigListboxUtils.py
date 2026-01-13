@@ -41,6 +41,10 @@ class ConfigListboxUtils:
             setattr(self, 'spinbox_var', None)
             )
         )
+        spinbox.bind("<FocusOut>", lambda e: (
+                    self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
+                    print("focusout build_value_spin_box"),
+                    setattr(self._store, 'block_active_adding', False)))
         return spinbox
 
     @try_except_catcher

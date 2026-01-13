@@ -193,7 +193,6 @@ class TreeView(ttk.Treeview):
         except Exception as e:
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
-
     @try_except_catcher
     def update_tree_item_to_page_widget_grid_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
@@ -202,9 +201,6 @@ class TreeView(ttk.Treeview):
         current_tree_item.grid_configure(
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
         current_tree_item.update_idletasks()
-        # saved_grid_state = current_tree_item.grid_info()
-        # current_tree_item.grid(**saved_grid_state)
-        pass
         
     @try_except_catcher
     def update_tree_item_to_page_widget_place_config(self, **listbox_item_pairs_dict):
