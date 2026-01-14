@@ -244,6 +244,7 @@ class Utils:
                     fn(action.data) if action.data is not None else fn()
         except Exception as e:
             logging.error(f"Error dispatch_action {action.type}: {e}", exc_info=True)
+            raise
     @staticmethod    
     def get_geometry_info(widget: tk.Widget):
         geometry_type = widget.winfo_manager()
@@ -311,11 +312,13 @@ class Utils:
         # store state of current var
         for k in kwargs:
             prev[k] = widget.cget(k)
-
         try:
-            # try value on config - no error means succews
+            # try value on config - no error means success
             widget.config(**kwargs)
-        except tk.TclError:
-            logging.error(f"safe_config: Invalid config for {widget}: {kwargs}", exc_info=True)
-            # if failure restore original state
-            widget.config(**prev)
+        except tk.TclError as e:
+            # if hits this block bad value added to config 
+            logging.debug(f"safe_config: Invalid config for input to {widget}: {kwargs}: {e}", exc_info=True)
+            raise e
+        except Exception as e:
+            logging.error(f"safe_config: Error configuring {widget}: {e}", exc_info=True)
+            raise e

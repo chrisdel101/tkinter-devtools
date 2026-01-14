@@ -1,5 +1,5 @@
 from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption, GridGeometryOption, PackGeometryOptionName, PlaceGeometryOption
-from devtools.schemas import ConfigOptionMapSetting
+from devtools.constants import ConfigOptionMapSetting
 
 PACK_GEOMETRY_CONFIG_SETTING_VALUES = {
     PackGeometryOptionName.PADX: {
