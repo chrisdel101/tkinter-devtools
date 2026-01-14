@@ -1,6 +1,5 @@
 
 from typing import Any
-import tkinter as tk
 from dataclasses import dataclass
 
 from devtools.constants import ActionType
