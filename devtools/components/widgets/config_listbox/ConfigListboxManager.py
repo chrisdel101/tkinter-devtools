@@ -98,20 +98,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         y0, _ = self.yview()
         # check for .get method  - use .get for new entry else val correct option box  
         value_entry_value = value_entry_widget.get() if getattr(value_entry_widget, 'get', None) else updated_option_value
-         # delete data at current index and insert new data there
-        self.delete_all_listbox_items()
-        current_listbox_insert_widget = self._store.current_listbox_insert
-        current_listbox_value_state_dict  = self._store.listbox_manager_state_get_value(ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE)
-        # overwrite current vals - stops duplicates from adding to listbox
-        updated_value_state_sorted_dict = Utils.sorted_dict(Utils.merge_dicts(current_listbox_value_state_dict, {key_entry_value: value_entry_value}))
-        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
-        
-        self.after_idle(lambda: self.yview_moveto(y0))
-        # UPDATE THE PAGE WIDGETS HERE - calls tree
+         # UPDATE THE PAGE WIDGETS HERE - calls tree
         # --- OPTION UPDATE HANDLING 
         if self._listbox_page_insert_enum == ListboxPageInsertEnum.OPTIONS:
             # run update_tree_item_to_page_widget_option_config on widget.config
-            self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, data={
+                self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, data={
                 'key': key_entry_value,
                 'value': value_entry_value
             }))
@@ -134,6 +125,16 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                         'key': key_entry_value,
                         'value': value_entry_value
                     }))
+         # delete data at current index and insert new data there
+        self.delete_all_listbox_items()
+        # current_listbox_insert_widget = self._store.current_listbox_insert
+        current_listbox_value_state_dict  = self._store.listbox_manager_state_get_value(ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE)
+        # overwrite current vals - stops duplicates from adding to listbox
+        updated_value_state_sorted_dict = Utils.sorted_dict(Utils.merge_dicts(current_listbox_value_state_dict, {key_entry_value: value_entry_value}))
+        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
+        
+        self.after_idle(lambda: self.yview_moveto(y0))
+      
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
         self._store.block_active_adding = False
         self._store.allow_input_focus_out_logic = True

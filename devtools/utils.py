@@ -225,9 +225,9 @@ class Utils:
         except Exception:
             logging.error("Error determining if click was on combobox arrow.", exc_info=True)
     @staticmethod
+    @try_except_catcher
     # universal fn called in class notify methods
     def dispatch_action(self, action: Action):
-        try:
             # check any targets match the current obj - for multi instance
             if action.target is not None and action.target is not self:
                 logging.debug(f"Target set to {action.target.name}. Ignoring mismatch to {self}.")
@@ -242,9 +242,6 @@ class Utils:
                 else:
                     # don't input anything if no data
                     fn(action.data) if action.data is not None else fn()
-        except Exception as e:
-            logging.error(f"Error dispatch_action {action.type}: {e}", exc_info=True)
-            raise
     @staticmethod    
     def get_geometry_info(widget: tk.Widget):
         geometry_type = widget.winfo_manager()
@@ -315,9 +312,10 @@ class Utils:
         try:
             # try value on config - no error means success
             widget.config(**kwargs)
+        # hits this when bad config value is added 
         except tk.TclError as e:
-            # if hits this block bad value added to config 
-            logging.debug(f"safe_config: Invalid config for input to {widget}: {kwargs}: {e}", exc_info=True)
+            logging.debug(f"---SAFE_CONFIG ERROR---: Invalid input: {kwargs}: error: {e}")
+            # raise to next catch block - error chain should stop it making it to page
             raise e
         except Exception as e:
             logging.error(f"safe_config: Error configuring {widget}: {e}", exc_info=True)

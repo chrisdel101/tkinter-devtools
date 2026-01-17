@@ -225,8 +225,8 @@ class TreeView(ttk.Treeview):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
-        
-        Utils.safe_config(current_tree_item,
+        # for invalid entry error proporates to top and stops execution
+        current_tree_item.config(
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
 
     # delete tree and all branches
