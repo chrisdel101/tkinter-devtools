@@ -86,7 +86,6 @@ class Store:
         match current_target_listbox_enum:
             # set one of the ListboxInsertNotifyStateKey values by ListboxPageInsertEnum
             case ListboxPageInsertEnum.OPTIONS:
-                print("U1")
                 self.current_listbox_insert_internal_state[
                     ListboxPageInsertEnum.OPTIONS][enum_key.value] = state_to_set
                 self._observable.notify_observers(

@@ -7,7 +7,7 @@ from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionName, CommonGeometryOption, GridGeometryOption, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
 from devtools.decorators import try_except_catcher
-from devtools.geometry_info import GeometryInfo
+from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import ACTION_REGISTRY, CONFIG_OPTION_SETTINGS, CONFIG_ALIASES
 
 class Utils:
@@ -102,7 +102,8 @@ class Utils:
     @staticmethod
     @try_except_catcher
     # remove any non standard unusable options
-    def build_geometry_options_dict(geo_manager: GeometryInfo):
+    def build_geometry_standard_options_dict(geo_manager: GeometryManagerInfo):
+        # get all common option keys for geo type
         match geo_manager.geometry_type:
             case GeometryType.PACK:
                 common_options  = [getattr(PackGeometryOptionName, k) for k in filter(str.isupper, dir(PackGeometryOptionName))]
@@ -110,14 +111,15 @@ class Utils:
                 common_options = [getattr(GridGeometryOption, k) for k in filter(str.isupper, dir(GridGeometryOption))]
             case GeometryType.PLACE:
                 common_options = [getattr(PlaceGeometryOption, k) for k in filter(str.isupper, dir(PlaceGeometryOption))]
-        # value can be tuple or str/int
+        # geo_manager.geometry_type_info ex - {'in': <tkinter.Tk object .>, 'anchor': 'center', 'expand': 0,...} 
         for key, val in list(geo_manager.geometry_type_info.items()):
-        # delete unwanted config values from dict in place using list
+        # delete unwanted config values in place using tuples list
             if Utils.non_zero_falsey(val):
                 del geo_manager.geometry_type_info[key]
             elif key not in common_options:
                 del geo_manager.geometry_type_info[key]
         return geo_manager.geometry_type_info
+
     @staticmethod
     # check for each tuple length. if 5 it's last item, if 2 it's an alias
     # This is a tk inter standard for all configs objs
@@ -247,11 +249,11 @@ class Utils:
         geometry_type = widget.winfo_manager()
         match geometry_type:
             case GeometryType.PACK.value:
-                return GeometryInfo(GeometryType.PACK, widget.pack_info())
+                return GeometryManagerInfo(GeometryType.PACK, widget.pack_info())
             case GeometryType.GRID.value:
-                return GeometryInfo(GeometryType.GRID, widget.grid_info())
+                return GeometryManagerInfo(GeometryType.GRID, widget.grid_info())
             case GeometryType.PLACE.value:       
-                return GeometryInfo(GeometryType.PLACE, widget.place_info())
+                return GeometryManagerInfo(GeometryType.PLACE, widget.place_info())
             case _:
                 logging.debug(f"get_geometry_info: Widget {widget} has no geometry manager.")
                 return None
@@ -285,23 +287,32 @@ class Utils:
 
     @staticmethod
     @try_except_catcher
-    def combine_widget_geometry(widget) -> dict:
-        geo_manager: GeometryInfo = Utils.get_geometry_info(widget)
+    # combine any extra missing options here
+    def combine_additional_geometry_ooptions(widget) -> dict:
+        # get geo manager and value
+        geo_manager: GeometryManagerInfo = Utils.get_geometry_info(widget)
         resolved_combined_widget_geometry ={}
         if geo_manager:
-            options_dict = Utils.build_geometry_options_dict(geo_manager)
+            options_key_value_dict = Utils.build_geometry_standard_options_dict(geo_manager)
             combined_widget_geometry = Utils.merge_dicts(
                 {
+                    # ADD EXTRA OPTIONS HERE IF NEEDED
                     CommonGeometryOption.GEOMETRY_TYPE: geo_manager.geometry_type
                 }, 
-                options_dict
+                options_key_value_dict
             )
-            for key, val in combined_widget_geometry.items(): 
+            return combined_widget_geometry
+        return {}
+    @staticmethod
+    @try_except_catcher
+    def resolve_geometry_aliases(combined_widget_geometry: dict) -> dict:
+        new_combined_widget_geometry = {}
+        for key, val in combined_widget_geometry.items():
                 # resolve alias or keep key as is
                 canonical = Utils.listbox_option_alias_resolver(key)
-                resolved_combined_widget_geometry[canonical] = val
-            return resolved_combined_widget_geometry
-        return {}
+                new_combined_widget_geometry[canonical] = val
+             
+        return new_combined_widget_geometry   
     @staticmethod
     # handle invalid values passed to config
     def safe_config(widget, **kwargs):

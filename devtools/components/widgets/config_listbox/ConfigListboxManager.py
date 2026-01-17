@@ -8,7 +8,7 @@ from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxInsertNotifyStateKey, Store
 from devtools.constants import ActionType, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
-from devtools.geometry_info import GeometryInfo
+from devtools.geometry_info import GeometryManagerInfo
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -67,7 +67,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         else:
             # UPDATE GEOMETRY OPTIONS
             current_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
-            geometry_info: GeometryInfo = Utils.get_geometry_info(current_widget)
+            geometry_info: GeometryManagerInfo = Utils.get_geometry_info(current_widget)
             geometry_info_type = getattr(geometry_info, 'geometry_type', None)
             if geometry_info_type == GeometryType.PACK:
                 option_setting_map = self.map_pack_geometry_option_to_setting(listbox_item_pairs_dict.get('key'))

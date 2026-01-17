@@ -175,10 +175,11 @@ class TreeView(ttk.Treeview):
                         # if widget has no geometry set false to hide window button
                         # GeometryOptionAddition
                         self._store.show_geometry_button.set(bool(Utils.get_geometry_info(selected_item_widget)))
-                        widget_geometry_dict: dict = Utils.combine_widget_geometry(selected_item_widget)
+                        widget_geometry_dict: dict =Utils.resolve_geometry_aliases(Utils.combine_additional_geometry_ooptions(selected_item_widget))
+                        sorted_widget_geometry_dict = Utils.sorted_dict(widget_geometry_dict)
                         # set geometry listbox state
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
-                        state_to_set=widget_geometry_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
+                        state_to_set=sorted_widget_geometry_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
                         
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"

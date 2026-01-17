@@ -1,7 +1,16 @@
-from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption, GridGeometryOption, PackGeometryOptionName, PlaceGeometryOption
+from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption, GeometryType, GridGeometryOption, ListboxItemState, PackGeometryOptionName, PlaceGeometryOption
 from devtools.constants import ConfigOptionMapSetting
 
-PACK_GEOMETRY_CONFIG_SETTING_VALUES = {
+PACK_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
+    PackGeometryOptionName.GEOMETRY_TYPE: {
+        'values': GeometryType.PACK.value,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+        'state': ListboxItemState.READ_ONLY,
+    },
+    PackGeometryOptionName.PADX: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.INTEGER.value,
+    },
     PackGeometryOptionName.PADX: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
@@ -35,12 +44,18 @@ PACK_GEOMETRY_CONFIG_SETTING_VALUES = {
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
     # readonly options
-    PackGeometryOptionName.IN: {
-        'values': None,
-        'type': ConfigOptionValueTypeEnum.STRING.value,
-    }
+    # PackGeometryOptionName.IN: {
+    #     'values': None,
+    #     'type': ConfigOptionValueTypeEnum.STRING.value,
+    # }
 }
-GRID_GEOMETRY_CONFIG_SETTING_VALUES = {
+GRID_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
+    GridGeometryOption.GEOMETRY_TYPE: {
+        'values': GeometryType.GRID.value,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+        'state': ListboxItemState.READ_ONLY,
+
+    },
     GridGeometryOption.IPADX: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
@@ -77,13 +92,18 @@ GRID_GEOMETRY_CONFIG_SETTING_VALUES = {
         'values': ["","N","S","E","W","NS","EW","NE","NW","SE","SW","NSE","NSW","NEW","SEW","NSEW"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    # readonly options
-    PackGeometryOptionName.IN: {
-        'values': None,
-        'type': ConfigOptionValueTypeEnum.STRING.value,
-    }
+    # # readonly options
+    # PackGeometryOptionName.IN: {
+    #     'values': None,
+    #     'type': ConfigOptionValueTypeEnum.STRING.value,
+    # }
 }
-PLACE_GEOMETRY_CONFIG_SETTING_VALUES = {
+PLACE_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
+    PlaceGeometryOption.GEOMETRY_TYPE: {
+        'values': GeometryType.PLACE.value,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+        'state': ListboxItemState.READ_ONLY,
+    },
     PlaceGeometryOption.X: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
@@ -124,14 +144,14 @@ PLACE_GEOMETRY_CONFIG_SETTING_VALUES = {
         'values': ["inside","outside"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    # readonly options
-    CommonGeometryOption.IN: {
-        'values': None,
-        'type': ConfigOptionValueTypeEnum.STRING.value,
-    }
+    # # readonly options
+    # CommonGeometryOption.IN: {
+    #     'values': None,
+    #     'type': ConfigOptionValueTypeEnum.STRING.value,
+    # }
 }
 
-CONFIG_OPTION_SETTINGS: dict[dict[str,ConfigOptionMapSetting]] = {
+CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
     # relief
     ConfigOptionName.RELIEF.value: {
         'values': ["flat","raised","sunken","groove","ridge","solid"],
@@ -201,7 +221,6 @@ CONFIG_OPTION_SETTINGS: dict[dict[str,ConfigOptionMapSetting]] = {
 
 CONFIG_ALIASES = {
     CommonGeometryOption.GEOMETRY_TYPE: AliasRename.GEOMETRY_TYPE.value,
-    CommonGeometryOption.IN: AliasRename.PARENT_WIDGET.value,
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BG.value: ConfigOptionName.BACKGROUND.value,
@@ -210,3 +229,4 @@ CONFIG_ALIASES = {
 
 # uses action type enums to make to func with same name
 ACTION_REGISTRY = {a.name: a.value for a in ActionType}
+GEOMETRY_TYPES = [e.value for e in GeometryType]

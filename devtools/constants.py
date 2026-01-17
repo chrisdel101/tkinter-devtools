@@ -1,12 +1,12 @@
-from enum import Enum
+from enum import Enum, auto
 import tkinter as tk
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 
 MAX_KEY_WIDTH = 30  # adjust as needed
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
-class GeometryType(Enum ):
+class GeometryType(Enum):
     PACK = "pack"
     GRID = "grid"
     PLACE = "place"
@@ -49,8 +49,8 @@ class ConfigOptionValueTypeEnum(Enum):
 
 class CommonGeometryOption:
     GEOMETRY_TYPE = "geometry_type"
-    IN = "in"
-
+    
+# Add any new geometry options to these clases
 class GridGeometryOption(CommonGeometryOption):
     PADX = "padx"
     PADY = "pady"
@@ -118,9 +118,9 @@ class GeometryOptionAddition(Enum):
     ROW_CONFIGURE = "rowconfigure" 
     COLUMN_CONFIGURE = "columnconfigure"
 
-class ComboBoxState(Enum):
-    NORMAL = "normal"
-    READONLY = "readonly"
+class ListboxItemState(Enum):
+    DEFAULT = auto()
+    READ_ONLY = auto()
 
 # create used when adding and no val is being input
 class ListBoxEntryInputAction(Enum):
@@ -154,6 +154,7 @@ class ListboxInsertManagerState(TypedDict):
     listbox_page_insert_enum: ListboxPageInsertEnum | None
 
 # entry inside CONFIG_OPTION_SETTINGS
-class   ConfigOptionMapSetting(TypedDict):
+class ConfigOptionMapSetting(TypedDict):
     values: str
     type: str | int | bool | tuple | list
+    state: NotRequired[ListboxItemState]
