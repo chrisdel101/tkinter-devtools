@@ -5,7 +5,6 @@ from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
 from devtools.constants import ActionType, ListBoxEntryInputAction
 from devtools.decorators import try_except_catcher
-from devtools.style import Style
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 
@@ -17,7 +16,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.title(title)
         self.root = root
         self._observable = Observable()
-        self._store = Store(observable=self._observable)
+        self._store = Store(root=root, observable=self._observable)
         
         self.left_window = LeftWindowFrame(
             root=root, 

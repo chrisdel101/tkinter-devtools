@@ -8,6 +8,7 @@ from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManag
 from typing import TYPE_CHECKING
 
 from devtools.decorators import try_except_catcher
+from devtools.style import Style
 
 if TYPE_CHECKING:
     # ONLY for type checkers
@@ -16,10 +17,11 @@ if TYPE_CHECKING:
 
 class Store:
     @try_except_catcher
-    def __init__(self, observable):
+    def __init__(self, root, observable):
         self._observable = observable
         self.block_active_adding: bool = False
         self.existing_combobox_wrappers: list[tk.Widget] | list = []
+        self.style = Style(root=root)
         self.selected_combobox: tk.Widget | None = None
         self.devtools_window_in_focus: bool = True
         self.key_combobox_popdown_open: bool = False

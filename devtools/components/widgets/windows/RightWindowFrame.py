@@ -22,16 +22,13 @@ class RightWindowFrame(tk.Frame):
             master=self, 
             listbox_page_insert_enum=ListboxPageInsertEnum.OPTIONS,
             observable=self._observable,
-            store=self._store,           
-            **Style.config_listbox_manager)
-        # self._observable.register_observer(self._options_config_listbox_mngr)
+            store=self._store)
 
         self._geometry_config_listbox_mngr = ConfigListboxManager(
             master=self, 
             listbox_page_insert_enum=ListboxPageInsertEnum.GEOMETRY,
             observable=self._observable,
-            store=self._store,           
-            **Style.config_listbox_manager)
+            store=self._store)
         self._store.listbox_inserts = {
             ListboxPageInsertEnum.OPTIONS: self._options_config_listbox_mngr,
             ListboxPageInsertEnum.GEOMETRY: self._geometry_config_listbox_mngr  

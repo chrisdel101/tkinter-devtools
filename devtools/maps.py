@@ -221,6 +221,8 @@ CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
 
 CONFIG_ALIASES = {
     CommonGeometryOption.GEOMETRY_TYPE: AliasRename.GEOMETRY_TYPE.value,
+    # reverse of the above
+    AliasRename.GEOMETRY_TYPE.value: CommonGeometryOption.GEOMETRY_TYPE,
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BG.value: ConfigOptionName.BACKGROUND.value,

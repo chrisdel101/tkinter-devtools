@@ -3,9 +3,10 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ConfigOptionMapSetting, ListBoxEntryInputAction, TreeStateKey
+from devtools.constants import ActionType, ConfigOptionMapSetting, ListBoxEntryInputAction, ListboxItemState, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
+from devtools.style import Style
 from devtools.utils import Utils
 
 class ConfigListboxUtils:
@@ -20,7 +21,7 @@ class ConfigListboxUtils:
             to=9999, 
             increment=1,
             textvariable=self.spinbox_var,
-            **self.styles['entry'])
+            **Style.config_listbox_manager['entry'])
         spinbox.bind('<Return>', lambda _: (self.insert_value_output_and_apply_to_page
                 (value_entry_widget=spinbox, 
                 key_entry_value=key_entry_value,
@@ -294,22 +295,33 @@ class ConfigListboxUtils:
     # runs from treeview
     def insert_listbox_items(self, **config_dict):
         try:
-                
             for key in config_dict:
                 # insert selected node into styles_window_listbox window
                 display = f"{key}: {config_dict[key]}"
                 # this auto sizes w/o adding styles
                 # end inserts at the end of the LB
-                self.insert_listbox_item(index=tk.END, value=display)
-            pass
+                self.insert_listbox_item(index=tk.END, key=key, value=display)
+                
         except Exception as e:
             logging.error(f"Error insert_listbox_items: {e}", exc_info=True)
     # kwargs is index, value
+    @try_except_catcher
     def insert_listbox_item(self, **kwargs):
-        try:
-            self.insert(kwargs.get('index'), kwargs.get('value'))
-        except Exception as e:
-            logging.error(f"Error insert_listbox_item: {e}", exc_info=True)
+        # insert lb item
+        self.insert(kwargs.get('index'), kwargs.get('value'))
+        
+        state = self.check_maps_for_state(**kwargs)
+        # grey out any read only items
+        if state == ListboxItemState.READ_ONLY:
+            self.itemconfig(kwargs.get('index'), **Style.config_listbox_manager.get("item-disabled"))
+    
+    def check_maps_for_state(self, **kwargs) -> ListboxItemState | None:
+        # resolve any aliases
+        resolved = Utils.listbox_option_alias_resolver(kwargs.get('key'))
+        
+        state = self.config_map_merge.get(resolved).get('state') if self.config_map_merge.get(resolved) else None
+        # grey out any read only items
+        return state
 
     # delete all items from listbox
     def delete_all_listbox_items(self):
