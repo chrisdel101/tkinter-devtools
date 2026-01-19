@@ -7,12 +7,13 @@ from devtools.constants import ActionType, ListBoxEntryInputAction
 from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+from logging_utils import LoggingUtils
 
 
-logging.basicConfig(level = logging.DEBUG)
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, root, title="Devtools"):
         super().__init__(root)
+        LoggingUtils.set_logging_level(LoggingUtils.TRACE)
         self.title(title)
         self.root = root
         self._observable = Observable()
@@ -59,7 +60,7 @@ class DevtoolsWindow(tk.Toplevel):
         if not self._store.devtools_window_in_focus:
             # if focus on window
             if self.focus_displayof():
-                logging.debug("focus back")
+                logging.trace("focus back")
                 # set state to true
                 self._store.devtools_window_in_focus = True
 
