@@ -1,28 +1,25 @@
 import logging
 
+from devtools.constants import CustomLogLevel
+
 class LoggingUtils:
-    # level consts
-    TRACE = 8
-    BASE_TRACE = 3
-    LOW_TRACE = 5
     # define the new levels
-    logging.addLevelName(BASE_TRACE, "base_trace")
-    logging.addLevelName(LOW_TRACE, "low_trace")
-    logging.addLevelName(TRACE, "trace")
+    logging.addLevelName(CustomLogLevel.TRACE.value, "trace")
+    logging.addLevelName(CustomLogLevel.BASE_TRACE.value, "base_trace")
+    logging.addLevelName(CustomLogLevel.LOW_TRACE.value, "low_trace")
 
     @staticmethod
     def _low_trace(message, *args, **kwargs):
-        if logging.getLogger().isEnabledFor(LoggingUtils.LOW_TRACE):
-            logging.log(LoggingUtils.LOW_TRACE, message, *args, **kwargs)
+        if logging.getLogger().isEnabledFor(CustomLogLevel.LOW_TRACE.value):
+            logging.log(CustomLogLevel.LOW_TRACE.value, message, *args, **kwargs)
     @staticmethod
     def _base_trace(message, *args, **kwargs):
-        if logging.getLogger().isEnabledFor(LoggingUtils.BASE_TRACE):
-            logging.log(LoggingUtils.BASE_TRACE, message, *args, **kwargs)
+        if logging.getLogger().isEnabledFor(CustomLogLevel.BASE_TRACE.value):
+            logging.log(CustomLogLevel.BASE_TRACE.value, message, *args, **kwargs)
     @staticmethod
     def _trace(message, *args, **kwargs):
-        if logging.getLogger().isEnabledFor(LoggingUtils.TRACE):
-            logging.log(LoggingUtils.TRACE, message, *args, **kwargs)
-
+        if logging.getLogger().isEnabledFor(CustomLogLevel.TRACE.value):
+            logging.log(CustomLogLevel.TRACE.value, message, *args, **kwargs)
     @staticmethod
     def append_to_logging():
         # add to logging module

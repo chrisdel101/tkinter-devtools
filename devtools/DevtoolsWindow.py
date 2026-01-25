@@ -3,7 +3,7 @@ import logging
 import tkinter as tk
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
-from devtools.constants import ActionType, ListBoxEntryInputAction
+from devtools.constants import ActionType, CustomLogLevel, ListBoxEntryInputAction
 from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -13,7 +13,7 @@ from logging_utils import LoggingUtils
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, root, title="Devtools"):
         super().__init__(root)
-        LoggingUtils.set_logging_level(LoggingUtils.TRACE)
+        LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
         self.title(title)
         self.root = root
         self._observable = Observable()

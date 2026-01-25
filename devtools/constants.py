@@ -6,6 +6,16 @@ from typing import Any, NotRequired, TypedDict
 MAX_KEY_WIDTH = 30  # adjust as needed
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
+# define log levels by value
+class CustomLogLevel(Enum):
+    TRACE = 8
+    BASE_TRACE = 3
+    LOW_TRACE = 5
+# namespaces are logged when enabled
+class LogNameSpace(Enum):
+    # namespaces
+    COMBOBOX_KEY = auto()
+
 class GeometryType(Enum):
     PACK = "pack"
     GRID = "grid"

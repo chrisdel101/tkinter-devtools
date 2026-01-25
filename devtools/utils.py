@@ -232,7 +232,7 @@ class Utils:
     def dispatch_action(self, action: Action):
             # check any targets match the current obj - for multi instance
             if action.target is not None and action.target is not self:
-                logging.debug(f"Target set to {action.target.name}. Ignoring mismatch to {self}.")
+                logging.low_trace(f"Target set to {action.target.name}. Ignoring mismatch to {self}.")
                 return
             # check if action maps to a method on this class
             fn = getattr(self, ACTION_REGISTRY.get(action.type.name), None)

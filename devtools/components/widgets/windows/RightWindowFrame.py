@@ -121,7 +121,7 @@ class RightWindowFrame(tk.Frame):
             # insert after selected_item
             current_selection_index = current_listbox_selection[0]
             insert_at_index = current_selection_index + 1
-        print("Inserting at index:", insert_at_index)
+        logging.trace("Inserting at index:", insert_at_index)
         # insert into listbox
         current_listbox_insert_widget.insert_listbox_item(index=insert_at_index, value="")
         # init entry input process
@@ -141,7 +141,7 @@ class RightWindowFrame(tk.Frame):
         # current_treeview_item = self._store.tree_state_get('selected_item')
 
         if len(curselection) == 0:
-            print("No item selected to remove.")
+            logging.debug("No item selected to remove.")
             return
         else:
             current_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
