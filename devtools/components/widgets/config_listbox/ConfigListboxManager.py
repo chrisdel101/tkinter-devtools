@@ -88,14 +88,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             if geometry_info_type == GeometryType.PACK:
                 option_setting_map = self.map_pack_geometry_option_to_setting(
                     listbox_item_pairs_dict.get('key'))
-                pass
             elif geometry_info_type == GeometryType.GRID:
                 option_setting_map = self.map_grid_geometry_option_to_setting(
                     listbox_item_pairs_dict.get('key'))
             elif geometry_info_type == GeometryType.PLACE:
                 option_setting_map = self.map_place_geometry_option_to_setting(
                     listbox_item_pairs_dict.get('key'))
-                pass
         if option_setting_map is None:
             logging.debug(
                 f"No option setting map found for {listbox_item_pairs_dict.get('key')}", exc_info=True)
@@ -151,19 +149,19 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
         # current_listbox_insert_widget = self._store.current_listbox_insert
-        current_listbox_value_state_dict = self._store.listbox_manager_state_get_value(
+        prev_listbox_store_dict = self._store.listbox_manager_state_get_value(
             ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE)
-        # overwrite current vals - stops duplicates from adding to listbox
-        updated_value_state_sorted_dict = Utils.sorted_dict(Utils.merge_dicts(
-            current_listbox_value_state_dict, {key_entry_value: value_entry_value}))
+        # merge prev current - stops duplicates from adding to listbox - sorted
+        updated_listbox_store_dict = Utils.sorted_dict(Utils.merge_dicts(
+            prev_listbox_store_dict, {key_entry_value: value_entry_value}))
         self._store.listbox_manager_state_set(
-            enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_value_state_sorted_dict)
-        self.itemconfig(3, fg="gray")
+            enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_listbox_store_dict)
         self.after_idle(lambda: self.yview_moveto(y0))
-
+        
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
-        self._store.block_active_adding = False
-        self._store.allow_input_focus_out_logic = True
+        self.listbox_value_focus_out(_, *self._store.existing_combobox_wrappers)        
+        # self._store.block_active_adding = False
+        # self._store.allow_input_focus_out_logic = True
 
     @block_allow_input_focus_out_logic
     @try_except_catcher
@@ -248,21 +246,22 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # set manually so curselect can access it on subract
             self._set_selected_by_index(index)
             value_entry.bind("<Return>", lambda e:
-                             self.insert_value_output_and_apply_to_page(
-                                 value_entry_widget=e.widget,
-                                 key_entry_value=key_entry_value,
-                                 updated_option_value=current_option_val
-                             )
-                             )
+                self.insert_value_output_and_apply_to_page(
+                    value_entry_widget=e.widget,
+                    key_entry_value=key_entry_value,
+                    updated_option_value=current_option_val
+                )
+            )
             if kwargs.get('entry_input_action') == ListBoxEntryInputAction.CREATE.value:
                 value_entry.bind("<Escape>", lambda e: (
                     self._observable.notify_observers(
                         Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)),
                     self.cancel_update_listbox(
                         *self._store.existing_combobox_wrappers),
-                    print("escape entry create"),
+                    logging.trace("--escape entry create--"),
                     setattr(self._store, 'block_active_adding', False)))
                 value_entry.bind("<FocusOut>", lambda e: (
+                    logging.trace("--focusout entry create--"),
                     self._observable.notify_observers(
                         Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)),
                     self.cancel_update_listbox(
@@ -272,12 +271,13 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 value_entry.bind("<Escape>", lambda e: (
                     self.cancel_update_listbox(
                         *self._store.existing_combobox_wrappers),
-                    print("escape entry update"),
+                    logging.trace("--escape entry update--"),
                     setattr(self._store, 'block_active_adding', False)))
                 value_entry.bind("<FocusOut>", lambda e: (
+                    self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers),
                     self.cancel_update_listbox(
                         *self._store.existing_combobox_wrappers),
-                    print("focusout entry update"),
+                    logging.trace("--focusout entry update--"),
                     setattr(self._store, 'block_active_adding', False)))
     # run funcs for entering row update - called from double click on row
 
@@ -292,9 +292,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.listbox_entry_input_action = ListBoxEntryInputAction.UPDATE
         self._store.editting_item_index = index
         y_coord = self.bbox(index)[1]
-        self.key_box_wrapper = tk.Frame(self)
+        self.key_box_wrapper = tk.Frame(self, name="key_box_wrapper")
         key_entry = tk.Entry(self.key_box_wrapper, **
-                             Style.config_listbox_manager['entry'], **Style.config_listbox_manager['key_entry'])
+            Style.config_listbox_manager['entry'], 
+            **Style.config_listbox_manager['key_entry'])
         # add the text from the item into the key_entry - just place it but dont allow focus
         key_entry.insert(0, listbox_item_pairs_dict.get('key'))
         key_entry.selection_from(0)

@@ -110,7 +110,7 @@ class Store:
 
     @allow_input_focus_out_logic.setter
     def allow_input_focus_out_logic(self, value):
-        logging.debug(f'SETTING allow_input_focus_out_logic TO {value}')
+        logging.trace(f'store setter - set allow_input_focus_out_logic - {value}')
         self._allow_input_focus_out_logic = value
 
     @property

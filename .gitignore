@@ -4,3 +4,4 @@ build
 tk_devtools.egg-info
 venv/
 TODO.md
+.python-version

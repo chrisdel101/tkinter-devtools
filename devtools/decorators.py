@@ -4,7 +4,7 @@ import logging
 import tkinter as tk
 
 # focus out guard - if true block any logic that runs on key_combo_box focus out - listbox_key_focus_out
-# mostly to handle focusset from key-value option
+# mostly to handle focusset when adding key-value boxes - and doing focusset
 def block_allow_input_focus_out_logic(func):
     try:
         @wraps(func)

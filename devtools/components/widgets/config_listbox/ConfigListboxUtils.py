@@ -34,17 +34,22 @@ class ConfigListboxUtils:
             ))
         spinbox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.spin_box_wrapper), 
-            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0)) if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
+            # subract added item on create
+            self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
+             if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
+            
             setattr(self._store, 'block_active_adding', False),
             setattr(self._store, 'allow_input_focus_out_logic', True),
             setattr(self._store, 'listbox_entry_input_action', None),
              # reset spinbox var
-            setattr(self, 'spinbox_var', None)
+            setattr(self, 'spinbox_var', None),
+            logging.trace("spinbox escape")
             )
         )
         spinbox.bind("<FocusOut>", lambda e: (
-                    self.cancel_update_listbox(*self._store.existing_combobox_wrappers), 
-                    print("focusout build_value_spin_box"),
+                    logging.trace("----spinbox focus out----"),
+                    self.cancel_update_listbox(*self._store.existing_combobox_wrappers),
+                     self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers),
                     setattr(self._store, 'block_active_adding', False)))
         return spinbox
 
@@ -78,7 +83,7 @@ class ConfigListboxUtils:
       
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
-            print('value box escape'),
+            logging.trace('combobox value escape'),
             self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0)) if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
             setattr(self._store, 'block_active_adding', False),
             setattr(self._store, 'allow_input_focus_out_logic', True),
@@ -97,7 +102,7 @@ class ConfigListboxUtils:
             self.register(self.handle_value_combobox_closed)
         )
         value_combobox.bind("<FocusOut>", lambda e: 
-                self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers))
+                (self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers), logging.trace("combobox value focus out")))
 
         return value_combobox
         
@@ -137,16 +142,16 @@ class ConfigListboxUtils:
                     key_entry_widget=key_combo_box,
                     key_entry_value=value_inside.get(),
                     y_coord=0,    
-                    config_setting_map=config_setting_map,               # actual value of config option   
+                    config_setting_map=config_setting_map,    # actual value of config option   
                     current_option_val=Utils.conform_option_lisbox_config(self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET).config()).get(value_inside.get()),
                     entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
             ))            
             # this is when adding new line with new key item entry - subtract list item and cancel option box
             key_combo_box.bind("<Escape>", lambda _: 
-                (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)), 
+                    (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)), 
                 self.cancel_update_listbox(self.key_box_wrapper),
-                print("keybox escape"),
+                logging.trace("---keybox escape----"),
                 setattr(self._store, 'block_active_adding', False))) 
             # use native tcl to detect when open
             key_combo_box.bind("<Button-1>", self.handle_key_combobox_open)
@@ -160,7 +165,7 @@ class ConfigListboxUtils:
                 self.register(self.handle_key_combobox_closed)
             )
             key_combo_box.bind("<FocusOut>", lambda e: 
-                self.listbox_key_focus_out(e, self.key_box_wrapper))
+                (self.listbox_key_focus_out(e, self.key_box_wrapper), logging.trace("key focus out")))
          
             return key_combo_box
         except Exception as e:
@@ -170,7 +175,7 @@ class ConfigListboxUtils:
         try:
             if self._store.key_combobox_popdown_open:
                 self._store.key_combobox_popdown_open = False
-                logging.debug(f"Combobox popdown closed state: {self._store.key_combobox_popdown_open}")
+                logging.low_trace(f"Combobox popdown closed state: {self._store.key_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_key_combobox_closed: {e}", exc_info=True)
     # when arrow clicked flip to open
@@ -180,7 +185,7 @@ class ConfigListboxUtils:
             if check:
                 if not self._store.key_combobox_popdown_open:
                     self._store.key_combobox_popdown_open = True
-                logging.debug(f"handle_key_combobox_open open state: {self._store.key_combobox_popdown_open}")
+                logging.low_trace(f"handle_key_combobox_open open state: {self._store.key_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_key_combobox_open: {e}", exc_info=True)
 
@@ -189,7 +194,7 @@ class ConfigListboxUtils:
         try:
             if self._store.value_combobox_popdown_open:
                 self._store.value_combobox_popdown_open = False
-                logging.debug(f"Combobox popdown closed state: {self._store.value_combobox_popdown_open}")
+                logging.low_trace(f"Combobox popdown closed state: {self._store.value_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_value_combobox_closed: {e}",   exc_info=True)
     # when arrow clicked flip to open
@@ -199,32 +204,32 @@ class ConfigListboxUtils:
             if check:
                 if not self._store.value_combobox_popdown_open:
                     self._store.value_combobox_popdown_open = True
-                logging.debug(f"handle_value_combobox_open open state: {self._store.value_combobox_popdown_open}")
+                logging.low_trace   (f"handle_value_combobox_open open state: {self._store.value_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
 
     def listbox_key_focus_out(self,e, *args):
         if self._store.key_combobox_popdown_open: 
-            print("key LISTBOX_ON_FOCUS guard1 open")
+            logging.trace(f"key LISTBOX_ON_FOCUS guard1 open")
             return
         if not self._store.allow_input_focus_out_logic:
-            print("key LISTBOX_ON_FOCUS guard2 off", self._store.allow_input_focus_out_logic)
+            logging.trace(f"key LISTBOX_ON_FOCUS guard2 off {self._store.allow_input_focus_out_logic}")
             return  # internal focus change → ignore
-        print("listbox_key_focus_out build_key_option_box block_active_adding FALSE")
         self._store.block_active_adding =  False
         self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
         setattr(self._store, 'listbox_entry_input_action', None)
+        logging.trace("listbox_key_focus_out block_active_adding setting to false")
 
         self.cancel_update_listbox(*args)
 
     def listbox_value_focus_out(self,e, *args):
-        # if not self.allow_focus_out_value_logic:
-        #     print("value LISTBOX_ON_FOCUS guard1", self.allow_focus_out_value_logic)
-            #     return  # internal focus change → ignore
+        logging.trace(f"listbox_value_focus_out: {e.widget}")
+        # if not self._store.allow_input_focus_out_logic:
+        #     logging.trace(f"value LISTBOX_ON_FOCUS guard1 {self._store.allow_input_focus_out_logic}")
+        #     return  # internal focus change → ignore
         if self._store.value_combobox_popdown_open: 
-            print("value LISTBOX_ON_FOCUS guard2")
+            logging.trace("value LISTBOX_ON_FOCUS guard2")
             return
-        print("llistbox_value_focus_out")
         self._store.block_active_adding =  False
         self._store.allow_input_focus_out_logic = True
         if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
@@ -288,6 +293,7 @@ class ConfigListboxUtils:
     
     @staticmethod
     def cancel_update_listbox(*args):
+        # args[2].destroy()
         for arg in filter(None, args):
             arg.destroy()
     
@@ -307,14 +313,16 @@ class ConfigListboxUtils:
     # kwargs is index, value
     @try_except_catcher
     def insert_listbox_item(self, **kwargs):
+        index, value = kwargs.get('index'), kwargs.get('value')
         # insert lb item
-        self.insert(kwargs.get('index'), kwargs.get('value'))
+        self.insert(index, value)
         
         state = self.check_maps_for_state(**kwargs)
         # grey out any read only items
         if state == ListboxItemState.READ_ONLY:
-            self.itemconfig(kwargs.get('index'), **Style.config_listbox_manager.get("item-disabled"))
+            self.itemconfig(index, **Style.config_listbox_manager.get("item-disabled"))
     
+    # use state value if map has one - used to set state in the UI
     def check_maps_for_state(self, **kwargs) -> ListboxItemState | None:
         # resolve any aliases
         resolved = Utils.listbox_option_alias_resolver(kwargs.get('key'))
@@ -337,7 +345,7 @@ class ConfigListboxUtils:
 
     def listbox_in_parent_y_coord(self) -> int:
         try: 
-            # pos of listbox within the parent win
+            # pos of listbox within the parent win - used to positions combo/option box
             lisbox_in_parent_coord = self.winfo_y()
             return  lisbox_in_parent_coord
         except Exception as e:

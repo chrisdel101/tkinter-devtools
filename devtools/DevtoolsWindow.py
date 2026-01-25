@@ -13,7 +13,7 @@ from logging_utils import LoggingUtils
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, root, title="Devtools"):
         super().__init__(root)
-        LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
+        LoggingUtils.set_logging_level(CustomLogLevel.LOW_TRACE.value)
         self.title(title)
         self.root = root
         self._observable = Observable()

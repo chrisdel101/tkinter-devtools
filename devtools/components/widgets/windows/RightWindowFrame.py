@@ -121,7 +121,7 @@ class RightWindowFrame(tk.Frame):
             # insert after selected_item
             current_selection_index = current_listbox_selection[0]
             insert_at_index = current_selection_index + 1
-        logging.trace("Inserting at index:", insert_at_index)
+        logging.trace(f"Inserting at index: {insert_at_index}")
         # insert into listbox
         current_listbox_insert_widget.insert_listbox_item(index=insert_at_index, value="")
         # init entry input process
