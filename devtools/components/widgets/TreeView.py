@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, GeometryOptionAddition, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.utils import Utils
 
@@ -154,7 +154,7 @@ class TreeView(ttk.Treeview):
                 # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     try:
-                        # HANDLE OPTION LISTBOX INSERT
+                        # HANDLE OPTION COMBOBOX INSERT
                         # delete prev content in listbox
                         self._observable.notify_observers(
                             Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))

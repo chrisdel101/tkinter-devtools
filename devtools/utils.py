@@ -217,6 +217,7 @@ class Utils:
         except KeyError:
             # ttk Combobox popdown (not in widget tree)
             return widget
+    # check if current cursor click is the arrow area of the combobox
     @staticmethod
     def is_combobox_arrow(combobox: ttk.Combobox, x: int) -> bool:
         try:

@@ -103,15 +103,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             listbox_item_pairs_dict=listbox_item_pairs_dict,
             config_setting_map=option_setting_map
         )
-    # handle entry within an entry inside listbox
-    # - pass in callback - used in multiple places w diff callbacks
-
+    # main entrt point to page app - pass value widget input to apply to actual page app widget 
     @try_except_catcher
     def insert_value_output_and_apply_to_page(
         self,
         value_entry_widget: tk.Entry | tk.OptionMenu,
         key_entry_value: str,
         updated_option_value: str | int | float,
+        event: tk.Event | None = None # used for logging only - remove later
     ):
         # store the current y position in listbox
         y0, _ = self.yview()
@@ -159,32 +158,32 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.after_idle(lambda: self.yview_moveto(y0))
         
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
-        self.listbox_value_focus_out(_, *self._store.existing_combobox_wrappers)        
-        # self._store.block_active_adding = False
-        # self._store.allow_input_focus_out_logic = True
+        # self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)        
+        self._store.block_active_adding = False
+        self._store.allow_input_focus_out_logic = True
 
     @block_allow_input_focus_out_logic
     @try_except_catcher
-    # return and place value_option_box from key_option_box
-    def handle_build_value_option_box_from_key_option_box(
+    # return and place value_combo_box from build_combo_box
+    def handle_build_value_combobox_box_from_key_combo_box(
             self,
             index: int,
-            key_option_box: ttk.Combobox,
+            build_combo_box: ttk.Combobox,
             value_inside: tk.StringVar,
             item_option_vals_list: list[str]):
-        value_option_box = self.build_value_option_box(
+        value_combo_box = self.build_value_combo_box(
             index,
-            key_entry_widget=key_option_box,
+            key_entry_widget=build_combo_box,
             key_entry_value=value_inside.get(),
             item_option_vals_list=item_option_vals_list
         )
 
-        value_option_box.pack(fill='x')
+        value_combo_box.pack(fill='x')
         self.value_box_wrapper.place(
             relx=0.5, y=self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.value_box_wrapper)
         # self.allow_input_focus_out_logic = True
-        value_option_box.focus_set()
+        value_combo_box.focus_set()
         # self.allow_input_focus_out_logic = False
 
         self._set_selected_by_index(index)
@@ -247,6 +246,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             self._set_selected_by_index(index)
             value_entry.bind("<Return>", lambda e:
                 self.insert_value_output_and_apply_to_page(
+                    event=e,
                     value_entry_widget=e.widget,
                     key_entry_value=key_entry_value,
                     updated_option_value=current_option_val
@@ -277,7 +277,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                     self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers),
                     self.cancel_update_listbox(
                         *self._store.existing_combobox_wrappers),
-                    logging.trace("--focusout entry update--"),
+                    logging.trace("--focusout callee entry update--"),
                     setattr(self._store, 'block_active_adding', False)))
     # run funcs for entering row update - called from double click on row
 
@@ -320,18 +320,18 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             spinbox.focus_set()
         # check mapping for option config value options - combobox
         elif (item_option_vals_list := config_setting_map and config_setting_map.get('values')):
-            value_option_box = self.build_value_option_box(
+            value_combo_box = self.build_value_combo_box(
                 index=index,
                 key_entry_widget=key_entry,
                 key_entry_value=listbox_item_pairs_dict.get('key'),
                 item_option_vals_list=item_option_vals_list
             )
-            value_option_box.pack(fill='x')
+            value_combo_box.pack(fill='x')
             self.value_box_wrapper.place(
                 relx=0.45, y=y_coord + self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.value_box_wrapper)
             # self.allow_input_focus_out_logic = True
-            value_option_box.focus_set()
+            value_combo_box.focus_set()
         else:
             # no mapping - entry
             self.handle_build_value_entry_from_key_entry(
@@ -356,16 +356,16 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         page_insert = self._store.current_listbox_insert._listbox_page_insert_enum
         current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(
             page_insert).get(ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE.value).keys())
-        key_option_box = self.build_key_option_box(
+        build_combo_box = self.build_key_combo_box(
             index=index,
             item_option_vals_list=current_item_options_list
         )
-        key_option_box.pack(fill='x')
+        build_combo_box.pack(fill='x')
         self.key_box_wrapper.place(
             relx=0, y=self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
         # move focus to key combo
-        key_option_box.focus_set()
+        build_combo_box.focus_set()
         # set manually so curselect can access it on subract
         self._set_selected_by_index(index)
 

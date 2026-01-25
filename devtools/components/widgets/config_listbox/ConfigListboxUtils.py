@@ -22,10 +22,11 @@ class ConfigListboxUtils:
             increment=1,
             textvariable=self.spinbox_var,
             **Style.config_listbox_manager['entry'])
-        spinbox.bind('<Return>', lambda _: (self.insert_value_output_and_apply_to_page
+        spinbox.bind('<Return>', lambda e: (self.insert_value_output_and_apply_to_page
                 (value_entry_widget=spinbox, 
                 key_entry_value=key_entry_value,
                 updated_option_value=spinbox.get(), 
+                event=e
                 ),
                 setattr(self._store, 'listbox_entry_input_action', None),
                 # reset spinbox var
@@ -54,7 +55,7 @@ class ConfigListboxUtils:
         return spinbox
 
     @try_except_catcher
-    def build_value_option_box(self, 
+    def build_value_combo_box(self, 
         index: int,
         key_entry_widget: tk.Entry | ttk.Combobox,
         key_entry_value: str,
@@ -73,10 +74,11 @@ class ConfigListboxUtils:
             )
         for event in ["<<ComboboxSelected>>", "<Return>"]:
             value_combobox.bind(event, 
-                lambda _: (self.insert_value_output_and_apply_to_page
+                lambda e: (self.insert_value_output_and_apply_to_page
                 (value_entry_widget=value_combobox, 
                 key_entry_value=key_entry_value,
                 updated_option_value=value_inside.get(), 
+                event=e
                 ),
                 setattr(self._store, 'listbox_entry_input_action', None)
             ))
@@ -102,12 +104,12 @@ class ConfigListboxUtils:
             self.register(self.handle_value_combobox_closed)
         )
         value_combobox.bind("<FocusOut>", lambda e: 
-                (self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers), logging.trace("combobox value focus out")))
+                (self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers), logging.trace("combobox value focus out callee")))
 
         return value_combobox
         
     @try_except_catcher
-    def build_key_option_box(self, 
+    def build_key_combo_box(self, 
         index: int,
         item_option_vals_list: list[str]):
         try:
@@ -126,9 +128,9 @@ class ConfigListboxUtils:
             for event in ["<<ComboboxSelected>>", "<Return>"]:
                 key_combo_box.bind(event, 
                 lambda _: ( 
-                    self.handle_build_value_option_box_from_key_option_box( 
+                    self.handle_build_value_combobox_box_from_key_combo_box( 
                         index=index,
-                        key_option_box=key_combo_box,
+                        build_combo_box=key_combo_box,
                     value_inside=value_inside,
                     item_option_vals_list=config_setting_map.get('values')
                 ) 
@@ -204,7 +206,9 @@ class ConfigListboxUtils:
             if check:
                 if not self._store.value_combobox_popdown_open:
                     self._store.value_combobox_popdown_open = True
-                logging.low_trace   (f"handle_value_combobox_open open state: {self._store.value_combobox_popdown_open}")
+                    logging.low_trace   (f"handle_value_combobox_open setting open state: {self._store.value_combobox_popdown_open}")
+                else:
+                    logging.low_trace   (f"handle_value_combobox_open state unchanged: {self._store.value_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
 
@@ -223,12 +227,14 @@ class ConfigListboxUtils:
         self.cancel_update_listbox(*args)
 
     def listbox_value_focus_out(self,e, *args):
-        logging.trace(f"listbox_value_focus_out: {e.widget}")
+        # returns highest no null value
+        name  = e.widget._name if e and e.widget and e.widget._name is not None else (e.widget if e else None)
+        logging.trace(f"LISTBOX_VALUE_FOCUS_OUT inner: {name}")
         # if not self._store.allow_input_focus_out_logic:
         #     logging.trace(f"value LISTBOX_ON_FOCUS guard1 {self._store.allow_input_focus_out_logic}")
         #     return  # internal focus change → ignore
         if self._store.value_combobox_popdown_open: 
-            logging.trace("value LISTBOX_ON_FOCUS guard2")
+            logging.trace("value LISTBOX_ON_FOCUS guard2 block")
             return
         self._store.block_active_adding =  False
         self._store.allow_input_focus_out_logic = True
