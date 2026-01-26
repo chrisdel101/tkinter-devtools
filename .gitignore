@@ -3,6 +3,7 @@ dist
 build
 tk_devtools.egg-info
 venv/
+venv_*/
 TODO.md
 NOTES.md
 .python-version

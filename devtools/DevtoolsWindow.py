@@ -7,7 +7,7 @@ from devtools.constants import ActionType, CustomLogLevel, ListBoxEntryInputActi
 from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
-from logging_utils import LoggingUtils
+from devtools.logging_utils import LoggingUtils
 
 
 class DevtoolsWindow(tk.Toplevel):

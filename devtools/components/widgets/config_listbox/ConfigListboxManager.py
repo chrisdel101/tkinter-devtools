@@ -158,9 +158,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.after_idle(lambda: self.yview_moveto(y0))
         
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
-        # self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)        
-        self._store.block_active_adding = False
-        self._store.allow_input_focus_out_logic = True
+        self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)        
+        # self._store.block_active_adding = False
+        # self._store.allow_input_focus_out_logic = True
 
     @block_allow_input_focus_out_logic
     @try_except_catcher

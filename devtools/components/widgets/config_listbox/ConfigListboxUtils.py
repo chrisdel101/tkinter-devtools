@@ -177,38 +177,39 @@ class ConfigListboxUtils:
         try:
             if self._store.key_combobox_popdown_open:
                 self._store.key_combobox_popdown_open = False
-                logging.low_trace(f"Combobox popdown closed state: {self._store.key_combobox_popdown_open}")
+                logging.trace(f"Combobox popdown closed state: {self._store.key_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_key_combobox_closed: {e}", exc_info=True)
     # when arrow clicked flip to open
     def handle_key_combobox_open(self, e):
         try:
+            logging.low_trace(f"handle_key_combobox_open called")
             check = Utils.is_combobox_arrow(e.widget, e.x)
             if check:
                 if not self._store.key_combobox_popdown_open:
                     self._store.key_combobox_popdown_open = True
-                logging.low_trace(f"handle_key_combobox_open open state: {self._store.key_combobox_popdown_open}")
+                logging.trace(f"handle_key_combobox_open open state: {self._store.key_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_key_combobox_open: {e}", exc_info=True)
 
     # if open flip state to closed - called on tcl unmap
     def handle_value_combobox_closed(self):
         try:
+            logging.low_trace   (f"handle_value_combobox_closed called")
             if self._store.value_combobox_popdown_open:
                 self._store.value_combobox_popdown_open = False
-                logging.low_trace(f"Combobox popdown closed state: {self._store.value_combobox_popdown_open}")
+                logging.trace(f"Combobox popdown closed state: {self._store.value_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_value_combobox_closed: {e}",   exc_info=True)
     # when arrow clicked flip to open
     def handle_value_combobox_open(self, e):
         try:
+            logging.low_trace   (f"handle_value_combobox_open called")
             check = Utils.is_combobox_arrow(e.widget, e.x)
             if check:
                 if not self._store.value_combobox_popdown_open:
                     self._store.value_combobox_popdown_open = True
-                    logging.low_trace   (f"handle_value_combobox_open setting open state: {self._store.value_combobox_popdown_open}")
-                else:
-                    logging.low_trace   (f"handle_value_combobox_open state unchanged: {self._store.value_combobox_popdown_open}")
+                logging.trace   (f"handle_value_combobox_open setting open state: {self._store.value_combobox_popdown_open}")
         except Exception as e:
             logging.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
 
@@ -230,9 +231,6 @@ class ConfigListboxUtils:
         # returns highest no null value
         name  = e.widget._name if e and e.widget and e.widget._name is not None else (e.widget if e else None)
         logging.trace(f"LISTBOX_VALUE_FOCUS_OUT inner: {name}")
-        # if not self._store.allow_input_focus_out_logic:
-        #     logging.trace(f"value LISTBOX_ON_FOCUS guard1 {self._store.allow_input_focus_out_logic}")
-        #     return  # internal focus change → ignore
         if self._store.value_combobox_popdown_open: 
             logging.trace("value LISTBOX_ON_FOCUS guard2 block")
             return
