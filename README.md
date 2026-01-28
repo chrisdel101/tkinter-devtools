@@ -13,8 +13,6 @@ Windows
     py -m pip install --upgrade build
     py -m build
 
-
-
 Mac
 
     python3 -m pip install --upgrade pip
@@ -25,7 +23,7 @@ Mac
 
 Packaging in source
 
-    rm -r dist && rm -r tk_devtools.egg-info && python -m build
+    rm -rf build && rm -rf dist && rm -rf tk_devtools.egg-info && python -m build
 
 Importing in local target
 

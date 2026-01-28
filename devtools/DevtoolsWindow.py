@@ -8,11 +8,13 @@ from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 from devtools.logging_utils import LoggingUtils
+from devtools.tcl_runtime_utils import TclRunTimeUtility
 
 
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, root, title="Devtools"):
         super().__init__(root)
+        TclRunTimeUtility.runtime_checks(root)     
         LoggingUtils.set_logging_level(CustomLogLevel.LOW_TRACE.value)
         self.title(title)
         self.root = root
