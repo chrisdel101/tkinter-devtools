@@ -11,8 +11,8 @@ from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
 
-    def __init__(self, root, master, observable, store):
-        super().__init__(master, show="tree", style="My.Treeview")
+    def __init__(self, root, parent, observable, store):
+        super().__init__(parent, show="tree", style="My.Treeview")
         self.root = root
         self._observable = observable
         self._store = store
@@ -72,11 +72,12 @@ class TreeView(ttk.Treeview):
     # on next calls used vals passed in
     def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
         try:
-            # no parent node it's first call - no id to use yet
+            # if no parent node it's first call - no id to use yet
             if not parent_widget_insert_id:
                 parent_memory_id = id(parent_widget)
-                # manual insert -get insert id
-                # set using blank str   - used for first level tree node
+                # manual insert - get insert id
+                # set using blank str for parent - used for first node in the tree w no parent 
+                # insert at end index
                 insert_parent_memory_id = self.insert(
                     "", "end", text=parent_widget.winfo_class())
                 # add using mem id {4579038880: {tree_id:'I002', widget:tk.Widget}}
@@ -86,10 +87,13 @@ class TreeView(ttk.Treeview):
                     insert_parent_memory_id, parent_widget)
 
             else:
-                # parent node - so use id passed from prev call
+                # parent node - so use id passed from prev call - it's parent for this call
                 insert_parent_memory_id = parent_widget_insert_id
             # method gives all child widgets of tk obj
             for child in parent_widget.winfo_children():
+                # if widget is not mapped/packed
+                if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
+                    continue    
                 # Skip any Toplevel windows - this is the dev tool window
                 if isinstance(child, tk.Toplevel):
                     continue
@@ -137,6 +141,7 @@ class TreeView(ttk.Treeview):
             return acc
         except Exception as e:
             logging.error(f"Error collect_widgets: {e}")
+            raise
 
     def handle_tree_select(self, _,):
         try:

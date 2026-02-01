@@ -17,8 +17,11 @@ if TYPE_CHECKING:
 
 class Store:
     @try_except_catcher
-    def __init__(self, root, observable):
+    def __init__(self, root, observable, config):
         self._observable = observable
+        # config values
+        self.show_unmapped_widgets: bool = config.get("show_unmapped_widgets")
+        
         self.block_active_adding: bool = False
         self.existing_combobox_wrappers: list[tk.Widget] | list = []
         self.style = Style(root=root)
@@ -128,6 +131,14 @@ class Store:
     @devtools_window_in_focus.setter
     def devtools_window_in_focus(self, value):
         self._devtools_window_in_focus = value
+
+    @property
+    def show_unmapped_widgets(self):
+        return self._show_unmapped_widgets
+
+    @show_unmapped_widgets.setter
+    def show_unmapped_widgets(self, value):
+        self._show_unmapped_widgets = value
 
     @property
     def current_listbox_insert(self):

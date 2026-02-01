@@ -8,27 +8,32 @@ from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 from devtools.logging_utils import LoggingUtils
+from devtools.maps import CONFIG
 from devtools.tcl_runtime_utils import TclRunTimeUtility
 
 
 class DevtoolsWindow(tk.Toplevel):
-    def __init__(self, root, title="Devtools"):
+    def __init__(self, root, title="Devtools", **kwargs):
         super().__init__(root)
+        # run to update page render for before tree maps
+        root.update_idletasks()
         TclRunTimeUtility.runtime_checks(root)     
-        LoggingUtils.set_logging_level(CustomLogLevel.LOW_TRACE.value)
+        LoggingUtils.set_logging_level(logging.ERROR)
+        # overwrite any default config with kwargs
+        CONFIG.update(**kwargs)
         self.title(title)
         self.root = root
         self._observable = Observable()
-        self._store = Store(root=root, observable=self._observable)
+        self._store = Store(root=root, observable=self._observable, config=CONFIG)
         
         self.left_window = LeftWindowFrame(
             root=root, 
-            master=self,
+            parent=self,
             observable=self._observable,
             store=self._store)
     
         self.right_window = RightWindowFrame(
-            master=self,
+            parent=self,
             observable=self._observable,
             store=self._store)
         # pack left window
@@ -38,9 +43,9 @@ class DevtoolsWindow(tk.Toplevel):
 
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
-        self.geometry("+300+0")
+        self.geometry("+700+0")
         # self.poll_for_changes()
-
+    
     @try_except_catcher
     def on_focus_out(self, _):
         if self._store.devtools_window_in_focus:

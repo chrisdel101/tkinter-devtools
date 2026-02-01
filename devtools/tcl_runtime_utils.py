@@ -22,6 +22,7 @@ class TclRunTimeUtility:
                 "Tk command callbacks are not working in this process.\n"
                 "This Python/Tk environment is broken."
             )
+        btn.destroy()
     @staticmethod
     def assert_combobox_command_valid(root):
         fired = False

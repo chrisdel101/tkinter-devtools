@@ -11,11 +11,11 @@ import tkinter as tk
 
 class RightWindowFrame(tk.Frame):
     def __init__(self, 
-                master,     
+                parent,     
                 observable, 
                 store 
                 ):
-        super().__init__(master, **Style.right_window['frame'])
+        super().__init__(parent, **Style.right_window['frame'])
         self._observable = observable
         self._store = store
         self._options_config_listbox_mngr = ConfigListboxManager(
@@ -43,7 +43,7 @@ class RightWindowFrame(tk.Frame):
         # bottom row wrappper
         self.bottom_row_wrapper = tk.Frame(self.header_frame, **Style.right_window['header']['bottom_row'])
         self.bottom_row_wrapper.grid(row=1, column=0, sticky="w")
-
+       
         self.attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['option_button_text'])
         self.geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
         self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click  (insert_type_enum=ListboxPageInsertEnum.OPTIONS))

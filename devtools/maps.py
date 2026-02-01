@@ -42,12 +42,7 @@ PACK_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     PackGeometryOptionName.SIDE: {
         'values': ['top', 'bottom', 'left', 'right'],
         'type': ConfigOptionValueTypeEnum.STRING.value,
-    },
-    # readonly options
-    # PackGeometryOptionName.IN: {
-    #     'values': None,
-    #     'type': ConfigOptionValueTypeEnum.STRING.value,
-    # }
+    }
 }
 GRID_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     GridGeometryOption.GEOMETRY_TYPE: {
@@ -232,3 +227,7 @@ CONFIG_ALIASES = {
 # uses action type enums to make to func with same name
 ACTION_REGISTRY = {a.name: a.value for a in ActionType}
 GEOMETRY_TYPES = [e.value for e in GeometryType]
+
+CONFIG = {
+    "list_ummapped_widgets":False
+}
