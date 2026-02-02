@@ -55,15 +55,21 @@ class Store:
             }
         }
         self.hidden_widgets = None
-        self.show_geometry_button = tk.BooleanVar()
-        self.show_geometry_button.trace_add('write', self.on_geometry_var_change)
-        self.show_geometry_button.set(False)
+        self.show_geometry_button = False
+        # self.show_geometry_button.trace_add('write', lambda *_: self._observable.notify_observers(Action(
+        #     type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
+        # data=self.show_geometry_button.get()
+        # )))
         
-    def on_geometry_var_change(self, *_):
-        self._observable.notify_observers(Action(
-            type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
-        data=self.show_geometry_button.get()
-        ))
+    # @try_except_catcher
+    # # wildcard for 3 args - variable name, index, and operation
+    # def handle_toggle_geometry_btn(self, visible):
+    #     # fire when ever the setter is called
+    #     self._observable.notify_observers(Action(
+    #         type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
+    #     data=self.show_geometry_button.get()
+    #     ))
+
 
     @try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
@@ -107,6 +113,18 @@ class Store:
                         data=self.current_listbox_insert_internal_state[ListboxPageInsertEnum.GEOMETRY].get(enum_key.value),
                         target=current_target_listbox)
                     )
+
+    @property
+    def show_geometry_button(self):
+        return self._show_geometry_button
+    
+    @show_geometry_button.setter
+    def show_geometry_button(self, value):
+        self._show_geometry_button = value
+        self._observable.notify_observers(Action(
+            type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
+        data=value
+        ))
 
     @property
     def allow_input_focus_out_logic(self):

@@ -2,8 +2,9 @@ from __future__ import annotations
 import logging
 from tkinter import ttk
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, GeometryType, ListboxPageInsertEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
+from devtools.geometry_info import GeometryManagerInfo
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -69,7 +70,7 @@ class RightWindowFrame(tk.Frame):
     @try_except_catcher
     def toggle_geo_button_visible(self, visible: bool):
         if visible:
-            Utils.show_widget(self.geo_button, self._store)
+            Utils.show_widget(self.geo_button, GeometryManagerInfo(GeometryType.GRID, {}))
         else:
             Utils.hide_widget(self.geo_button, self._store)
     
