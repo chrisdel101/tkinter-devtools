@@ -20,6 +20,8 @@ class GeometryType(Enum):
     PACK = "pack"
     GRID = "grid"
     PLACE = "place"
+    WM = "wm"
+    EMPTY = ""
 
 class TreeStateKey(Enum):
     SELECTED_ITEM_WIDGET =  1

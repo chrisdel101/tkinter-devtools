@@ -7,24 +7,24 @@ from devtools.constants import ActionType, CustomLogLevel, ListBoxEntryInputActi
 from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+from devtools.config import kwargs_config, app_config
 from devtools.logging_utils import LoggingUtils
-from devtools.maps import CONFIG
 from devtools.tcl_runtime_utils import TclRunTimeUtility
 
 
 class DevtoolsWindow(tk.Toplevel):
-    def __init__(self, root, title="Devtools", **kwargs):
-        super().__init__(root)
+    def __init__(self, root, title=app_config['app_title'], **kwargs):
+        super().__init__(root, name=app_config['top_level_name'])
         # run to update page render for before tree maps
         root.update_idletasks()
         TclRunTimeUtility.runtime_checks(root)     
-        LoggingUtils.set_logging_level(logging.ERROR)
+        LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
         # overwrite any default config with kwargs
-        CONFIG.update(**kwargs)
+        kwargs_config.update(**kwargs)
         self.title(title)
         self.root = root
         self._observable = Observable()
-        self._store = Store(root=root, observable=self._observable, config=CONFIG)
+        self._store = Store(root=root, observable=self._observable, config=kwargs_config)
         
         self.left_window = LeftWindowFrame(
             root=root, 

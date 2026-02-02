@@ -111,14 +111,14 @@ class Utils:
                 common_options = [getattr(GridGeometryOption, k) for k in filter(str.isupper, dir(GridGeometryOption))]
             case GeometryType.PLACE:
                 common_options = [getattr(PlaceGeometryOption, k) for k in filter(str.isupper, dir(PlaceGeometryOption))]
-        # geo_manager.geometry_type_info ex - {'in': <tkinter.Tk object .>, 'anchor': 'center', 'expand': 0,...} 
-        for key, val in list(geo_manager.geometry_type_info.items()):
+        # geo_manager.geometry_options ex - {'in': <tkinter.Tk object .>, 'anchor': 'center', 'expand': 0,...} 
+        for key, val in list(geo_manager.geometry_options.items()):
         # delete unwanted config values in place using tuples list
             if Utils.non_zero_falsey(val):
-                del geo_manager.geometry_type_info[key]
+                del geo_manager.geometry_options[key]
             elif key not in common_options:
-                del geo_manager.geometry_type_info[key]
-        return geo_manager.geometry_type_info
+                del geo_manager.geometry_options[key]
+        return geo_manager.geometry_options
 
     @staticmethod
     # check for each tuple length. if 5 it's last item, if 2 it's an alias
@@ -246,7 +246,7 @@ class Utils:
                     # don't input anything if no data
                     fn(action.data) if action.data is not None else fn()
     @staticmethod    
-    def get_geometry_info(widget: tk.Widget):
+    def get_geometry_manager_info(widget: tk.Widget):
         geometry_type = widget.winfo_manager()
         match geometry_type:
             case GeometryType.PACK.value:
@@ -255,8 +255,14 @@ class Utils:
                 return GeometryManagerInfo(GeometryType.GRID, widget.grid_info())
             case GeometryType.PLACE.value:       
                 return GeometryManagerInfo(GeometryType.PLACE, widget.place_info())
+            case GeometryType.EMPTY.value:
+                logging.trace(f"get_geometry_manager_info: Widget {widget} is not mapped.")
+                return GeometryManagerInfo(GeometryType.EMPTY, {})
+            case GeometryType.WM.value:
+                logging.trace(f"get_geometry_manager_info: Widget {widget} uses wm - rejected.")
+                return None
             case _:
-                logging.debug(f"get_geometry_info: Widget {widget} has no geometry manager.")
+                logging.warning(f"get_geometry_manager_info: Widget {widget} has no geometry manager.")
                 return None
             
     @staticmethod
@@ -291,7 +297,7 @@ class Utils:
     # combine any extra missing options here
     def combine_additional_geometry_ooptions(widget) -> dict:
         # get geo manager and value
-        geo_manager: GeometryManagerInfo = Utils.get_geometry_info(widget)
+        geo_manager: GeometryManagerInfo = Utils.get_geometry_manager_info(widget)
         resolved_combined_widget_geometry ={}
         if geo_manager:
             options_key_value_dict = Utils.build_geometry_standard_options_dict(geo_manager)
