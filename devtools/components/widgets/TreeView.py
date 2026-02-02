@@ -175,14 +175,17 @@ class TreeView(ttk.Treeview):
                             key_value_config_dict)
                         # save listbox state - diff than listbox insert into UI
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
-                        state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.OPTIONS)
+                                                              state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.OPTIONS)
                         # HANDLE GEOMETRY LISTBOX INSERT
                         # if widget has no geometry set false to hide window button
                         # GeometryOptionAddition
-                        self._store.show_geometry_button = (bool(Utils.get_geometry_manager_info(selected_item_widget)))
+                        self._store.show_geometry_button = (
+                            bool(Utils.get_geometry_manager_info(selected_item_widget)))
                         # self._store.handle_toggle_geometry_btn(bool(Utils.get_geometry_info(selected_item_widget)))
-                        widget_geometry_dict: dict =Utils.resolve_geometry_aliases(Utils.combine_additional_geometry_ooptions(selected_item_widget))
-                        sorted_widget_geometry_dict = Utils.sorted_dict(widget_geometry_dict)
+                        widget_geometry_dict: dict = Utils.resolve_geometry_aliases(
+                            Utils.combine_additional_geometry_ooptions(selected_item_widget))
+                        sorted_widget_geometry_dict = Utils.sorted_dict(
+                            widget_geometry_dict)
                         # set geometry listbox state
                         self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
                                                               state_to_set=sorted_widget_geometry_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)

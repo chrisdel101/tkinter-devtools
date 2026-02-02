@@ -266,6 +266,11 @@ class Utils:
                 return None
             
     @staticmethod
+    def _set_hidden_widgets(widget, store, geo_manager_info: GeometryManagerInfo):
+        hidden_widgets = Utils.merge_dicts(store.hidden_widgets or {}, {id(widget): geo_manager_info})
+        store.hidden_widgets = hidden_widgets
+    
+    @staticmethod
     def hide_widget(widget: tk.Widget, store: Store):
         geo_manager_info = Utils.get_geometry_manager_info(widget)
         if geo_manager_info is None:
@@ -277,27 +282,21 @@ class Utils:
                 widget.grid_forget()
             case GeometryType.PLACE:
                 widget.place_forget()
-        hidden_widgets = Utils.merge_dicts(store.hidden_widgets or {}, {id(widget): geo_manager_info})
-        store.hidden_widgets = hidden_widgets
+        Utils._set_hidden_widgets(widget, store, geo_manager_info)
+        
 
     @staticmethod
     # show an unmapped widget
-    def show_widget(widget: tk.Widget, geometry_manager_info: GeometryManagerInfo):
-        # widget_state = store.hidden_widgets.get(id(widget)) if store.hidden_widgets else None
-        geo_manager_info  = Utils.get_geometry_manager_info(widget) 
-        if geometry_manager_info is None:
-            return
-        match geometry_manager_info.geometry_type:
-            case geometry_manager_info.geometry_type.PACK:
-                widget.pack(**geo_manager_info.geometry_options)
-            case geometry_manager_info.geometry_type.GRID:
-                widget.grid(**geo_manager_info.geometry_options)
-            case geometry_manager_info.geometry_type.PLACE:
-                widget.place(**geo_manager_info.geometry_options)
-            case geometry_manager_info.geometry_type.EMPTY:
-                logging.debug(f"show_widget: Widget {widget} his set to empty. This function does not take this option.")
-            case _:
-                logging.debug(f"show_widget: Widget {widget} has no geometry manager to show.")
+    def show_widget(widget: tk.Widget, store: Store):
+        widget_state = store.hidden_widgets.get(id(widget)) if store.hidden_widgets else None
+        geo_type  = widget_state.geometry_type if widget_state else None
+        match geo_type:
+            case GeometryType.PACK:
+                widget.pack(**widget_state.geometry_type_info)
+            case GeometryType.GRID:
+                widget.grid(**widget_state.geometry_type_info)
+            case GeometryType.PLACE:
+                widget.place(**widget_state.geometry_type_info)
 
     @staticmethod
     @try_except_catcher
