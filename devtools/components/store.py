@@ -19,9 +19,9 @@ class Store:
     @try_except_catcher
     def __init__(self, root, observable, config):
         self._observable = observable
-        # config values
-        self.show_unmapped_widgets: bool = config.get("show_unmapped_widgets")
-        
+        # map all config values to store
+        [setattr(self, k, v) for k, v in config.items()]
+        # state state values
         self.block_active_adding: bool = False
         self.existing_combobox_wrappers: list[tk.Widget] | list = []
         self.style = Style(root=root)
@@ -38,8 +38,9 @@ class Store:
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }
         # store the listbox manager inserts
-        self.listbox_inserts: dict[ListboxPageInsertEnum, ConfigListboxManager] = {} 
-        # listbox being shown in frame 
+        self.listbox_inserts: dict[ListboxPageInsertEnum,
+                                   ConfigListboxManager] = {}
+        # listbox being shown in frame
         self.current_listbox_insert: ConfigListboxManager | None = None
         self.current_listbox_insert_internal_state: ListboxManagerState = {
             ListboxPageInsertEnum.OPTIONS: {
