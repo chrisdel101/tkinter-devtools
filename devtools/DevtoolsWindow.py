@@ -17,10 +17,12 @@ class DevtoolsWindow(tk.Toplevel):
         super().__init__(root, name=app_config['top_level_name'])
         # run to update page render for before tree maps
         root.update_idletasks()
+        # run runtime checks of tcl bridge
         TclRunTimeUtility.runtime_checks(root)     
-        LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
         # overwrite any default config with kwargs
         kwargs_config.update(**kwargs)
+        # set logging level
+        LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
         self.title(title)
         self.root = root
         self._observable = Observable()

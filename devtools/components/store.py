@@ -54,7 +54,7 @@ class Store:
                 ListboxInsertNotifyStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.GEOMETRY
             }
         }
-        self.hidden_widgets = None
+        self.hidden_widgets = {}
         self.show_geometry_button = False
         # self.show_geometry_button.trace_add('write', lambda *_: self._observable.notify_observers(Action(
         #     type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
@@ -135,11 +135,13 @@ class Store:
         logging.trace(f'store setter - set allow_input_focus_out_logic - {value}')
         self._allow_input_focus_out_logic = value
 
+    # hidden widgets are tracked with their state to allow for re-showing 
     @property
     def hidden_widgets(self):
         return self._hidden_widgets
 
     @hidden_widgets.setter
+    # dict of widgets by py id
     def hidden_widgets(self, value):
         self._hidden_widgets = value
 

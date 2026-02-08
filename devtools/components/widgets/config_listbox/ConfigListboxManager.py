@@ -82,7 +82,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # UPDATE GEOMETRY OPTIONS
             current_widget = self._store.tree_state_get(
                 TreeStateKey.SELECTED_ITEM_WIDGET)
-            geometry_info: GeometryManagerInfo = Utils.get_geometry_manager_info(
+            geometry_info: GeometryManagerInfo = Utils.check_widget_geometry_manager_info(
                 current_widget)
             geometry_info_type = getattr(geometry_info, 'geometry_type', None)
             if geometry_info_type == GeometryType.PACK:

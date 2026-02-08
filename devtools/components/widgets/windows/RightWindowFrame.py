@@ -70,7 +70,7 @@ class RightWindowFrame(tk.Frame):
     @try_except_catcher
     def toggle_geo_button_visible(self, visible: bool):
         if visible:
-            Utils.show_widget(self.geo_button, GeometryManagerInfo(GeometryType.GRID, {}))
+            Utils.show_widget(self.geo_button, self._store)
         else:
             Utils.hide_widget(self.geo_button, self._store)
     

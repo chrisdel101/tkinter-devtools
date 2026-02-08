@@ -1,5 +1,6 @@
 from __future__ import annotations
 from ast import Store
+from copy import copy
 import logging
 import tkinter as tk
 from tkinter import ttk
@@ -246,33 +247,46 @@ class Utils:
                     # don't input anything if no data
                     fn(action.data) if action.data is not None else fn()
     @staticmethod    
-    def get_geometry_manager_info(widget: tk.Widget):
+    @try_except_catcher
+    def check_widget_geometry_manager_info(widget: tk.Widget):
         geometry_type = widget.winfo_manager()
         match geometry_type:
             case GeometryType.PACK.value:
-                return GeometryManagerInfo(GeometryType.PACK, widget.pack_info())
+                return GeometryManagerInfo(GeometryType.PACK, widget.pack_info(), name=widget.winfo_name())
             case GeometryType.GRID.value:
-                return GeometryManagerInfo(GeometryType.GRID, widget.grid_info())
+                return GeometryManagerInfo(GeometryType.GRID, widget.grid_info(), name=widget.winfo_name())
             case GeometryType.PLACE.value:       
-                return GeometryManagerInfo(GeometryType.PLACE, widget.place_info())
-            case GeometryType.EMPTY.value:
-                logging.trace(f"get_geometry_manager_info: Widget {widget} is not mapped.")
-                return GeometryManagerInfo(GeometryType.EMPTY, {})
+                return GeometryManagerInfo(GeometryType.PLACE, widget.place_info(), name=widget.winfo_name())
+            case GeometryType.BLANK.value:
+                logging.trace(f"check_widget_geometry_manager_info: Widget {widget} is not mapped.")
+                return GeometryManagerInfo(GeometryType.BLANK, {} , name=widget.winfo_name())
             case GeometryType.WM.value:
-                logging.trace(f"get_geometry_manager_info: Widget {widget} uses wm - rejected.")
+                logging.trace(f"check_widget_geometry_manager_info: Widget {widget} uses wm - rejected.")
                 return None
             case _:
-                logging.warning(f"get_geometry_manager_info: Widget {widget} has no geometry manager.")
+                logging.warning(f"check_widget_geometry_manager_info: Widget {widget} has no geometry manager.")
                 return None
             
     @staticmethod
-    def _set_hidden_widgets(widget, store, geo_manager_info: GeometryManagerInfo):
+    def _track_hidden_widgets(widget, store, geo_manager_info: GeometryManagerInfo):
+        # combine new widgets with any stored ones
         hidden_widgets = Utils.merge_dicts(store.hidden_widgets or {}, {id(widget): geo_manager_info})
         store.hidden_widgets = hidden_widgets
+
+    @staticmethod
+    def _untrack_hidden_widgets(updated_hidden_widgets, store):
+        # overwrite with updated copy
+        store.hidden_widgets = updated_hidden_widgets
     
     @staticmethod
     def hide_widget(widget: tk.Widget, store: Store):
-        geo_manager_info = Utils.get_geometry_manager_info(widget)
+        # check if already hidden - do nothing
+        is_widget_hidden = store.hidden_widgets.get(id(widget))
+        if is_widget_hidden:
+            return
+        geo_manager_info = Utils.check_widget_geometry_manager_info(widget)
+        # store state of hidden widget to restore later
+        Utils._track_hidden_widgets(widget, store, geo_manager_info)
         if geo_manager_info is None:
             return
         match geo_manager_info.geometry_type:
@@ -282,28 +296,41 @@ class Utils:
                 widget.grid_forget()
             case GeometryType.PLACE:
                 widget.place_forget()
-        Utils._set_hidden_widgets(widget, store, geo_manager_info)
         
 
     @staticmethod
     # show an unmapped widget
-    def show_widget(widget: tk.Widget, store: Store):
-        widget_state = store.hidden_widgets.get(id(widget)) if store.hidden_widgets else None
-        geo_type  = widget_state.geometry_type if widget_state else None
+    def show_widget(widget: tk.Widget, store: Store, geometry_type: GeometryType | None = None):
+        # if no state store will be no options set
+        widget_state = store.hidden_widgets.get(id(widget))
+        # if not stored state need to manually set i.e. from page
+        geo_type  = widget_state.geometry_type if widget_state else geometry_type
+        if not geo_type:
+            logging.trace(f"show_widget: Widget {widget} has no stored hidden state.")
+            return
         match geo_type:
             case GeometryType.PACK:
-                widget.pack(**widget_state.geometry_type_info)
+                widget.pack(**widget_state.geometry_options)
             case GeometryType.GRID:
-                widget.grid(**widget_state.geometry_type_info)
+                widget.grid(**widget_state.geometry_options)
             case GeometryType.PLACE:
-                widget.place(**widget_state.geometry_type_info)
+                widget.place(**widget_state.geometry_options)
+            case _:
+                logging.warning(f"show_widget: Widget {widget} has unknown geometry type {geo_type}.")
+                return
+        # make shallow copy 
+        hidden_widgets_copy = copy(store.hidden_widgets)
+        #  remove showed widgets from hidden_widgets copy - it's vibile now
+        del hidden_widgets_copy[id(widget)]
+        # overwrite hidden state with the copy
+        Utils._untrack_hidden_widgets(hidden_widgets_copy, store)
 
     @staticmethod
     @try_except_catcher
     # combine any extra missing options here
     def combine_additional_geometry_ooptions(widget) -> dict:
         # get geo manager and value
-        geo_manager: GeometryManagerInfo = Utils.get_geometry_manager_info(widget)
+        geo_manager: GeometryManagerInfo = Utils.check_widget_geometry_manager_info(widget)
         resolved_combined_widget_geometry ={}
         if geo_manager:
             options_key_value_dict = Utils.build_geometry_standard_options_dict(geo_manager)

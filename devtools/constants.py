@@ -20,8 +20,15 @@ class GeometryType(Enum):
     PACK = "pack"
     GRID = "grid"
     PLACE = "place"
+    # is for the tk widget
     WM = "wm"
-    EMPTY = ""
+    # items inside a canvas not canvas itself
+    CANVAS = "canvas"
+    # means exists but is not displayed
+    BLANK = "" 
+    # for inside a text widget
+    TEXT = "text"
+    PANED_WINDOW = "paned_window"
 
 class TreeStateKey(Enum):
     SELECTED_ITEM_WIDGET =  1

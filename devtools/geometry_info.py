@@ -8,3 +8,4 @@ from devtools.constants import GeometryType
 class GeometryManagerInfo: 
     geometry_type: GeometryType  # winfo_manager() value
     geometry_options: dict # pack, grid, or place info dict. emptry type uses {}
+    name: str | None = None  # optional name
