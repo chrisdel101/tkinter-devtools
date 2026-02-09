@@ -2,9 +2,8 @@ from __future__ import annotations
 import logging
 from tkinter import ttk
 from devtools.components.observable import Action
-from devtools.constants import ActionType, GeometryType, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
-from devtools.geometry_info import GeometryManagerInfo
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -21,18 +20,18 @@ class RightWindowFrame(tk.Frame):
         self._store = store
         self._options_config_listbox_mngr = ConfigListboxManager(
             master=self, 
-            listbox_page_insert_enum=ListboxPageInsertEnum.OPTIONS,
+            listbox_page_template_enum=ListboxPageTemplateEnum.OPTIONS,
             observable=self._observable,
             store=self._store)
 
         self._geometry_config_listbox_mngr = ConfigListboxManager(
             master=self, 
-            listbox_page_insert_enum=ListboxPageInsertEnum.GEOMETRY,
+            listbox_page_template_enum=ListboxPageTemplateEnum.GEOMETRY,
             observable=self._observable,
             store=self._store)
-        self._store.listbox_inserts = {
-            ListboxPageInsertEnum.OPTIONS: self._options_config_listbox_mngr,
-            ListboxPageInsertEnum.GEOMETRY: self._geometry_config_listbox_mngr  
+        self._store.listbox_templates = {
+            ListboxPageTemplateEnum.OPTIONS: self._options_config_listbox_mngr,
+            ListboxPageTemplateEnum.GEOMETRY: self._geometry_config_listbox_mngr  
         }
         # self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
         self._observable.register_observer(self)
@@ -47,8 +46,8 @@ class RightWindowFrame(tk.Frame):
        
         self.attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['option_button_text'])
         self.geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
-        self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click  (insert_type_enum=ListboxPageInsertEnum.OPTIONS))
-        self.geo_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageInsertEnum.GEOMETRY))
+        self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click  (insert_type_enum=ListboxPageTemplateEnum.OPTIONS))
+        self.geo_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageTemplateEnum.GEOMETRY))
        
         add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda: self.handle_add(0), width=2, height=2)
         
@@ -65,7 +64,7 @@ class RightWindowFrame(tk.Frame):
         #  pack header
         self.header_frame.pack(fill='both')
         # load _options_config_listbox_mngr listbox by default
-        self.pack_listbox_page_insert(insert_type_enum=ListboxPageInsertEnum.OPTIONS)
+        self.pack_listbox_page_insert(insert_type_enum=ListboxPageTemplateEnum.OPTIONS)
     
     @try_except_catcher
     def toggle_geo_button_visible(self, visible: bool):
@@ -75,26 +74,26 @@ class RightWindowFrame(tk.Frame):
             Utils.hide_widget(self.geo_button, self._store)
     
     @try_except_catcher
-    # run pack_listbox_page_insert with check to no repack same insert
-    def handle_pack_listbox_page_insert_click(self, insert_type_enum: ListboxPageInsertEnum):
+    # run pack_listbox_page_insert with check to not repack same insert
+    def handle_pack_listbox_page_insert_click(self, insert_type_enum: ListboxPageTemplateEnum):
         # guard logic - block re-packing same listbox
-        if current_listbox_insert_enum := (self._store.current_listbox_insert and self._store.current_listbox_insert._listbox_page_insert_enum):
+        if current_listbox_insert_enum := (self._store.current_listbox_template and self._store.current_listbox_template._listbox_page_insert_enum):
             if current_listbox_insert_enum == insert_type_enum:
                 # button clicked on current - already packed 
                 return
-            self._store.current_listbox_insert.pack_forget()
+            self._store.current_listbox_template.pack_forget()
         self.pack_listbox_page_insert(insert_type_enum=insert_type_enum)
 
     @try_except_catcher
-    def pack_listbox_page_insert(self, insert_type_enum: ListboxPageInsertEnum):
+    def pack_listbox_page_insert(self, insert_type_enum: ListboxPageTemplateEnum):
         match insert_type_enum:
-            case ListboxPageInsertEnum.OPTIONS:
+            case ListboxPageTemplateEnum.OPTIONS:
                     # set new current list
-                    self._store.current_listbox_insert = self._options_config_listbox_mngr
+                    self._store.current_listbox_template = self._options_config_listbox_mngr
                     self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
-            case ListboxPageInsertEnum.GEOMETRY:
+            case ListboxPageTemplateEnum.GEOMETRY:
                     # set new current list
-                    self._store.current_listbox_insert = self._geometry_config_listbox_mngr
+                    self._store.current_listbox_template = self._geometry_config_listbox_mngr
                     self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
             case _:
                 logging.error(f"Error pack_listbox_page_insert: No listbox packed", exc_info=True)
@@ -108,9 +107,9 @@ class RightWindowFrame(tk.Frame):
             return
         # setter for state store
         self._store.block_active_adding = True
-        current_listbox_insert_widget = self._store.current_listbox_insert
-        current_listbox_insert_enum = ListboxPageInsertEnum
-        # if current_listbox_insert_widget._listbox_page_insert_enum == ListboxPageInsertEnum.OPTIONS:
+        current_listbox_insert_widget = self._store.current_listbox_template
+        current_listbox_insert_enum = ListboxPageTemplateEnum
+        # if current_listbox_insert_widget._listbox_page_insert_enum == ListboxPageTemplateEnum.OPTIONS:
         current_listbox_selection = current_listbox_insert_widget.curselection()
         # current_treeview_item = self._store.tree_state_get('selected_item')
         if index is not None:
@@ -136,7 +135,7 @@ class RightWindowFrame(tk.Frame):
         if self._store.block_active_adding:
             logging.debug("addning state is blocked/in session. Cannot subtract.")
             return
-        current_listbox = self._store.current_listbox_insert
+        current_listbox = self._store.current_listbox_template
         # this is tuple format (3,)
         curselection: tuple[int] = current_listbox.curselection()
         # current_treeview_item = self._store.tree_state_get('selected_item')

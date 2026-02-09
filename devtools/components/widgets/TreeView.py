@@ -4,8 +4,9 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeStateKey
+from devtools.constants import ActionType, CommonGeometryOption, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
+from devtools.geometry_info import GeometryManagerInfo
 from devtools.utils import Utils
 from devtools.config import app_config
 
@@ -95,7 +96,7 @@ class TreeView(ttk.Treeview):
                 # dev tools window - skip this top level in tree
                 if isinstance(child, tk.Toplevel) and child._name == app_config['top_level_name']:
                     continue
-                # hide unmapped widgets - optionalaå
+                # hide unmapped widgets - optional
                 if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
                     continue
                 child_memory_id = id(child)
@@ -158,37 +159,12 @@ class TreeView(ttk.Treeview):
                 # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     try:
-                        # HANDLE OPTION COMBOBOX INSERT
-                        # delete prev content in listbox
-                        self._observable.notify_observers(
-                            Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
-                        # config used to populate listbox
-                        original_options_config: dict = self._store.tree_state_get(
-                            TreeStateKey.SELECTED_ITEM_WIDGET).configure()
-                        # filter out unwanted config values not in ConfigOptionName - keep original dict formating
-                        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_options(
-                            original_options_config)
-                        # extract the actual set value from value tuples - is key val str pairs
-                        key_value_config_dict: dict[str, str] = Utils.conform_option_lisbox_config(
-                            filtered_config_dict)
-                        key_value_config_sorted_dict = Utils.sorted_dict(
-                            key_value_config_dict)
-                        # save listbox state - diff than listbox insert into UI
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
-                        state_to_set=key_value_config_sorted_dict, page_insert_override=ListboxPageInsertEnum.OPTIONS)
+                        # HANDLE OPTION LISTBOX TEMPLATE
+                        self.stuff_listbox_options_state_into_page_template(selected_item_widget)
                         # HANDLE GEOMETRY LISTBOX INSERT
-                      
-                        # check geo option on selected item 
-                        self._store.show_geometry_button = (
-                            bool(Utils.check_widget_geometry_manager_info(selected_item_widget)))
-                        # self._store.handle_toggle_geometry_btn(bool(Utils.get_geometry_info(selected_item_widget)))
-                        widget_geometry_dict: dict = Utils.resolve_geometry_aliases(
-                            Utils.combine_additional_geometry_ooptions(selected_item_widget))
-                        sorted_widget_geometry_dict = Utils.sorted_dict(
-                            widget_geometry_dict)
-                        # set geometry listbox state
-                        self._store.listbox_manager_state_set(enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE,
-                        state_to_set=sorted_widget_geometry_dict, page_insert_override=ListboxPageInsertEnum.GEOMETRY)
+                        self.stuff_listbox_geometry_state_into_page_template(selected_item_widget)
+
+                        self._store.show_geometry_button = (bool(Utils.build_widget_geometry_manager_info(selected_item_widget)))
 
                     except Exception as e:
                         err_msg = f"error handle_tree_select: {e}"
@@ -202,6 +178,48 @@ class TreeView(ttk.Treeview):
 
         except Exception as e:
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
+
+    @try_except_catcher
+    def stuff_listbox_options_state_into_page_template(self, selected_item_widget):
+        # delete prev content in listbox
+        self._observable.notify_observers(
+            Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
+        # get configure vals - these will populate the list box
+        original_options_config: dict = selected_item_widget.configure()
+        # filter out unwanted config values not in ConfigOptionName - keep original dict formating
+        filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_options(
+            original_options_config)
+        # extract the actual set value from value tuples 
+        # - is key val str pairs
+        key_value_config_dict: dict[str, str] = Utils.conform_option_lisbox_config(
+            filtered_config_dict)
+        # sort by alpha order
+        key_value_config_sorted_dict = Utils.sorted_dict(
+            key_value_config_dict)
+        # stuff listbox state template state values
+        self._store.listbox_manager_state_set(
+            enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
+            state_to_set=key_value_config_sorted_dict,  page_insert_override=ListboxPageTemplateEnum.OPTIONS)
+
+    @try_except_catcher
+    def stuff_listbox_geometry_state_into_page_template(self, selected_item_widget):
+
+        current_widget_geo_manager: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(selected_item_widget)
+        
+        common_geometry_options = { 
+            CommonGeometryOption.GEOMETRY_TYPE: getattr(current_widget_geo_manager, 'geometry_type', None),
+            CommonGeometryOption.VISIBILITY: selected_item_widget.winfo_ismapped()
+        }
+        combined_widget_geometry_options = Utils.combine_additional_geometry_options(geo_manager=current_widget_geo_manager, 
+        **common_geometry_options)
+        
+        widget_geometry_dict: dict = Utils.resolve_geometry_aliases(
+            combined_widget_geometry_options)
+        sorted_widget_geometry_dict = Utils.sorted_dict(
+            widget_geometry_dict)
+        # set geometry listbox state
+        self._store.listbox_manager_state_set(enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
+        state_to_set=sorted_widget_geometry_dict, page_insert_override=ListboxPageTemplateEnum.GEOMETRY)
 
     @try_except_catcher
     # listbox calls to make updates to grid geomtetry

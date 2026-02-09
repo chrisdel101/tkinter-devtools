@@ -4,7 +4,7 @@ import tkinter as tk
 from typing import Any
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxInsertNotifyStateKey, ListboxPageInsertEnum, TreeState, TreeStateKey
+from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
 from devtools.decorators import try_except_catcher
@@ -37,39 +37,26 @@ class Store:
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT.value: {},
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }
-        # store the listbox manager inserts
-        self.listbox_inserts: dict[ListboxPageInsertEnum,
+        # store the listbox manager templates
+        self.listbox_templates: dict[ListboxPageTemplateEnum,
                                    ConfigListboxManager] = {}
-        # listbox being shown in frame
-        self.current_listbox_insert: ConfigListboxManager | None = None
-        self.current_listbox_insert_internal_state: ListboxManagerState = {
-            ListboxPageInsertEnum.OPTIONS: {
-                ListboxInsertNotifyStateKey.SELECTED_INDEX.value: None,
-                ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxInsertNotifyStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.OPTIONS
+        # which template is inserted as shown in the listbox
+        self.current_listbox_template: ConfigListboxManager | None = None
+        # store the state of the active template in the listbox 
+        self.current_listbox_template_internal_state: ListboxManagerState = {
+            ListboxPageTemplateEnum.OPTIONS: {
+                ListboxTemplateNotifyStateKey.SELECTED_INDEX.value: None,
+                ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value: None,
+                ListboxTemplateNotifyStateKey.LISTBOX_PAGE_TEMPLATE.value: ListboxPageTemplateEnum.OPTIONS
             },
-            ListboxPageInsertEnum.GEOMETRY: {
-                ListboxInsertNotifyStateKey.SELECTED_INDEX.value: None,
-                ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE.value: None,
-                ListboxInsertNotifyStateKey.LISTBOX_PAGE_INSERT.value: ListboxPageInsertEnum.GEOMETRY
+            ListboxPageTemplateEnum.GEOMETRY: {
+                ListboxTemplateNotifyStateKey.SELECTED_INDEX.value: None,
+                ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value: None,
+                ListboxTemplateNotifyStateKey.LISTBOX_PAGE_TEMPLATE.value: ListboxPageTemplateEnum.GEOMETRY
             }
         }
         self.hidden_widgets = {}
         self.show_geometry_button = False
-        # self.show_geometry_button.trace_add('write', lambda *_: self._observable.notify_observers(Action(
-        #     type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
-        # data=self.show_geometry_button.get()
-        # )))
-        
-    # @try_except_catcher
-    # # wildcard for 3 args - variable name, index, and operation
-    # def handle_toggle_geometry_btn(self, visible):
-    #     # fire when ever the setter is called
-    #     self._observable.notify_observers(Action(
-    #         type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
-    #     data=self.show_geometry_button.get()
-    #     ))
-
 
     @try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
@@ -82,35 +69,35 @@ class Store:
 
     # get single value from listbox manager state
     @try_except_catcher
-    def listbox_manager_state_get_value(self, enum_key: ListboxInsertNotifyStateKey, page_insert_override: ListboxPageInsertEnum | None = None):
-        # get current insert key ListboxPageInsertEnum or manual param
-        page_insert = page_insert_override if page_insert_override else self.current_listbox_insert._listbox_page_insert_enum
-        return self.current_listbox_insert_internal_state.get(page_insert).get(enum_key.value)
+    def listbox_manager_state_get_value(self, enum_key: ListboxTemplateNotifyStateKey, page_insert_override: ListboxPageTemplateEnum | None = None):
+        # get current insert key ListboxPageTemplateEnum or manual param
+        page_insert = page_insert_override if page_insert_override else self.current_listbox_template._listbox_page_insert_enum
+        return self.current_listbox_template_internal_state.get(page_insert).get(enum_key.value)
 
-    # key for name current_listbox_insert_internal_state, value is dict of values
+    # key for name current_listbox_template_internal_state, value is dict of values
     # - updates whole dict whenever a change occurs
     @try_except_catcher
-    def listbox_manager_state_set(self, enum_key: ListboxInsertNotifyStateKey, state_to_set: Any, page_insert_override: ListboxPageInsertEnum | None = None):
+    def listbox_manager_state_set(self, enum_key: ListboxTemplateNotifyStateKey, state_to_set: Any, page_insert_override: ListboxPageTemplateEnum | None = None):
         # use current page insert or override param - get listbox by enum key
-        current_target_listbox = self.listbox_inserts.get(page_insert_override) if page_insert_override else self.current_listbox_insert
+        current_target_listbox = self.listbox_templates.get(page_insert_override) if page_insert_override else self.current_listbox_template
         current_target_listbox_enum = current_target_listbox._listbox_page_insert_enum if current_target_listbox else None
         
         match current_target_listbox_enum:
-            # set one of the ListboxInsertNotifyStateKey values by ListboxPageInsertEnum
-            case ListboxPageInsertEnum.OPTIONS:
-                self.current_listbox_insert_internal_state[
-                    ListboxPageInsertEnum.OPTIONS][enum_key.value] = state_to_set
+            # set one of the ListboxTemplateNotifyStateKey values by ListboxPageTemplateEnum
+            case ListboxPageTemplateEnum.OPTIONS:
+                self.current_listbox_template_internal_state[
+                    ListboxPageTemplateEnum.OPTIONS][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_insert_internal_state[ListboxPageInsertEnum.OPTIONS].get(enum_key.value),
+                           data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.OPTIONS].get(enum_key.value),
                            target=current_target_listbox)
                 )
-            case ListboxPageInsertEnum.GEOMETRY:
-                self.current_listbox_insert_internal_state[
-                    ListboxPageInsertEnum.GEOMETRY][enum_key.value] = state_to_set
+            case ListboxPageTemplateEnum.GEOMETRY:
+                self.current_listbox_template_internal_state[
+                    ListboxPageTemplateEnum.GEOMETRY][enum_key.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                        data=self.current_listbox_insert_internal_state[ListboxPageInsertEnum.GEOMETRY].get(enum_key.value),
+                        data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.GEOMETRY].get(enum_key.value),
                         target=current_target_listbox)
                     )
 
@@ -162,21 +149,20 @@ class Store:
         self._show_unmapped_widgets = value
 
     @property
-    def current_listbox_insert(self):
+    def current_listbox_template(self):
         return self._current_listbox_insert
 
-    @current_listbox_insert.setter
-    def current_listbox_insert(self, value):
+    @current_listbox_template.setter
+    def current_listbox_template(self, value):
         self._current_listbox_insert = value
 
     @property
-    def listbox_inserts(self):
-        return self._listbox_inserts
+    def listbox_templates(self):
+        return self._listbox_templates
 
-    @listbox_inserts.setter
-    def listbox_inserts(self, value):
-        self._listbox_inserts = value
-
+    @listbox_templates.setter
+    def listbox_templates(self, value):
+        self._listbox_templates = value
     @property
     def editting_item_index(self):
         return self._editting_item_index

@@ -5,12 +5,11 @@ from tkinter import ttk
 from typing import Any
 
 from devtools.components.observable import Action, Observable
-from devtools.components.store import ListboxInsertNotifyStateKey, Store
-from devtools.constants import ActionType, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageInsertEnum, TreeStateKey
+from devtools.components.store import ListboxTemplateNotifyStateKey, Store
+from devtools.constants import ActionType, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
-from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
-from devtools.maps import CONFIG_OPTION_SETTINGS
+from devtools.maps import CONFIG_OPTION_SETTINGS, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -28,17 +27,17 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
     def __init__(self,
                  master,
-                 listbox_page_insert_enum: ListboxPageInsertEnum,
+                 listbox_page_template_enum: ListboxPageTemplateEnum,
                  observable: Observable,
                  store: Store
                  ):
         tk.Listbox.__init__(self, master=master, **
                             Style.config_listbox_manager.get('listbox'))
-        self.name = f"{listbox_page_insert_enum.name} listbox"
+        self.name = f"{listbox_page_template_enum.name} listbox"
         self._observable: Observable = observable
         self._store: Store = store
         self._observable.register_observer(self)
-        self._listbox_page_insert_enum: ListboxPageInsertEnum = listbox_page_insert_enum
+        self._listbox_page_insert_enum: ListboxPageTemplateEnum = listbox_page_template_enum
         # self.scroll_bar = tk.Scrollbar(master, orient="vertical", command=self.yview)
         # self.config(yscrollcommand=self.scroll_bar.set)
 
@@ -73,8 +72,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         state = self.check_maps_for_state(**listbox_item_pairs_dict)
         if state == ListboxItemState.READ_ONLY:
             return "break"
-        # ListboxPageInsertEnum - {'values': None, 'type': <class 'int'>}
-        if self._listbox_page_insert_enum == ListboxPageInsertEnum.OPTIONS:
+        # ListboxPageTemplateEnum - {'values': None, 'type': <class 'int'>}
+        if self._listbox_page_insert_enum == ListboxPageTemplateEnum.OPTIONS:
             # UPDATE CONFIG ATTTRIBUTES
             option_setting_map = self.map_config_option_to_setting(
                 listbox_item_pairs_dict.get('key'))
@@ -82,7 +81,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # UPDATE GEOMETRY OPTIONS
             current_widget = self._store.tree_state_get(
                 TreeStateKey.SELECTED_ITEM_WIDGET)
-            geometry_info: GeometryManagerInfo = Utils.check_widget_geometry_manager_info(
+            geometry_info: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(
                 current_widget)
             geometry_info_type = getattr(geometry_info, 'geometry_type', None)
             if geometry_info_type == GeometryType.PACK:
@@ -119,7 +118,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             value_entry_widget, 'get', None) else updated_option_value
         # UPDATE THE PAGE WIDGETS HERE - calls tree
         # --- OPTION UPDATE HANDLING
-        if self._listbox_page_insert_enum == ListboxPageInsertEnum.OPTIONS:
+        if self._listbox_page_insert_enum == ListboxPageTemplateEnum.OPTIONS:
             # run update_tree_item_to_page_widget_option_config on widget.config
             self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, data={
                 'key': key_entry_value,
@@ -147,14 +146,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                     }))
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
-        # current_listbox_insert_widget = self._store.current_listbox_insert
+        # current_listbox_insert_widget = self._store.current_listbox_template
         prev_listbox_store_dict = self._store.listbox_manager_state_get_value(
-            ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE)
+            ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE)
         # merge prev current - stops duplicates from adding to listbox - sorted
         updated_listbox_store_dict = Utils.sorted_dict(Utils.merge_dicts(
             prev_listbox_store_dict, {key_entry_value: value_entry_value}))
         self._store.listbox_manager_state_set(
-            enum_key=ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_listbox_store_dict)
+            enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_listbox_store_dict)
         self.after_idle(lambda: self.yview_moveto(y0))
         
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
@@ -353,9 +352,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         current_treeview_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
         # using listbox state stored - already filtered/extracted
-        page_insert = self._store.current_listbox_insert._listbox_page_insert_enum
-        current_item_options_list = list(self._store.current_listbox_insert_internal_state.get(
-            page_insert).get(ListboxInsertNotifyStateKey.CURRENT_VALUES_STATE.value).keys())
+        page_insert = self._store.current_listbox_template._listbox_page_insert_enum
+        current_item_options_list = list(self._store.current_listbox_template_internal_state.get(
+            page_insert).get(ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value).keys())
         build_combo_box = self.build_key_combo_box(
             index=index,
             item_option_vals_list=current_item_options_list

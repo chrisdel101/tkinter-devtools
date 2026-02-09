@@ -13,7 +13,7 @@ from devtools.maps import ACTION_REGISTRY, CONFIG_OPTION_SETTINGS, CONFIG_ALIASE
 
 class Utils:
     @staticmethod
-    # Check false but excluding zero
+    # Check falsey but excluding zero - we want zero
     def non_zero_falsey(value) -> bool:
         # true for None and ""
         if not isinstance(value, (int, float)) and not value:
@@ -107,20 +107,40 @@ class Utils:
         # get all common option keys for geo type
         match geo_manager.geometry_type:
             case GeometryType.PACK:
-                common_options  = [getattr(PackGeometryOptionName, k) for k in filter(str.isupper, dir(PackGeometryOptionName))]
+                standard_geo_options  = Utils.extract_class_attributes(PackGeometryOptionName)
             case GeometryType.GRID:
-                common_options = [getattr(GridGeometryOption, k) for k in filter(str.isupper, dir(GridGeometryOption))]
+                standard_geo_options = Utils.extract_class_attributes(GridGeometryOption)
             case GeometryType.PLACE:
-                common_options = [getattr(PlaceGeometryOption, k) for k in filter(str.isupper, dir(PlaceGeometryOption))]
+                standard_geo_options = Utils.extract_class_attributes(PlaceGeometryOption)
+            case _:
+                logging.warning(f"build_geometry_standard_options_dict: Unknown geometry type {geo_manager.geometry_type}. No standard options extracted. Returning")
+                return {}
         # geo_manager.geometry_options ex - {'in': <tkinter.Tk object .>, 'anchor': 'center', 'expand': 0,...} 
+        return Utils.filter_non_used_geometry_options(geo_manager, standard_geo_options)
+
+    @staticmethod
+    @try_except_catcher
+    # compare actual geo options vals to standard_geo_options and remove all falsey
+    def filter_non_used_geometry_options(geo_manager: GeometryManagerInfo, standard_geo_options: list[str]):
         for key, val in list(geo_manager.geometry_options.items()):
         # delete unwanted config values in place using tuples list
             if Utils.non_zero_falsey(val):
+                # delete falsey vals
                 del geo_manager.geometry_options[key]
-            elif key not in common_options:
+        # delete if not listed on standard options for geo type - ex - pack has no 'row' option but grid option classes
+            elif key not in standard_geo_options:
                 del geo_manager.geometry_options[key]
         return geo_manager.geometry_options
-
+       
+    @staticmethod
+    # takes a constant class used like enum - extract all attrs using uppercase filter 
+    def extract_class_attributes(className):
+        # dir list all class attrs including modules, plumbing, etc
+        all_class_attrs = dir(className)
+        # filter all unwanted - uppercase only all_class_attrs - then check if each uppercase is an attr on class i.e. AFTER, IPADX
+        extract_used_attrs = [getattr(className, k) for k in filter(str.isupper, all_class_attrs)]
+        return extract_used_attrs
+    
     @staticmethod
     # check for each tuple length. if 5 it's last item, if 2 it's an alias
     # This is a tk inter standard for all configs objs
@@ -248,7 +268,7 @@ class Utils:
                     fn(action.data) if action.data is not None else fn()
     @staticmethod    
     @try_except_catcher
-    def check_widget_geometry_manager_info(widget: tk.Widget):
+    def build_widget_geometry_manager_info(widget: tk.Widget) -> GeometryManagerInfo | None:
         geometry_type = widget.winfo_manager()
         match geometry_type:
             case GeometryType.PACK.value:
@@ -257,14 +277,14 @@ class Utils:
                 return GeometryManagerInfo(GeometryType.GRID, widget.grid_info(), name=widget.winfo_name())
             case GeometryType.PLACE.value:       
                 return GeometryManagerInfo(GeometryType.PLACE, widget.place_info(), name=widget.winfo_name())
-            case GeometryType.BLANK.value:
-                logging.trace(f"check_widget_geometry_manager_info: Widget {widget} is not mapped.")
-                return GeometryManagerInfo(GeometryType.BLANK, {} , name=widget.winfo_name())
+            case GeometryType.UNMAPPED.value:
+                logging.trace(f"build_widget_geometry_manager_info: Widget {widget} is empty str. It is unmapped.")
+                return GeometryManagerInfo(GeometryType.UNMAPPED, {} , name=widget.winfo_name())
             case GeometryType.WM.value:
-                logging.trace(f"check_widget_geometry_manager_info: Widget {widget} uses wm - rejected.")
+                logging.trace(f"build_widget_geometry_manager_info: Widget {widget} uses wm - rejected.")
                 return None
             case _:
-                logging.warning(f"check_widget_geometry_manager_info: Widget {widget} has no geometry manager.")
+                logging.warning(f"build_widget_geometry_manager_info: Widget {widget} has no geometry manager.")
                 return None
             
     @staticmethod
@@ -284,7 +304,7 @@ class Utils:
         is_widget_hidden = store.hidden_widgets.get(id(widget))
         if is_widget_hidden:
             return
-        geo_manager_info = Utils.check_widget_geometry_manager_info(widget)
+        geo_manager_info = Utils.build_widget_geometry_manager_info(widget)
         # store state of hidden widget to restore later
         Utils._track_hidden_widgets(widget, store, geo_manager_info)
         if geo_manager_info is None:
@@ -328,21 +348,17 @@ class Utils:
     @staticmethod
     @try_except_catcher
     # combine any extra missing options here
-    def combine_additional_geometry_ooptions(widget) -> dict:
-        # get geo manager and value
-        geo_manager: GeometryManagerInfo = Utils.check_widget_geometry_manager_info(widget)
-        resolved_combined_widget_geometry ={}
-        if geo_manager:
-            options_key_value_dict = Utils.build_geometry_standard_options_dict(geo_manager)
-            combined_widget_geometry = Utils.merge_dicts(
-                {
-                    # ADD EXTRA OPTIONS HERE IF NEEDED
-                    CommonGeometryOption.GEOMETRY_TYPE: geo_manager.geometry_type
-                }, 
-                options_key_value_dict
-            )
-            return combined_widget_geometry
-        return {}
+    def combine_additional_geometry_options(geo_manager: GeometryManagerInfo, **kwargs) -> dict:
+        if not geo_manager:
+            return {}
+        # extact and filter geo options dict
+        options_key_value_dict = Utils.build_geometry_standard_options_dict(geo_manager)
+        # bundle 'pack' type other values - shows in listbox
+        combined_widget_geometry = Utils.merge_dicts(
+            options_key_value_dict,
+            kwargs,
+        )
+        return combined_widget_geometry
     @staticmethod
     @try_except_catcher
     def resolve_geometry_aliases(combined_widget_geometry: dict) -> dict:

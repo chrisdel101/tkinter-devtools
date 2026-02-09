@@ -25,7 +25,7 @@ class GeometryType(Enum):
     # items inside a canvas not canvas itself
     CANVAS = "canvas"
     # means exists but is not displayed
-    BLANK = "" 
+    UNMAPPED = "" 
     # for inside a text widget
     TEXT = "text"
     PANED_WINDOW = "paned_window"
@@ -35,13 +35,13 @@ class TreeStateKey(Enum):
     WIDGETS_BY_TREE_INSERT_ID_DICT = 2
     MEM_WIDGET_STORE_BY_PY_MEM_ID= 3
 
-class ListboxInsertNotifyStateKey(Enum):
+class ListboxTemplateNotifyStateKey(Enum):
     SELECTED_INDEX = "selected_index"
     CURRENT_VALUES_STATE = "current_values_state"
-    LISTBOX_PAGE_INSERT = "listbox_page_insert_enum"
+    LISTBOX_PAGE_TEMPLATE = "listbox_page_template_enum"
 
-# name to use to display specific listbox insert within frame
-class ListboxPageInsertEnum(Enum):
+# name to use to display specific listbox template within frame
+class ListboxPageTemplateEnum(Enum):
     OPTIONS = 1
     GEOMETRY = 2
 
@@ -68,6 +68,7 @@ class ConfigOptionValueTypeEnum(Enum):
 
 class CommonGeometryOption:
     GEOMETRY_TYPE = "geometry_type"
+    VISIBILITY = "visibility"
     
 # Add any new geometry options to these clases
 class GridGeometryOption(CommonGeometryOption):
@@ -104,7 +105,7 @@ class PackGeometryOptionName(CommonGeometryOption):
     IPADY = "ipady"
     SIDE = "side"
     ANCHOR = "anchor"
-
+    
 class ConfigOptionName(Enum):
     RELIEF = "relief"
     ANCHOR = "anchor"
@@ -165,12 +166,12 @@ class TreeState(TypedDict):
     mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore] = {}
 
 class ListboxManagerState(TypedDict):
-    listbox_page_insert_enum: ListboxPageInsertEnum
+    listbox_page_template_enum: ListboxPageTemplateEnum
 
 class ListboxInsertManagerState(TypedDict):
     selected_index: int | None
     current_values_state: list[str] | None
-    listbox_page_insert_enum: ListboxPageInsertEnum | None
+    listbox_page_template_enum: ListboxPageTemplateEnum | None
 
 # entry inside CONFIG_OPTION_SETTINGS
 class ConfigOptionMapSetting(TypedDict):
