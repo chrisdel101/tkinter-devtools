@@ -4,9 +4,10 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, CommonGeometryOption, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
+from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.utils import Utils
 from devtools.config import app_config
 
@@ -70,6 +71,86 @@ class TreeView(ttk.Treeview):
     def get_widget_by_obj_mem_id(self, item_id: int):
         return self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(item_id).get("widget")
 
+
+    def tree_order_key(
+        self,
+        child: tk.Widget,
+        children: list[tk.Widget],
+        pack_order: dict[tk.Widget, int],
+    ):
+        # preserve sibling declaration order as a stable tie-breaker
+        original_index = children.index(child)
+        
+        # First preference: if widget is visible, sort by actual on-screen position
+        # (top-to-bottom, then left-to-right)
+        if child.winfo_ismapped():
+            try:
+                return (0, child.winfo_rooty(), child.winfo_rootx(), original_index)
+            except tk.TclError:
+                # if runtime position cannot be read, fall through to geometry-based ordering
+                pass
+
+        geo_manager_info = Utils.build_widget_geometry_manager_info(child)
+
+        # Fallback for grid-managed widgets: row/column order
+        if geo_manager_info and geo_manager_info.geometry_type == GeometryType.GRID:
+            info = child.grid_info()
+            row = TreeViewUtils._safe_int(info.get("row"), 0)
+            column = TreeViewUtils._safe_int(info.get("column"), 0)
+            return (1, row, column, original_index)
+
+        # Fallback for pack-managed widgets: Tk pack sibling order
+        if geo_manager_info and geo_manager_info.geometry_type == GeometryType.PACK:
+            order = pack_order.get(child, original_index)
+            return (1, order, original_index)
+
+        # Fallback for place-managed widgets: y/x coordinates
+        if geo_manager_info and geo_manager_info.geometry_type == GeometryType.PLACE:
+            info = child.place_info()
+            y = TreeViewUtils._safe_int(info.get("y"), 0)
+            x = TreeViewUtils._safe_int(info.get("x"), 0)
+            return (1, y, x, original_index)
+
+        # Final fallback: keep original sibling declaration order
+        return (2, original_index)
+
+    def get_display_ordered_children(self, parent_widget: tk.Widget) -> list[tk.Widget]:
+        # Raw sibling order from Tk (creation/declaration order under this parent)
+        children = list(parent_widget.winfo_children())
+        if not children:
+            logging.debug(f"No children for widget: {parent_widget} with id {id(parent_widget)}")
+            return children
+
+        # Ensure widget geometry/position info is up to date before visual sorting
+        parent_widget.update_idletasks()
+        # Pack sibling order is used as a fallback inside tree_order_key
+        pack_order = {
+            child: index for index, child in enumerate(parent_widget.pack_slaves())
+        }
+
+        # Only mapped widgets are visually sortable by actual display position
+        mapped_children = [child for child in children if child.winfo_ismapped()]
+        mapped_children_sorted = sorted(
+            mapped_children,
+            key=lambda child: self.tree_order_key(
+                child=child,
+                children=children,
+                pack_order=pack_order,
+            ),
+        )
+
+        # Rebuild final list by replacing mapped slots with sorted mapped widgets,
+        # while keeping unmapped widgets in their original sibling positions.
+        mapped_iter = iter(mapped_children_sorted)
+        ordered_children: list[tk.Widget] = []
+        for child in children:
+            if child.winfo_ismapped():
+                ordered_children.append(next(mapped_iter))
+            else:
+                ordered_children.append(child)
+
+        return ordered_children
+
     # on first call insert widget and get insert id - recurse
     # on next calls used vals passed in
     def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
@@ -92,7 +173,7 @@ class TreeView(ttk.Treeview):
                 # parent node - so use id passed from prev call - it's parent for this call
                 insert_parent_memory_id = parent_widget_insert_id
             # method gives all child widgets of tk obj
-            for child in parent_widget.winfo_children():
+            for child in self.get_display_ordered_children(parent_widget):
                 # dev tools window - skip this top level in tree
                 if isinstance(child, tk.Toplevel) and child._name == app_config['top_level_name']:
                     continue
@@ -205,16 +286,25 @@ class TreeView(ttk.Treeview):
     def stuff_listbox_geometry_state_into_page_template(self, selected_item_widget):
 
         current_widget_geo_manager: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(selected_item_widget)
-        
-        common_geometry_options = { 
-            CommonGeometryOption.GEOMETRY_TYPE: getattr(current_widget_geo_manager, 'geometry_type', None),
+        current_geo_type = getattr(current_widget_geo_manager, 'geometry_type', None)
+        sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_item_widget)
+        resolved_geo_type = sibling_geo_type if current_geo_type == GeometryType.UNMAPPED and sibling_geo_type else current_geo_type
+
+        geo_type_and_visibility_dict = {
+            CommonGeometryOption.GEOMETRY_TYPE: getattr(resolved_geo_type, 'value', resolved_geo_type),
             CommonGeometryOption.VISIBILITY: selected_item_widget.winfo_ismapped()
         }
-        combined_widget_geometry_options = Utils.combine_additional_geometry_options(geo_manager=current_widget_geo_manager, 
-        **common_geometry_options)
+
+        if current_geo_type == GeometryType.UNMAPPED:
+            combined_with_widget_geometry_options = geo_type_and_visibility_dict
+        else:
+            combined_with_widget_geometry_options = Utils.combine_additional_geometry_options(
+                geo_manager=current_widget_geo_manager,
+                **geo_type_and_visibility_dict,
+            )
         
         widget_geometry_dict: dict = Utils.resolve_geometry_aliases(
-            combined_widget_geometry_options)
+            combined_with_widget_geometry_options)
         sorted_widget_geometry_dict = Utils.sorted_dict(
             widget_geometry_dict)
         # set geometry listbox state

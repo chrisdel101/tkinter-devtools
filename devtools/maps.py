@@ -5,7 +5,7 @@ PACK_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     PackGeometryOptionName.GEOMETRY_TYPE: {
         'values': GeometryType.PACK.value,
         'type': ConfigOptionValueTypeEnum.STRING.value,
-        'state': ListboxItemState.READ_ONLY,
+        'state': ListboxItemState.DEFAULT,
     },
     PackGeometryOptionName.PADX: {
         'values': None,
@@ -48,7 +48,7 @@ GRID_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     GridGeometryOption.GEOMETRY_TYPE: {
         'values': GeometryType.GRID.value,
         'type': ConfigOptionValueTypeEnum.STRING.value,
-        'state': ListboxItemState.READ_ONLY,
+        'state': ListboxItemState.DEFAULT,
 
     },
     GridGeometryOption.IPADX: {
@@ -97,7 +97,7 @@ PLACE_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     PlaceGeometryOption.GEOMETRY_TYPE: {
         'values': GeometryType.PLACE.value,
         'type': ConfigOptionValueTypeEnum.STRING.value,
-        'state': ListboxItemState.READ_ONLY,
+        'state': ListboxItemState.DEFAULT,
     },
     PlaceGeometryOption.X: {
         'values': None,
@@ -140,10 +140,10 @@ PLACE_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
     # # readonly options
-    # CommonGeometryOption.IN: {
-    #     'values': None,
-    #     'type': ConfigOptionValueTypeEnum.STRING.value,
-    # }
+    CommonGeometryOption.IN: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    }
 }
 
 CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
@@ -214,7 +214,7 @@ CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
     }
 }
 
-CONFIG_ALIASES = {
+ALL_ALIASES = {
     CommonGeometryOption.GEOMETRY_TYPE: AliasRename.GEOMETRY_TYPE.value,
     # reverse of the above
     AliasRename.GEOMETRY_TYPE.value: CommonGeometryOption.GEOMETRY_TYPE,

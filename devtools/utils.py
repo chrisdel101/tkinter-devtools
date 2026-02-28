@@ -9,7 +9,7 @@ from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionName, CommonGeometryOption, GridGeometryOption, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
-from devtools.maps import ACTION_REGISTRY, CONFIG_OPTION_SETTINGS, CONFIG_ALIASES
+from devtools.maps import ACTION_REGISTRY, CONFIG_OPTION_SETTINGS, ALL_ALIASES
 
 class Utils:
     @staticmethod
@@ -228,7 +228,7 @@ class Utils:
     # resolve aliases to call matching value          
     def listbox_option_alias_resolver(option: str):
     # check if it's alias mapping to a full config option - else return as is
-        resolved = CONFIG_ALIASES.get(option, option)
+        resolved = ALL_ALIASES.get(option, option)
         return resolved
     # using focus_displayof causes combobox KeyError: 'popdown'
     @staticmethod
@@ -268,6 +268,7 @@ class Utils:
                     fn(action.data) if action.data is not None else fn()
     @staticmethod    
     @try_except_catcher
+    # takes widget and returns the geo info manager for the widget
     def build_widget_geometry_manager_info(widget: tk.Widget) -> GeometryManagerInfo | None:
         geometry_type = widget.winfo_manager()
         match geometry_type:
@@ -305,10 +306,10 @@ class Utils:
         if is_widget_hidden:
             return
         geo_manager_info = Utils.build_widget_geometry_manager_info(widget)
+        if geo_manager_info is None or geo_manager_info.geometry_type == GeometryType.UNMAPPED:
+            return
         # store state of hidden widget to restore later
         Utils._track_hidden_widgets(widget, store, geo_manager_info)
-        if geo_manager_info is None:
-            return
         match geo_manager_info.geometry_type:
             case GeometryType.PACK:
                 widget.pack_forget()
@@ -325,23 +326,28 @@ class Utils:
         widget_state = store.hidden_widgets.get(id(widget))
         # if not stored state need to manually set i.e. from page
         geo_type  = widget_state.geometry_type if widget_state else geometry_type
+        geometry_options = widget_state.geometry_options if widget_state else {}
         if not geo_type:
             logging.trace(f"show_widget: Widget {widget} has no stored hidden state.")
             return
+        if not geometry_options and geo_type in (GeometryType.GRID, GeometryType.PACK, GeometryType.PLACE):
+            from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
+            geometry_options = TreeViewUtils.infer_geometry_options(widget, geo_type)
         match geo_type:
             case GeometryType.PACK:
-                widget.pack(**widget_state.geometry_options)
+                widget.pack(**geometry_options)
             case GeometryType.GRID:
-                widget.grid(**widget_state.geometry_options)
+                widget.grid(**geometry_options)
             case GeometryType.PLACE:
-                widget.place(**widget_state.geometry_options)
+                widget.place(**geometry_options)
             case _:
                 logging.warning(f"show_widget: Widget {widget} has unknown geometry type {geo_type}.")
                 return
         # make shallow copy 
         hidden_widgets_copy = copy(store.hidden_widgets)
-        #  remove showed widgets from hidden_widgets copy - it's vibile now
-        del hidden_widgets_copy[id(widget)]
+        # remove showed widgets from hidden state only if present
+        if id(widget) in hidden_widgets_copy:
+            del hidden_widgets_copy[id(widget)]
         # overwrite hidden state with the copy
         Utils._untrack_hidden_widgets(hidden_widgets_copy, store)
 
@@ -359,6 +365,7 @@ class Utils:
             kwargs,
         )
         return combined_widget_geometry
+    
     @staticmethod
     @try_except_catcher
     def resolve_geometry_aliases(combined_widget_geometry: dict) -> dict:
@@ -369,8 +376,9 @@ class Utils:
                 new_combined_widget_geometry[canonical] = val
              
         return new_combined_widget_geometry   
+    
     @staticmethod
-    # handle invalid values passed to config
+    # config will be loaded at start with flags - handle invalid values passed to config here
     def safe_config(widget, **kwargs):
         prev = {}
         # store state of current var
@@ -379,7 +387,7 @@ class Utils:
         try:
             # try value on config - no error means success
             widget.config(**kwargs)
-        # hits this when bad config value is added 
+        # hits this type or error when bad config value is added 
         except tk.TclError as e:
             logging.debug(f"---SAFE_CONFIG ERROR---: Invalid input: {kwargs}: error: {e}")
             # raise to next catch block - error chain should stop it making it to page

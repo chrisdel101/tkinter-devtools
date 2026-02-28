@@ -69,6 +69,7 @@ class ConfigOptionValueTypeEnum(Enum):
 class CommonGeometryOption:
     GEOMETRY_TYPE = "geometry_type"
     VISIBILITY = "visibility"
+    IN = "in"
     
 # Add any new geometry options to these clases
 class GridGeometryOption(CommonGeometryOption):

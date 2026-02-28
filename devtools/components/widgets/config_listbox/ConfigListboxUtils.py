@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ConfigOptionMapSetting, ListBoxEntryInputAction, ListboxItemState, TreeStateKey
+from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.style import Style
@@ -262,6 +262,28 @@ class ConfigListboxUtils:
             return 
         # check for options in map
         options_map_setting: ConfigOptionMapSetting|None = PACK_GEOMETRY_CONFIG_SETTING_VALUES.get(option_name)
+        if options_map_setting is None:
+            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+        elif options_map_setting.get('values') is None:
+            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+        return options_map_setting or {}
+    
+    @staticmethod
+    # handle unmapped type geometry widget 
+    @try_except_catcher
+    def map_unmapped_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
+        if not option_name:
+            return 
+        options_map_setting: ConfigOptionMapSetting | None = {
+            CommonGeometryOption.GEOMETRY_TYPE: {
+                'values': [GeometryType.PACK.value, GeometryType.GRID.value, GeometryType.PLACE.value],
+                'type': ConfigOptionValueTypeEnum.STRING.value,
+            },
+            CommonGeometryOption.VISIBILITY: {
+                'values': [True, False],
+                'type': ConfigOptionValueTypeEnum.BOOLEAN.value,
+            },
+        }.get(option_name)
         if options_map_setting is None:
             logging.debug(f"No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:

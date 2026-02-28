@@ -1,7 +1,7 @@
 from __future__ import annotations
 import tkinter as tk
 from devtools.style import Style
-from devtools.components.widgets.TreeView import TreeView
+from devtools.components.widgets.treeview.TreeView import TreeView
 
 class LeftWindowFrame(tk.Frame):
     def __init__(self, 

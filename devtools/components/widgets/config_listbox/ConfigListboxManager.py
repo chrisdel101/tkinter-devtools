@@ -6,10 +6,11 @@ from typing import Any
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxTemplateNotifyStateKey, Store
-from devtools.constants import ActionType, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import CONFIG_OPTION_SETTINGS, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
+from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
@@ -56,12 +57,19 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             CONFIG_OPTION_SETTINGS
         )
 
+    @staticmethod
+    def _to_bool(value) -> bool:
+        if isinstance(value, bool):
+            return value
+        return str(value).strip().lower() in ("1", "true", "yes", "on")
+
     # use event x and y w tk index - get listbox item index
     def _get_index_from_event_coords(self, event):
         selected_index: int = self.index(f"@{event.x},{event.y}")
         return selected_index
 
     def start_update(self, event):
+        option_setting_map = None
         # index of clicked item on list
         updating_item_index: int = self._get_index_from_event_coords(event)
         # extract starting values from list item
@@ -69,6 +77,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
 
         listbox_item_pairs_dict: ListboxItemPair = Utils.build_split_str_pairs_dict(
             full_txt_str, ":")
+        # use to disable or enable items
         state = self.check_maps_for_state(**listbox_item_pairs_dict)
         if state == ListboxItemState.READ_ONLY:
             return "break"
@@ -84,15 +93,21 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             geometry_info: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(
                 current_widget)
             geometry_info_type = getattr(geometry_info, 'geometry_type', None)
+            item_key = listbox_item_pairs_dict.get('key')
+            # check if key maps to alias i.e geometry type -> geometry_type
+            resolved_item_key = Utils.listbox_option_alias_resolver(item_key) or item_key
             if geometry_info_type == GeometryType.PACK:
                 option_setting_map = self.map_pack_geometry_option_to_setting(
-                    listbox_item_pairs_dict.get('key'))
+                    resolved_item_key)
             elif geometry_info_type == GeometryType.GRID:
                 option_setting_map = self.map_grid_geometry_option_to_setting(
-                    listbox_item_pairs_dict.get('key'))
+                    resolved_item_key)
             elif geometry_info_type == GeometryType.PLACE:
                 option_setting_map = self.map_place_geometry_option_to_setting(
-                    listbox_item_pairs_dict.get('key'))
+                    resolved_item_key)
+            elif geometry_info_type == GeometryType.UNMAPPED:
+                option_setting_map = self.map_unmapped_geometry_option_to_setting(
+                    resolved_item_key)
         if option_setting_map is None:
             logging.debug(
                 f"No option setting map found for {listbox_item_pairs_dict.get('key')}", exc_info=True)
@@ -126,24 +141,55 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             }))
         else:
             # GEOMETRY UPDATE HANDLING
-            geo_manager = self._store.tree_state.get(
-                TreeStateKey.SELECTED_ITEM_WIDGET.value).winfo_manager()
-            match geo_manager:
-                case GeometryType.PACK.value:
-                    self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
-                        'key': key_entry_value,
-                        'value': value_entry_value
-                    }))
-                case GeometryType.GRID.value:
-                    self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG, data={
-                        'key': key_entry_value,
-                        'value': value_entry_value
-                    }))
-                case GeometryType.PLACE.value:
-                    self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG, data={
-                        'key': key_entry_value,
-                        'value': value_entry_value
-                    }))
+            selected_widget = self._store.tree_state.get(
+                TreeStateKey.SELECTED_ITEM_WIDGET.value)
+            resolved_key = Utils.listbox_option_alias_resolver(key_entry_value)
+            current_geometry_state = self._store.listbox_manager_state_get_value(
+                ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
+                page_insert_override=ListboxPageTemplateEnum.GEOMETRY,
+            ) or {}
+
+            if resolved_key == CommonGeometryOption.VISIBILITY:
+                desired_visible = self._to_bool(value_entry_value)
+                if desired_visible:
+                    preferred_type = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE)
+                    sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
+                    current_manager = selected_widget.winfo_manager()
+                    chosen_type = preferred_type or (sibling_geo_type.value if sibling_geo_type else current_manager)
+                    geo_type = GeometryType(chosen_type) if chosen_type in (
+                        GeometryType.PACK.value,
+                        GeometryType.GRID.value,
+                        GeometryType.PLACE.value,
+                    ) else None
+                    Utils.show_widget(selected_widget, self._store, geometry_type=geo_type)
+                else:
+                    Utils.hide_widget(selected_widget, self._store)
+
+                current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
+                value_entry_value = desired_visible
+
+            geo_manager = selected_widget.winfo_manager()
+            if resolved_key != CommonGeometryOption.VISIBILITY:
+                match geo_manager:
+                    case GeometryType.PACK.value:
+                        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
+                            'key': key_entry_value,
+                            'value': value_entry_value
+                        }))
+                    case GeometryType.GRID.value:
+                        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG, data={
+                            'key': key_entry_value,
+                            'value': value_entry_value
+                        }))
+                    case GeometryType.PLACE.value:
+                        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG, data={
+                            'key': key_entry_value,
+                            'value': value_entry_value
+                        }))
+                    case GeometryType.UNMAPPED.value:
+                        if resolved_key == CommonGeometryOption.GEOMETRY_TYPE:
+                            current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = value_entry_value
+                            value_entry_value = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE, value_entry_value)
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
         # current_listbox_insert_widget = self._store.current_listbox_template
