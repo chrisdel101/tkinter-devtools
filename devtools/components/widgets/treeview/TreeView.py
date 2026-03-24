@@ -288,8 +288,9 @@ class TreeView(ttk.Treeview):
         current_widget_geo_manager: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(selected_item_widget)
         current_geo_type = getattr(current_widget_geo_manager, 'geometry_type', None)
         sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_item_widget)
+        # set this to sibling type if unmapped - allows options to use when mapping from UI
         resolved_geo_type = sibling_geo_type if current_geo_type == GeometryType.UNMAPPED and sibling_geo_type else current_geo_type
-
+        # set type it could be if setting unmapped to mapped - must match sibling
         geo_type_and_visibility_dict = {
             CommonGeometryOption.GEOMETRY_TYPE: getattr(resolved_geo_type, 'value', resolved_geo_type),
             CommonGeometryOption.VISIBILITY: selected_item_widget.winfo_ismapped()

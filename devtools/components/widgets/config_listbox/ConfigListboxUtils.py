@@ -3,13 +3,29 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, TreeStateKey
+from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, PackGeometryOptionName, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.style import Style
 from devtools.utils import Utils
 
 class ConfigListboxUtils:
+    @staticmethod
+    def _visibility_display_bool(value) -> str:
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, (int, float)):
+            return "true" if int(value) != 0 else "false"
+        value_str = str(value).strip().lower()
+        return "true" if value_str in ("1", "true", "yes", "on") else "false"
+
+    @staticmethod
+     # Convert a value to its canonical boolean string representation in the UI
+    def _normalize_bool_dropdown_values(key_entry_value: str, option_values: list) -> list:
+        if key_entry_value in (CommonGeometryOption.VISIBILITY, "expand"):
+            return ["true", "false"]
+        return option_values
+
     @try_except_catcher
     def build_value_spin_box(self, 
         index: int,
@@ -56,16 +72,18 @@ class ConfigListboxUtils:
 
     @try_except_catcher
     def build_value_combo_box(self, 
-        index: int,
-        key_entry_widget: tk.Entry | ttk.Combobox,
         key_entry_value: str,
         item_option_vals_list: list[str]
     ):
+        normalized_option_values = self._normalize_bool_dropdown_values(
+            key_entry_value=key_entry_value,
+            option_values=item_option_vals_list,
+        )
         value_inside = tk.StringVar()
         # set default top value
-        value_inside.set(item_option_vals_list[0] if item_option_vals_list else "")
+        value_inside.set(normalized_option_values[0] if normalized_option_values else "")
         # set any list to list var - done to keep it the same across calls
-        self.list_var.set(item_option_vals_list or [])
+        self.list_var.set(normalized_option_values or [])
         self.value_box_wrapper = tk.Frame(self.master)
         # like bind - get selected value from drop down
         value_combobox = ttk.Combobox(self.value_box_wrapper,
@@ -220,6 +238,18 @@ class ConfigListboxUtils:
         if not self._store.allow_input_focus_out_logic:
             logging.trace(f"key LISTBOX_ON_FOCUS guard2 off {self._store.allow_input_focus_out_logic}")
             return  # internal focus change → ignore
+
+        # In CREATE flow, selecting a key opens a value editor and naturally shifts focus.
+        # Do not treat that internal focus handoff as cancel/subtract.
+        if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:
+            has_active_value_editor = any(
+                wrapper is not None and wrapper.winfo_exists()
+                for wrapper in (self.value_box_wrapper, self.spin_box_wrapper)
+            )
+            if has_active_value_editor:
+                logging.trace("key LISTBOX_ON_FOCUS guard3 create handoff")
+                return
+
         self._store.block_active_adding =  False
         self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
         setattr(self._store, 'listbox_entry_input_action', None)
@@ -328,8 +358,11 @@ class ConfigListboxUtils:
     def insert_listbox_items(self, **config_dict):
         try:
             for key in config_dict:
+                value = config_dict[key]
+                if key in (CommonGeometryOption.VISIBILITY, PackGeometryOptionName.EXPAND):
+                    value = self._visibility_display_bool(value)
                 # insert selected node into styles_window_listbox window
-                display = f"{key}: {config_dict[key]}"
+                display = f"{key}: {value}"
                 # this auto sizes w/o adding styles
                 # end inserts at the end of the LB
                 self.insert_listbox_item(index=tk.END, key=key, value=display)

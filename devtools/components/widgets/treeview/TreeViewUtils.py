@@ -1,7 +1,7 @@
 from __future__ import annotations
 import tkinter as tk
 
-from devtools.constants import GeometryType
+from devtools.constants import CommonGeometryOption, GeometryType, GridGeometryOption, PackGeometryOptionName, PlaceGeometryOption
 from devtools.utils import Utils
 
 
@@ -105,3 +105,44 @@ class TreeViewUtils:
 			return {}
 
 		return {}
+
+	@staticmethod
+	def _default_geometry_state_for_type(geometry_type: GeometryType) -> dict:
+		match geometry_type:
+			case GeometryType.GRID:
+				keys = Utils.extract_class_attributes(GridGeometryOption)
+			case GeometryType.PACK:
+				keys = Utils.extract_class_attributes(PackGeometryOptionName)
+			case GeometryType.PLACE:
+				keys = Utils.extract_class_attributes(PlaceGeometryOption)
+			case _:
+				keys = [CommonGeometryOption.GEOMETRY_TYPE, CommonGeometryOption.VISIBILITY]
+
+		state = {key: 0 for key in keys}
+		state[CommonGeometryOption.GEOMETRY_TYPE] = geometry_type.value
+		state[CommonGeometryOption.VISIBILITY] = True
+		return state
+
+	@staticmethod
+	def build_geometry_state_for_widget(widget: tk.Widget, geometry_type: GeometryType) -> dict:
+		state = TreeViewUtils._default_geometry_state_for_type(geometry_type)
+
+		try:
+			if geometry_type == GeometryType.GRID and widget.winfo_manager() == GeometryType.GRID.value:
+				for key, value in widget.grid_info().items():
+					if key in state:
+						state[key] = value
+			elif geometry_type == GeometryType.PACK and widget.winfo_manager() == GeometryType.PACK.value:
+				for key, value in widget.pack_info().items():
+					if key in state:
+						state[key] = value
+			elif geometry_type == GeometryType.PLACE and widget.winfo_manager() == GeometryType.PLACE.value:
+				for key, value in widget.place_info().items():
+					if key in state:
+						state[key] = value
+		except Exception:
+			pass
+
+		state[CommonGeometryOption.GEOMETRY_TYPE] = geometry_type.value
+		state[CommonGeometryOption.VISIBILITY] = widget.winfo_ismapped()
+		return state

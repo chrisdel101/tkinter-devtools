@@ -131,6 +131,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # check for .get method  - use .get for new entry else val correct option box
         value_entry_value = value_entry_widget.get() if getattr(
             value_entry_widget, 'get', None) else updated_option_value
+        resolved_key = None
+        current_geometry_state = {}
         # UPDATE THE PAGE WIDGETS HERE - calls tree
         # --- OPTION UPDATE HANDLING
         if self._listbox_page_insert_enum == ListboxPageTemplateEnum.OPTIONS:
@@ -144,15 +146,23 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             selected_widget = self._store.tree_state.get(
                 TreeStateKey.SELECTED_ITEM_WIDGET.value)
             resolved_key = Utils.listbox_option_alias_resolver(key_entry_value)
+            # current geometry listbox state snapshot (used for UI refresh)
             current_geometry_state = self._store.listbox_manager_state_get_value(
                 ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
                 page_insert_override=ListboxPageTemplateEnum.GEOMETRY,
             ) or {}
 
             if resolved_key == CommonGeometryOption.VISIBILITY:
+                # track transition so we can rebuild manager-specific geometry keys
+                was_unmapped = selected_widget.winfo_manager() == GeometryType.UNMAPPED.value
                 desired_visible = self._to_bool(value_entry_value)
                 if desired_visible:
-                    preferred_type = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE)
+                    preferred_type = (
+                        current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE)
+                        or current_geometry_state.get(
+                            Utils.listbox_option_alias_resolver(CommonGeometryOption.GEOMETRY_TYPE)
+                        )
+                    )
                     sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
                     current_manager = selected_widget.winfo_manager()
                     chosen_type = preferred_type or (sibling_geo_type.value if sibling_geo_type else current_manager)
@@ -161,9 +171,17 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                         GeometryType.GRID.value,
                         GeometryType.PLACE.value,
                     ) else None
+                    # map widget back onto page using resolved geometry manager
                     Utils.show_widget(selected_widget, self._store, geometry_type=geo_type)
+                    if was_unmapped and geo_type:
+                        # refresh listbox state to manager constants + defaults/live values
+                        current_geometry_state = TreeViewUtils.build_geometry_state_for_widget(
+                            widget=selected_widget,
+                            geometry_type=geo_type,
+                        )
                 else:
                     Utils.hide_widget(selected_widget, self._store)
+                    current_geometry_state[CommonGeometryOption.VISIBILITY] = False
 
                 current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
                 value_entry_value = desired_visible
@@ -195,6 +213,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # current_listbox_insert_widget = self._store.current_listbox_template
         prev_listbox_store_dict = self._store.listbox_manager_state_get_value(
             ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE)
+        if self._listbox_page_insert_enum == ListboxPageTemplateEnum.GEOMETRY and resolved_key == CommonGeometryOption.VISIBILITY:
+            # when visibility toggles, use rebuilt geometry state as base before merge
+            prev_listbox_store_dict = Utils.resolve_geometry_aliases(current_geometry_state)
         # merge prev current - stops duplicates from adding to listbox - sorted
         updated_listbox_store_dict = Utils.sorted_dict(Utils.merge_dicts(
             prev_listbox_store_dict, {key_entry_value: value_entry_value}))
@@ -217,8 +238,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             value_inside: tk.StringVar,
             item_option_vals_list: list[str]):
         value_combo_box = self.build_value_combo_box(
-            index,
-            key_entry_widget=build_combo_box,
             key_entry_value=value_inside.get(),
             item_option_vals_list=item_option_vals_list
         )
@@ -278,7 +297,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             value_entry = tk.Entry(
                 self.value_box_wrapper, **Style.config_listbox_manager['entry'])
             # fill in entry with current val
-            value_entry.insert(0, current_option_val)
+            safe_current_option_value = "" if current_option_val is None else str(current_option_val)
+            value_entry.insert(0, safe_current_option_value)
             value_entry.selection_from(0)
             value_entry.selection_to("end")
             value_entry.pack(fill='x')
@@ -366,8 +386,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # check mapping for option config value options - combobox
         elif (item_option_vals_list := config_setting_map and config_setting_map.get('values')):
             value_combo_box = self.build_value_combo_box(
-                index=index,
-                key_entry_widget=key_entry,
                 key_entry_value=listbox_item_pairs_dict.get('key'),
                 item_option_vals_list=item_option_vals_list
             )
@@ -395,8 +413,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.listbox_entry_input_action = ListBoxEntryInputAction.CREATE
         # store current editting index
         self._store.editting_item_index = index
-        current_treeview_item = self._store.tree_state_get(
-            TreeStateKey.SELECTED_ITEM_WIDGET)
         # using listbox state stored - already filtered/extracted
         page_insert = self._store.current_listbox_template._listbox_page_insert_enum
         current_item_options_list = list(self._store.current_listbox_template_internal_state.get(

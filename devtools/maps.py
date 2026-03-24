@@ -87,11 +87,6 @@ GRID_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
         'values': ["","N","S","E","W","NS","EW","NE","NW","SE","SW","NSE","NSW","NEW","SEW","NSEW"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    # # readonly options
-    # PackGeometryOptionName.IN: {
-    #     'values': None,
-    #     'type': ConfigOptionValueTypeEnum.STRING.value,
-    # }
 }
 PLACE_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     PlaceGeometryOption.GEOMETRY_TYPE: {
@@ -139,11 +134,7 @@ PLACE_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
         'values': ["inside","outside"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    # # readonly options
-    CommonGeometryOption.IN: {
-        'values': None,
-        'type': ConfigOptionValueTypeEnum.STRING.value,
-    }
+
 }
 
 CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
