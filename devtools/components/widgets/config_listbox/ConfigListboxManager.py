@@ -117,7 +117,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             listbox_item_pairs_dict=listbox_item_pairs_dict,
             config_setting_map=option_setting_map
         )
-    # main entrt point to page app - pass value widget input to apply to actual page app widget 
+    # main entry point to page app - pass value widget input to apply to actual page app widget 
     @try_except_catcher
     def insert_value_output_and_apply_to_page(
         self,
@@ -212,7 +212,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.delete_all_listbox_items()
         # current_listbox_insert_widget = self._store.current_listbox_template
         prev_listbox_store_dict = self._store.listbox_manager_state_get_value(
-            ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE)
+            ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE) or {}
         if self._listbox_page_insert_enum == ListboxPageTemplateEnum.GEOMETRY and resolved_key == CommonGeometryOption.VISIBILITY:
             # when visibility toggles, use rebuilt geometry state as base before merge
             prev_listbox_store_dict = Utils.resolve_geometry_aliases(current_geometry_state)
@@ -222,11 +222,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self._store.listbox_manager_state_set(
             enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_listbox_store_dict)
         self.after_idle(lambda: self.yview_moveto(y0))
-        
+
+        # submit succeeded; avoid CREATE focus-out cleanup removing a row
+        self._store.listbox_entry_input_action = None
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
         self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)        
-        # self._store.block_active_adding = False
-        # self._store.allow_input_focus_out_logic = True
 
     @block_allow_input_focus_out_logic
     @try_except_catcher

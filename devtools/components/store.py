@@ -57,6 +57,7 @@ class Store:
         }
         self.hidden_widgets = {}
         self.show_geometry_button = False
+        self.row_shift = True
 
     @try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
@@ -111,6 +112,18 @@ class Store:
         self._observable.notify_observers(Action(
             type=ActionType.TOGGLE_GEO_BUTTON_VISIBLE,
         data=value
+        ))
+
+    @property
+    def row_shift(self):
+        return self._row_shift
+
+    @row_shift.setter
+    def row_shift(self, value):
+        self._row_shift = value
+        self._observable.notify_observers(Action(
+            type=ActionType.TOGGLE_ROW_SHIFT,
+            data=value
         ))
 
     @property

@@ -57,6 +57,7 @@ class ActionType(Enum):
     UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG = "update_tree_item_to_page_widget_option_config"
     DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
     TOGGLE_GEO_BUTTON_VISIBLE = "toggle_geo_button_visible"
+    TOGGLE_ROW_SHIFT = "toggle_row_shift"
 
 class ConfigOptionValueTypeEnum(Enum):
     STRING = str

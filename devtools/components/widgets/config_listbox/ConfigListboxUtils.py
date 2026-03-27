@@ -3,13 +3,62 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, PackGeometryOptionName, TreeStateKey
+from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, PackGeometryOptionName, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.style import Style
 from devtools.utils import Utils
 
 class ConfigListboxUtils:
+    @try_except_catcher
+    def _map_key_to_setting_for_current_template(self, option_name: str) -> ConfigOptionMapSetting:
+        if not option_name:
+            return {}
+
+        resolved_option_name = Utils.listbox_option_alias_resolver(option_name) or option_name
+        current_template = self._store.current_listbox_template
+        current_page = current_template._listbox_page_insert_enum if current_template else None
+
+        if current_page == ListboxPageTemplateEnum.OPTIONS:
+            return self.map_config_option_to_setting(resolved_option_name) or {}
+
+        # common geometry keys are valid regardless of current geometry manager state
+        if resolved_option_name in (CommonGeometryOption.GEOMETRY_TYPE, CommonGeometryOption.VISIBILITY):
+            return self.map_unmapped_geometry_option_to_setting(resolved_option_name) or {}
+
+        selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+        geometry_info = Utils.build_widget_geometry_manager_info(selected_widget) if selected_widget else None
+        geometry_type = getattr(geometry_info, 'geometry_type', None)
+
+        match geometry_type:
+            case GeometryType.PACK:
+                return self.map_pack_geometry_option_to_setting(resolved_option_name) or {}
+            case GeometryType.GRID:
+                return self.map_grid_geometry_option_to_setting(resolved_option_name) or {}
+            case GeometryType.PLACE:
+                return self.map_place_geometry_option_to_setting(resolved_option_name) or {}
+            case GeometryType.UNMAPPED:
+                return self.map_unmapped_geometry_option_to_setting(resolved_option_name) or {}
+            case _:
+                return {}
+
+    @try_except_catcher
+    def _get_current_value_for_create_input(self, key_entry_value: str):
+        current_template = self._store.current_listbox_template
+        current_page = current_template._listbox_page_insert_enum if current_template else None
+
+        if current_page == ListboxPageTemplateEnum.GEOMETRY:
+            current_geometry_state = self._store.listbox_manager_state_get_value(
+                ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
+                page_insert_override=ListboxPageTemplateEnum.GEOMETRY,
+            ) or {}
+            return current_geometry_state.get(key_entry_value)
+
+        selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+        if not selected_widget:
+            return None
+        return Utils.conform_option_lisbox_config(selected_widget.config()).get(key_entry_value)
+
     @staticmethod
     def _visibility_display_bool(value) -> str:
         if isinstance(value, bool):
@@ -154,7 +203,7 @@ class ConfigListboxUtils:
                 ) 
                 if 
                   # if mapped option values send to combobox
-                    (config_setting_map := self.map_config_option_to_setting(value_inside.get())) and config_setting_map.get('values')
+                                        (config_setting_map := self._map_key_to_setting_for_current_template(value_inside.get())) and config_setting_map.get('values')
                 else 
                     # if non-mapped option values entry or spinbox
                     self.handle_build_value_entry_from_key_entry(
@@ -163,7 +212,7 @@ class ConfigListboxUtils:
                     key_entry_value=value_inside.get(),
                     y_coord=0,    
                     config_setting_map=config_setting_map,    # actual value of config option   
-                    current_option_val=Utils.conform_option_lisbox_config(self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET).config()).get(value_inside.get()),
+                    current_option_val=self._get_current_value_for_create_input(value_inside.get()),
                     entry_input_action=ListBoxEntryInputAction.CREATE.value
                 )
             ))            

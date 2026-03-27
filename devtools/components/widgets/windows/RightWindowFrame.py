@@ -46,17 +46,16 @@ class RightWindowFrame(tk.Frame):
        
         self.attr_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['option_button_text'])
         self.geo_button = ttk.Button(self.top_row_wrapper, text=Style.right_window['header']['top_row']['geo_button_text'])
-        self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click  (insert_type_enum=ListboxPageTemplateEnum.OPTIONS))
+        self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageTemplateEnum.OPTIONS))
         self.geo_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageTemplateEnum.GEOMETRY))
        
-        add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda: self.handle_add(0), width=2, height=2)
-        
+        self.add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda: self.handle_add(0), width=2, height=2)
         self.subtract_config_button = tk.Button(self.bottom_row_wrapper, text="-", command=self.handle_subtract_selection, width=2, height=2)
 
         self.attr_button.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
         self.geo_button.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
         # pack add button
-        add_config_button.grid(row=1, column=0, padx=5, pady=5, sticky='sw')
+        self.add_config_button.grid(row=1, column=0, padx=5, pady=5, sticky='sw')
         # pack subtract button
         self.subtract_config_button.grid(row=1, column=1, padx=5, pady=5, sticky='sw')
         # add focus on click - allows focus out from listbox to work
@@ -72,6 +71,13 @@ class RightWindowFrame(tk.Frame):
             Utils.show_widget(self.geo_button, self._store)
         else:
             Utils.hide_widget(self.geo_button, self._store)
+
+    @try_except_catcher
+    # Enable row shift controls (+/-) only when current page supports adding/removing rows.
+    def toggle_row_shift(self, enabled: bool):
+        state = tk.NORMAL if enabled else tk.DISABLED
+        self.add_config_button.config(state=state)
+        self.subtract_config_button.config(state=state)
     
     @try_except_catcher
     # run pack_listbox_page_insert with check to not repack same insert
@@ -91,10 +97,12 @@ class RightWindowFrame(tk.Frame):
                     # set new current list
                     self._store.current_listbox_template = self._options_config_listbox_mngr
                     self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+                    self._store.row_shift = True
             case ListboxPageTemplateEnum.GEOMETRY:
                     # set new current list
                     self._store.current_listbox_template = self._geometry_config_listbox_mngr
                     self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+                    self._store.row_shift = False
             case _:
                 logging.error(f"Error pack_listbox_page_insert: No listbox packed", exc_info=True)
     
@@ -178,4 +186,3 @@ class RightWindowFrame(tk.Frame):
 
     def notify(self, action: Action):
         Utils.dispatch_action(self, action)
-       
