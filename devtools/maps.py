@@ -205,14 +205,18 @@ CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
     }
 }
 
-ALL_ALIASES = {
-    CommonGeometryOption.GEOMETRY_TYPE: AliasRename.GEOMETRY_TYPE.value,
-    # reverse of the above
-    AliasRename.GEOMETRY_TYPE.value: CommonGeometryOption.GEOMETRY_TYPE,
+BI_DIRECTIONAL_ALIASES = {
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
     ConfigOptionName.BG.value: ConfigOptionName.BACKGROUND.value,
     ConfigOptionName.FG.value: ConfigOptionName.FOREGROUND.value,
+}
+
+OPTION_TO_TYPE_ALIASES = {
+    CommonGeometryOption.GEOMETRY_TYPE: AliasRename.GEOMETRY_TYPE.value,
+}
+TYPE_TO_OPTIONS_ALIASES = {
+    AliasRename.GEOMETRY_TYPE.value: CommonGeometryOption.GEOMETRY_TYPE,
 }
 
 # uses action type enums to make to func with same name

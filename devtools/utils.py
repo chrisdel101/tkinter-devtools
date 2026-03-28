@@ -9,7 +9,13 @@ from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionName, CommonGeometryOption, GridGeometryOption, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
-from devtools.maps import ACTION_REGISTRY, CONFIG_OPTION_SETTINGS, ALL_ALIASES
+from devtools.maps import (
+    ACTION_REGISTRY,
+    CONFIG_OPTION_SETTINGS,
+    BI_DIRECTIONAL_ALIASES,
+    OPTION_TO_TYPE_ALIASES,
+    TYPE_TO_OPTIONS_ALIASES,
+)
 
 class Utils:
     @staticmethod
@@ -151,7 +157,7 @@ class Utils:
             valid_names = {e.value for e in ConfigOptionName}
             for key, val in config.items():
                 # resolve alias to full name - or just return name ie borderwidth
-                canonical = Utils.listbox_option_alias_resolver(key)
+                canonical = Utils.listbox_option_bi_direction_alias_resolver(key)
                 # check that name is part is one if valid ones - stop if not
                 if canonical not in valid_names:
                     continue             
@@ -224,12 +230,20 @@ class Utils:
             logging.error(f"Error extracting actual config values: {e}", exc_info=True)
             raise e 
           
-    @staticmethod 
-    # resolve aliases to call matching value          
-    def listbox_option_alias_resolver(option: str):
-    # check if it's alias mapping to a full config option - else return as is
-        resolved = ALL_ALIASES.get(option, option)
-        return resolved
+    @staticmethod
+    # Resolve bi-directional aliases (e.g. bg <-> background, bd <-> borderwidth).
+    def listbox_option_bi_direction_alias_resolver(option):
+        return BI_DIRECTIONAL_ALIASES.get(option, option)
+
+    @staticmethod
+    # Map internal option keys to UI display/type aliases.
+    def listbox_option_to_type_alias_direction_alias_resolver(option):
+        return OPTION_TO_TYPE_ALIASES.get(option, option)
+
+    @staticmethod
+    # Map UI display/type aliases back to internal option keys.
+    def listbox_type_to_option_alias_direction_alias_resolver(option):
+        return TYPE_TO_OPTIONS_ALIASES.get(option, option)
     # using focus_displayof causes combobox KeyError: 'popdown'
     @staticmethod
     def _safe_focus_displayof(widget):
@@ -371,8 +385,8 @@ class Utils:
     def resolve_geometry_aliases(combined_widget_geometry: dict) -> dict:
         new_combined_widget_geometry = {}
         for key, val in combined_widget_geometry.items():
-                # resolve alias or keep key as is
-                canonical = Utils.listbox_option_alias_resolver(key)
+                # Widget->UI direction: map internal option keys to display keys.
+                canonical = Utils.listbox_option_to_type_alias_direction_alias_resolver(key)
                 new_combined_widget_geometry[canonical] = val
              
         return new_combined_widget_geometry   

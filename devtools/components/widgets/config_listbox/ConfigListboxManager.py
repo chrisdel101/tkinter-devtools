@@ -88,6 +88,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 listbox_item_pairs_dict.get('key'))
         else:
             # UPDATE GEOMETRY OPTIONS
+            # match clicked row to widget
             current_widget = self._store.tree_state_get(
                 TreeStateKey.SELECTED_ITEM_WIDGET)
             geometry_info: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(
@@ -95,8 +96,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             geometry_info_type = getattr(geometry_info, 'geometry_type', None)
             item_key = listbox_item_pairs_dict.get('key')
             # check if key maps to alias i.e geometry type -> geometry_type
-            resolved_item_key = Utils.listbox_option_alias_resolver(item_key) or item_key
-            if geometry_info_type == GeometryType.PACK:
+            resolved_item_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(item_key)
+            if resolved_item_key in (CommonGeometryOption.GEOMETRY_TYPE, CommonGeometryOption.VISIBILITY):
+                option_setting_map = self.map_unmapped_geometry_option_to_setting(
+                    resolved_item_key)
+            elif geometry_info_type == GeometryType.PACK:
                 option_setting_map = self.map_pack_geometry_option_to_setting(
                     resolved_item_key)
             elif geometry_info_type == GeometryType.GRID:
@@ -145,12 +149,27 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # GEOMETRY UPDATE HANDLING
             selected_widget = self._store.tree_state.get(
                 TreeStateKey.SELECTED_ITEM_WIDGET.value)
-            resolved_key = Utils.listbox_option_alias_resolver(key_entry_value)
+            resolved_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
             # current geometry listbox state snapshot (used for UI refresh)
-            current_geometry_state = self._store.listbox_manager_state_get_value(
+            current_geometry_state = Utils.resolve_geometry_aliases(self._store.listbox_manager_state_get_value(
                 ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
                 page_insert_override=ListboxPageTemplateEnum.GEOMETRY,
-            ) or {}
+            ) or {})
+
+            if resolved_key == CommonGeometryOption.GEOMETRY_TYPE:
+                chosen_geo_type = GeometryType(value_entry_value) if value_entry_value in (
+                    GeometryType.PACK.value,
+                    GeometryType.GRID.value,
+                    GeometryType.PLACE.value,
+                ) else None
+                if chosen_geo_type and not selected_widget.winfo_ismapped():
+                    current_geometry_state = TreeViewUtils.build_geometry_state_for_widget(
+                        widget=selected_widget,
+                        geometry_type=chosen_geo_type,
+                    )
+                    current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = chosen_geo_type.value
+                    current_geometry_state[CommonGeometryOption.VISIBILITY] = selected_widget.winfo_ismapped()
+                    value_entry_value = chosen_geo_type.value
 
             if resolved_key == CommonGeometryOption.VISIBILITY:
                 # track transition so we can rebuild manager-specific geometry keys
@@ -160,7 +179,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                     preferred_type = (
                         current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE)
                         or current_geometry_state.get(
-                            Utils.listbox_option_alias_resolver(CommonGeometryOption.GEOMETRY_TYPE)
+                            Utils.listbox_option_to_type_alias_direction_alias_resolver(CommonGeometryOption.GEOMETRY_TYPE)
                         )
                     )
                     sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
@@ -187,21 +206,21 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 value_entry_value = desired_visible
 
             geo_manager = selected_widget.winfo_manager()
-            if resolved_key != CommonGeometryOption.VISIBILITY:
+            if resolved_key not in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
                 match geo_manager:
                     case GeometryType.PACK.value:
                         self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
-                            'key': key_entry_value,
+                            'key': resolved_key,
                             'value': value_entry_value
                         }))
                     case GeometryType.GRID.value:
                         self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG, data={
-                            'key': key_entry_value,
+                            'key': resolved_key,
                             'value': value_entry_value
                         }))
                     case GeometryType.PLACE.value:
                         self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG, data={
-                            'key': key_entry_value,
+                            'key': resolved_key,
                             'value': value_entry_value
                         }))
                     case GeometryType.UNMAPPED.value:
@@ -213,12 +232,17 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         # current_listbox_insert_widget = self._store.current_listbox_template
         prev_listbox_store_dict = self._store.listbox_manager_state_get_value(
             ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE) or {}
-        if self._listbox_page_insert_enum == ListboxPageTemplateEnum.GEOMETRY and resolved_key == CommonGeometryOption.VISIBILITY:
-            # when visibility toggles, use rebuilt geometry state as base before merge
-            prev_listbox_store_dict = Utils.resolve_geometry_aliases(current_geometry_state)
+        if self._listbox_page_insert_enum == ListboxPageTemplateEnum.GEOMETRY:
+            prev_listbox_store_dict = Utils.resolve_geometry_aliases(prev_listbox_store_dict)
+            if resolved_key in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
+                # rebuilt geometry states should replace stale geometry rows, not merge with them
+                prev_listbox_store_dict = Utils.resolve_geometry_aliases(current_geometry_state)
         # merge prev current - stops duplicates from adding to listbox - sorted
+        listbox_key = resolved_key or key_entry_value
+        if self._listbox_page_insert_enum == ListboxPageTemplateEnum.GEOMETRY:
+            listbox_key = Utils.listbox_option_to_type_alias_direction_alias_resolver(listbox_key)
         updated_listbox_store_dict = Utils.sorted_dict(Utils.merge_dicts(
-            prev_listbox_store_dict, {key_entry_value: value_entry_value}))
+            prev_listbox_store_dict, {listbox_key: value_entry_value}))
         self._store.listbox_manager_state_set(
             enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_listbox_store_dict)
         self.after_idle(lambda: self.yview_moveto(y0))

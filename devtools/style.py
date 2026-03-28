@@ -72,6 +72,27 @@ class Style:
             'bottom_row': {
                 'bg': 'grey'
             },
+            'row_shift_buttons': {
+                # Single disabled style shared by both +/- controls.
+                'disabled': {
+                    'disabledforeground': '#d0d0d0',
+                    'highlightbackground': '#2f2f2f',
+                },
+            },
+        }
+        ,
+        'row_shift_tooltip': {
+            'text': 'Disabled. All options shown',
+            'x_offset': 16,
+            'y_offset': 6,
+            'label': {
+                'bg': '#fff8dc',
+                'fg': '#222222',
+                'relief': 'solid',
+                'bd': 1,
+                'padx': 6,
+                'pady': 3,
+            }
         }
     }
     

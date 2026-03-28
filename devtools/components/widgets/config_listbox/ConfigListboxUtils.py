@@ -15,7 +15,7 @@ class ConfigListboxUtils:
         if not option_name:
             return {}
 
-        resolved_option_name = Utils.listbox_option_alias_resolver(option_name) or option_name
+        resolved_option_name = Utils.listbox_type_to_option_alias_direction_alias_resolver(option_name)
         current_template = self._store.current_listbox_template
         current_page = current_template._listbox_page_insert_enum if current_template else None
 
@@ -203,7 +203,7 @@ class ConfigListboxUtils:
                 ) 
                 if 
                   # if mapped option values send to combobox
-                                        (config_setting_map := self._map_key_to_setting_for_current_template(value_inside.get())) and config_setting_map.get('values')
+                    (config_setting_map := self._map_key_to_setting_for_current_template(value_inside.get())) and config_setting_map.get('values')
                 else 
                     # if non-mapped option values entry or spinbox
                     self.handle_build_value_entry_from_key_entry(
@@ -433,7 +433,7 @@ class ConfigListboxUtils:
     # use state value if map has one - used to set state in the UI
     def check_maps_for_state(self, **kwargs) -> ListboxItemState | None:
         # resolve any aliases
-        resolved = Utils.listbox_option_alias_resolver(kwargs.get('key'))
+        resolved = Utils.listbox_type_to_option_alias_direction_alias_resolver(kwargs.get('key'))
         
         state = self.config_map_merge.get(resolved).get('state') if self.config_map_merge.get(resolved) else None
         # grey out any read only items

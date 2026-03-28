@@ -49,8 +49,30 @@ class RightWindowFrame(tk.Frame):
         self.attr_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageTemplateEnum.OPTIONS))
         self.geo_button.bind("<Button-1>", lambda e: self.handle_pack_listbox_page_insert_click(insert_type_enum=ListboxPageTemplateEnum.GEOMETRY))
        
-        self.add_config_button = tk.Button(self.bottom_row_wrapper, text="+", command=lambda: self.handle_add(0), width=2, height=2)
-        self.subtract_config_button = tk.Button(self.bottom_row_wrapper, text="-", command=self.handle_subtract_selection, width=2, height=2)
+        self.add_config_button = tk.Button(
+            self.bottom_row_wrapper,
+            text="+",
+            command=lambda: self.handle_add(0),
+            width=2,
+            height=2,
+        )
+        self.subtract_config_button = tk.Button(
+            self.bottom_row_wrapper,
+            text="-",
+            command=self.handle_subtract_selection,
+            width=2,
+            height=2,
+        )
+        self._row_shift_button_default_style = {
+            'disabledforeground': self.add_config_button.cget('disabledforeground'),
+            'highlightbackground': self.add_config_button.cget('highlightbackground'),
+        }
+        self._row_shift_tooltip: tk.Toplevel | None = None
+        self._row_shift_tooltip_text = Style.right_window['row_shift_tooltip']['text']
+        self.add_config_button.bind("<Enter>", self._on_row_shift_hover_enter)
+        self.add_config_button.bind("<Leave>", self._on_row_shift_hover_leave)
+        self.subtract_config_button.bind("<Enter>", self._on_row_shift_hover_enter)
+        self.subtract_config_button.bind("<Leave>", self._on_row_shift_hover_leave)
 
         self.attr_button.grid(row=0, column=0, padx=5, pady=5, sticky='sw')
         self.geo_button.grid(row=0, column=1, padx=5, pady=5, sticky='sw')
@@ -75,9 +97,42 @@ class RightWindowFrame(tk.Frame):
     @try_except_catcher
     # Enable row shift controls (+/-) only when current page supports adding/removing rows.
     def toggle_row_shift(self, enabled: bool):
-        state = tk.NORMAL if enabled else tk.DISABLED
-        self.add_config_button.config(state=state)
-        self.subtract_config_button.config(state=state)
+        self._hide_row_shift_tooltip()
+        style_map = Style.right_window['header']['row_shift_buttons']
+        if enabled:
+            self.add_config_button.config(**self._row_shift_button_default_style, state=tk.NORMAL)
+            self.subtract_config_button.config(**self._row_shift_button_default_style, state=tk.NORMAL)
+        else:
+            self.add_config_button.config(**style_map['disabled'], state=tk.DISABLED)
+            self.subtract_config_button.config(**style_map['disabled'], state=tk.DISABLED)
+
+    @try_except_catcher
+    def _on_row_shift_hover_enter(self, event):
+        if event.widget.cget("state") != tk.DISABLED:
+            return
+        self._hide_row_shift_tooltip()
+        tooltip_style = Style.right_window['row_shift_tooltip']
+        x = event.widget.winfo_rootx() + tooltip_style['x_offset']
+        y = event.widget.winfo_rooty() + event.widget.winfo_height() + tooltip_style['y_offset']
+        self._row_shift_tooltip = tk.Toplevel(self)
+        self._row_shift_tooltip.wm_overrideredirect(True)
+        self._row_shift_tooltip.wm_geometry(f"+{x}+{y}")
+        label = tk.Label(
+            self._row_shift_tooltip,
+            text=self._row_shift_tooltip_text,
+            **tooltip_style['label'],
+        )
+        label.pack()
+
+    @try_except_catcher
+    def _on_row_shift_hover_leave(self, _):
+        self._hide_row_shift_tooltip()
+
+    @try_except_catcher
+    def _hide_row_shift_tooltip(self):
+        if self._row_shift_tooltip:
+            self._row_shift_tooltip.destroy()
+            self._row_shift_tooltip = None
     
     @try_except_catcher
     # run pack_listbox_page_insert with check to not repack same insert
