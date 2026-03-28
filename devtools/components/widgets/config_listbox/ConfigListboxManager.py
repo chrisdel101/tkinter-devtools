@@ -100,6 +100,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             if resolved_item_key in (CommonGeometryOption.GEOMETRY_TYPE, CommonGeometryOption.VISIBILITY):
                 option_setting_map = self.map_unmapped_geometry_option_to_setting(
                     resolved_item_key)
+                if resolved_item_key == CommonGeometryOption.GEOMETRY_TYPE:
+                    sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(current_widget)
+                    if sibling_geo_type and option_setting_map:
+                        # Tk managers cannot be mixed in same parent; constrain choices.
+                        option_setting_map = {
+                            **option_setting_map,
+                            'values': [sibling_geo_type.value],
+                        }
             elif geometry_info_type == GeometryType.PACK:
                 option_setting_map = self.map_pack_geometry_option_to_setting(
                     resolved_item_key)
@@ -162,13 +170,32 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                     GeometryType.GRID.value,
                     GeometryType.PLACE.value,
                 ) else None
-                if chosen_geo_type and not selected_widget.winfo_ismapped():
+                if chosen_geo_type:
+                    sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
+                    if sibling_geo_type and sibling_geo_type != chosen_geo_type:
+                        chosen_geo_type = sibling_geo_type
+                    current_manager = selected_widget.winfo_manager()
+                    current_geo_type = GeometryType(current_manager) if current_manager in (
+                        GeometryType.PACK.value,
+                        GeometryType.GRID.value,
+                        GeometryType.PLACE.value,
+                    ) else None
+                    # Preserve current visibility intent while switching managers.
+                    desired_visible = self._to_bool(
+                        current_geometry_state.get(CommonGeometryOption.VISIBILITY, selected_widget.winfo_ismapped())
+                    )
+                    if current_geo_type != chosen_geo_type:
+                        if selected_widget.winfo_ismapped():
+                            Utils.hide_widget(selected_widget, self._store)
+                        if desired_visible:
+                            Utils.show_widget(selected_widget, self._store, geometry_type=chosen_geo_type)
+
                     current_geometry_state = TreeViewUtils.build_geometry_state_for_widget(
                         widget=selected_widget,
                         geometry_type=chosen_geo_type,
                     )
                     current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = chosen_geo_type.value
-                    current_geometry_state[CommonGeometryOption.VISIBILITY] = selected_widget.winfo_ismapped()
+                    current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
                     value_entry_value = chosen_geo_type.value
 
             if resolved_key == CommonGeometryOption.VISIBILITY:

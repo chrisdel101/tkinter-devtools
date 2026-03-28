@@ -338,9 +338,12 @@ class Utils:
     def show_widget(widget: tk.Widget, store: Store, geometry_type: GeometryType | None = None):
         # if no state store will be no options set
         widget_state = store.hidden_widgets.get(id(widget))
-        # if not stored state need to manually set i.e. from page
-        geo_type  = widget_state.geometry_type if widget_state else geometry_type
+        # explicit geometry_type should win when caller is switching managers.
+        geo_type  = geometry_type or (widget_state.geometry_type if widget_state else None)
         geometry_options = widget_state.geometry_options if widget_state else {}
+        if geometry_type and widget_state and widget_state.geometry_type != geometry_type:
+            # Stored options belong to a different manager; infer defaults for requested one.
+            geometry_options = {}
         if not geo_type:
             logging.trace(f"show_widget: Widget {widget} has no stored hidden state.")
             return
