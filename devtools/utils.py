@@ -312,7 +312,7 @@ class Utils:
     def _untrack_hidden_widgets(updated_hidden_widgets, store):
         # overwrite with updated copy
         store.hidden_widgets = updated_hidden_widgets
-    
+    @try_except_catcher
     @staticmethod
     def hide_widget(widget: tk.Widget, store: Store):
         # check if already hidden - do nothing
@@ -322,6 +322,20 @@ class Utils:
         geo_manager_info = Utils.build_widget_geometry_manager_info(widget)
         if geo_manager_info is None or geo_manager_info.geometry_type == GeometryType.UNMAPPED:
             return
+        # on pack only we need to store the neigbour widgets to restore in correct slot when re-shown
+        if geo_manager_info.geometry_type == GeometryType.PACK:
+            opts = dict(geo_manager_info.geometry_options)
+            if not opts.get("before") and not opts.get("after"):
+                # get siblings on hide
+                siblings = widget.master.pack_slaves()
+                idx = siblings.index(widget)
+                # store prev widget to current - so we know which widget to show this "after"  
+                if idx > 0:
+                    opts["after"] = siblings[idx - 1]
+                 # store next widget to current - so we know which widget to show this "before"  
+                elif len(siblings) > 1:
+                    opts["before"] = siblings[1]
+            geo_manager_info = GeometryManagerInfo(GeometryType.PACK, opts, name=geo_manager_info.name)
         # store state of hidden widget to restore later
         Utils._track_hidden_widgets(widget, store, geo_manager_info)
         match geo_manager_info.geometry_type:
@@ -332,7 +346,7 @@ class Utils:
             case GeometryType.PLACE:
                 widget.place_forget()
         
-
+    @try_except_catcher
     @staticmethod
     # show an unmapped widget
     def show_widget(widget: tk.Widget, store: Store, geometry_type: GeometryType | None = None):

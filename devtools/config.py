@@ -1,5 +1,5 @@
 kwargs_config = {
-    "list_unmapped_widgets": False
+    "show_unmapped_widgets": True
 }
 app_config = {
     "app_title": "Tk Devtools",

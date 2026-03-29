@@ -77,8 +77,6 @@ class ConfigListboxUtils:
 
     @try_except_catcher
     def build_value_spin_box(self, 
-        index: int,
-        key_entry_widget: tk.Entry | ttk.Combobox,
         key_entry_value: str, 
         current_option_value: str):        
         spinbox = tk.Spinbox(self.spin_box_wrapper, 

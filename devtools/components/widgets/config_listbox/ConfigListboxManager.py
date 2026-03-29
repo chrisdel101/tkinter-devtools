@@ -423,10 +423,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         if config_setting_map and config_setting_map.get("type") == int or config_setting_map.get("type") == float:
             self.spin_box_wrapper = tk.Frame(self)
             spinbox = self.build_value_spin_box(
-                key_entry_widget=key_entry,
                 key_entry_value=listbox_item_pairs_dict.get('key'),
                 current_option_value=listbox_item_pairs_dict.get('value'),
-                index=index
             )
             spinbox.pack(fill='x')
             self.spin_box_wrapper.place(
