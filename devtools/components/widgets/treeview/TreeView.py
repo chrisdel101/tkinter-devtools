@@ -62,7 +62,7 @@ class TreeView(ttk.Treeview):
         if self._refresh_job is not None:
             return
         self._refresh_job = self.after_idle(self.rebuild_tree_from_root)
-    @try_except_catcher
+
     def rebuild_tree_from_root(self):
         # Clear pending flag because this job is now running.
         self._refresh_job = None
@@ -298,7 +298,7 @@ class TreeView(ttk.Treeview):
                 # set tree state selected item
                 self._store.tree_state_set(
                     TreeStateKey.SELECTED_ITEM_WIDGET, self.get_widget_by_tree_insert_id(item_id))
-                # mem_obj_id = self.get_widget_by_obj_mem_id(id(self._store.tree_state_get('selected_item')))
+               
 
                 # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):

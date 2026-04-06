@@ -48,7 +48,6 @@ class DevtoolsWindow(tk.Toplevel):
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
         self.wm_geometry(window_geometry)
-        # self.poll_for_changes()
     
     @try_except_catcher
     def on_focus_out(self, _):
@@ -74,10 +73,3 @@ class DevtoolsWindow(tk.Toplevel):
                 logging.trace("focus back")
                 # set state to true
                 self._store.devtools_window_in_focus = True
-
-    def poll_for_changes(self):
-        # poll tree for changes
-        self.left_window.tree.collect_widgets(self.root)
-        # poll again after delay
-        self.after(1000, self.poll_for_changes)
-        logging.debug("Polling for changes...")

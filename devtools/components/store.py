@@ -27,6 +27,9 @@ class Store:
         self.style = Style(root=root)
         self.selected_combobox: tk.Widget | None = None
         self.devtools_window_in_focus: bool = True
+        self.tree_refresh_job = None
+        self.tree_is_rebuilding: bool = False
+        self.tree_needs_refresh: bool = False
         self.key_combobox_popdown_open: bool = False
         self.value_combobox_popdown_open: bool = False
         self.listbox_entry_input_action:   ListBoxEntryInputAction | None = None
@@ -152,6 +155,30 @@ class Store:
     @devtools_window_in_focus.setter
     def devtools_window_in_focus(self, value):
         self._devtools_window_in_focus = value
+
+    @property
+    def tree_refresh_job(self):
+        return self._tree_refresh_job
+
+    @tree_refresh_job.setter
+    def tree_refresh_job(self, value):
+        self._tree_refresh_job = value
+
+    @property
+    def tree_is_rebuilding(self):
+        return self._tree_is_rebuilding
+
+    @tree_is_rebuilding.setter
+    def tree_is_rebuilding(self, value):
+        self._tree_is_rebuilding = value
+
+    @property
+    def tree_needs_refresh(self):
+        return self._tree_needs_refresh
+
+    @tree_needs_refresh.setter
+    def tree_needs_refresh(self, value):
+        self._tree_needs_refresh = value
 
     @property
     def show_unmapped_widgets(self):
