@@ -1,17 +1,23 @@
+import sys
 from tkinter import *
 import tkinter as tk
 from tkinter import ttk
 from devtools.style import Style
-
 from devtools.DevtoolsWindow import DevtoolsWindow
+# # Add the parent directory of 'devtools' to sys.path so absolute import works
+# sys.path.append('/Users/chrisdielschnieder/code_work/lytehorse/LyteHorse_Dyno') 
+from lytehorse_dyno.Dyno_Interface.Classes.App import App
+# from Dyno_Interface.Classes.App import App 
+
+
     
-class App(tk.Frame):
+class TestApp(tk.Frame):
     def __init__(self, root):
         super().__init__(root)
         self.pack()
 
 
-        grid_container = tk.Frame(self, padx=10, width=200, height=200).grid()
+        grid_container = tk.Frame(self, padx=10, width=200, height=300).grid()
         tk.Button(self, text="Quit").grid(column=1, row=1)
         tk.Label(self, text="Hello World!")#.grid(column=0, row=0)
         tk.Label(self, text="Hello World2!").grid(column=1, row=0)
@@ -42,10 +48,12 @@ class App(tk.Frame):
         tk.Label(self, text="XXXXXXXXX")#.pack()
     
 root = tk.Tk()
+# app = TestApp(root)
 app = App(root)
+app.pack(side=tk.TOP, fill="both", expand=True)
 # style = ttk.Style()
 # style.configure(
-#     "My.Treeview",
+#     "My.Treeview",    
 #     **Style.treeview
 # )
 DevtoolsWindow(app, title="Devtools", show_unmapped_widgets=True)

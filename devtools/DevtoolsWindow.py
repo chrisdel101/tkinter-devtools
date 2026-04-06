@@ -9,6 +9,7 @@ from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 from devtools.config import kwargs_config, app_config
 from devtools.logging_utils import LoggingUtils
+from devtools.style import Style
 from devtools.tcl_runtime_utils import TclRunTimeUtility
 
 
@@ -18,7 +19,8 @@ class DevtoolsWindow(tk.Toplevel):
         # run to update page render for before tree maps
         root.update_idletasks()
         # run runtime checks of tcl bridge
-        TclRunTimeUtility.runtime_checks(root)     
+        TclRunTimeUtility.runtime_checks(root)
+        window_geometry = Style.devtools_window["geometry"]
         # overwrite any default config with kwargs
         kwargs_config.update(**kwargs)
         # set logging level
@@ -45,7 +47,7 @@ class DevtoolsWindow(tk.Toplevel):
 
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
-        self.geometry("+700+0")
+        self.wm_geometry(window_geometry)
         # self.poll_for_changes()
     
     @try_except_catcher

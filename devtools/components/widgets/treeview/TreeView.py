@@ -19,18 +19,82 @@ class TreeView(ttk.Treeview):
         self.root = root
         self._observable = observable
         self._store = store
+        self._refresh_job = None
+        self._is_rebuilding = False
+        self._needs_refresh = False
         self._observable.register_observer(self)
         # use Treeview.insert id like 'I001'
-        # self.store_widget_by_tree_insert_id: dict[str, tk.Widget] = {}
         # use obj mem id from id(obj) - {id: {tree_id:str, widget:tk.Widget}}
-        # self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
+        self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
         self.column("#0", width=300)
         # main listener for tree item selects
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
         self.build_tree(root)
+        self._bind_tree_change_events()
 
         self.selection_set(self.get_children()[0])
         # self.event_generate("<<TreeviewSelect>>")
+
+    def _bind_tree_change_events(self):
+        # Event-driven tree sync for dynamic UIs (no polling).
+        # Tcl/Tk dispatches events through bindtags; bind_all hooks the shared "all" bindtag.
+        # add=True appends our callback so existing app/Tk bindings are preserved.
+        self.root.bind_all("<Map>", self._on_widget_tree_event, add=True)
+        self.root.bind_all("<Unmap>", self._on_widget_tree_event, add=True)
+        self.root.bind_all("<Destroy>", self._on_widget_tree_event, add=True)
+
+    def _on_widget_tree_event(self, event):
+        # Pull the widget that raised the Tk event.
+        event_widget = getattr(event, "widget", None)
+        if event_widget is None:
+            return
+        # Ignore devtools toplevel lifecycle changes to avoid self-trigger loops.
+        if isinstance(event_widget, tk.Toplevel) and getattr(event_widget, "_name", None) == app_config['top_level_name']:
+            return
+        # Request a debounced refresh.
+        self.schedule_tree_refresh()
+
+    def schedule_tree_refresh(self):
+        # Coalesce many events into one idle-time rebuild.
+        if self._is_rebuilding:
+            self._needs_refresh = True
+            return
+        if self._refresh_job is not None:
+            return
+        self._refresh_job = self.after_idle(self.rebuild_tree_from_root)
+    @try_except_catcher
+    def rebuild_tree_from_root(self):
+        # Clear pending flag because this job is now running.
+        self._refresh_job = None
+        if self._is_rebuilding:
+            return
+        # Guard against re-entrant rebuilds from nested Tk callbacks.
+        self._is_rebuilding = True
+        try:
+            # Preserve current selection if that widget still exists after rebuild.
+            selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+            self.delete_tree()
+            self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
+            self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
+            self.build_tree(self.root)
+
+            if selected_widget and selected_widget.winfo_exists():
+                selected_item = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(id(selected_widget))
+                if selected_item:
+                    self.selection_set(selected_item.get("tree_id"))
+            elif self.get_children():
+                # Fall back to the first root node when previous selection is gone.
+                self.selection_set(self.get_children()[0])
+        except tk.TclError:
+            # Widget may be destroyed during teardown; ignore transient Tcl lifecycle errors.
+            logging.debug("Tree refresh skipped due to widget lifecycle change during rebuild (expected transient TclError).")
+            pass
+        finally:
+            # Always release rebuild guard.
+            self._is_rebuilding = False
+            if self._needs_refresh:
+                self._needs_refresh = False
+                self.schedule_tree_refresh()
 
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
@@ -41,15 +105,14 @@ class TreeView(ttk.Treeview):
 
         self._store.tree_state_set(
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, new_dict)
-        # self.store_widget_by_tree_insert_id[item_id] = widget
 
     # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
     def add_tree_item_to_obj_mem_id_store(self, memory_id: int, tree_insert_id: str, widget: tk.Widget):
         # """Store the widget by Treeview.insert ID."""
-        # self.store_widget_by_obj_mem_id[memory_id] = {
-        #     "tree_id": tree_insert_id,
-        #      "widget": widget
-        #     }
+        self.store_widget_by_obj_mem_id[memory_id] = {
+            "tree_id": tree_insert_id,
+             "widget": widget
+            }
         # get current id(widget) state
         current_mem_id_widget_state = self._store.tree_state_get(
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)

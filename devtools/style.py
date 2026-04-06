@@ -30,6 +30,9 @@ class Style:
         'background': "#C0C0C0",  # bg does not work here
         "foreground": "#000",  # fg does not work here
     }
+    devtools_window = {
+        'geometry': '700x500+700+0',
+    }
     config_listbox_manager = {
         'listbox': {
             'bg': '#F5F5F5',
@@ -55,7 +58,7 @@ class Style:
     right_window = {
         'frame': {
             'width': 100,
-            'height': 200,
+            'height': 300,
             'bg': 'green',
         },
         'header': {

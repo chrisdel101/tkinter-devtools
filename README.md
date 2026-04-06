@@ -28,3 +28,7 @@ Packaging in source
 Importing in local target
 
     pip uninstall /Users/chrisdielschnieder/code_work/python/tk-devtools/dist/tk_devtools-0.1.0-py3-none-any.whl && pip install /Users/chrisdielschnieder/code_work/python/tk-devtools/dist/tk_devtools-0.1.0-py3-none-any.whl
+
+Pip install requirements from another project
+
+    python -m pip install -r /Users/chrisdielschnieder/code_work/lytehorse/LyteHorse_Dyno/requirements.mac.txt

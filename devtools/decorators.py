@@ -24,7 +24,7 @@ def try_except_catcher(func):
         try:
             return func(*args, **kwargs)
         except tk.TclError as e:
-            logging.error(f"--SAFE_CONFIG ERROR--- in {func.__name__}: error {e}---", exc_info=True)
+            logging.error(f"--tcl error in decorator --- in {func.__name__}: error {e}---", exc_info=True)
             raise e
         except Exception as e:
             logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
