@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import DEVTOOLS_MARKER, ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
@@ -34,7 +34,7 @@ class TreeView(ttk.Treeview):
 
         self.selection_set(self.get_children()[0])
         # self.event_generate("<<TreeviewSelect>>")
-
+    # bind tcls events to montitor for changes in the App that might need a tree rebuild
     def _bind_tree_change_events(self):
         # Event-driven tree sync for dynamic UIs (no polling).
         # Tcl/Tk dispatches events through bindtags; bind_all hooks the shared "all" bindtag.
@@ -43,13 +43,22 @@ class TreeView(ttk.Treeview):
         self.root.bind_all("<Unmap>", self._on_widget_tree_event, add=True)
         self.root.bind_all("<Destroy>", self._on_widget_tree_event, add=True)
 
+    def _is_devtools_widget(self, widget: tk.Widget) -> bool:
+        current = widget
+        while current is not None:
+            # block events that occur inside the dev tools
+            if getattr(current, "devtools_marker", None) == DEVTOOLS_MARKER:
+                return True
+            current = getattr(current, "master", None)
+        return False
+
     def _on_widget_tree_event(self, event):
         # Pull the widget that raised the Tk event.
         event_widget = getattr(event, "widget", None)
         if event_widget is None:
             return
-        # Ignore devtools toplevel lifecycle changes to avoid self-trigger loops.
-        if isinstance(event_widget, tk.Toplevel) and getattr(event_widget, "_name", None) == app_config['top_level_name']:
+        # Ignore events from the devtools window hierarchy to avoid self-trigger loops.
+        if self._is_devtools_widget(event_widget):
             return
         # Request a debounced refresh.
         self.schedule_tree_refresh()
@@ -62,7 +71,7 @@ class TreeView(ttk.Treeview):
         if self._refresh_job is not None:
             return
         self._refresh_job = self.after_idle(self.rebuild_tree_from_root)
-
+    # rebuild logic for new tree state from the App
     def rebuild_tree_from_root(self):
         # Clear pending flag because this job is now running.
         self._refresh_job = None
@@ -238,7 +247,7 @@ class TreeView(ttk.Treeview):
             # method gives all child widgets of tk obj
             for child in self.get_display_ordered_children(parent_widget):
                 # dev tools window - skip this top level in tree
-                if isinstance(child, tk.Toplevel) and child._name == app_config['top_level_name']:
+                if self._is_devtools_widget(child):
                     continue
                 # hide unmapped widgets - optional
                 if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
@@ -258,38 +267,8 @@ class TreeView(ttk.Treeview):
             logging.error(f"Error build_tree: {e}")
             raise e
 
-    # walk the tree and get all the widgets
-    def collect_widgets(self, widget, acc=None):
-        try:
-            if acc is None:
-                acc = set()
-            if not self.get_widget_by_obj_mem_id(id(widget)):
-                self.delete_tree()
-                # change - rebuild tree
-                self.build_tree(self.root)
-                return
-            else:
-                acc.add(widget)
-
-            for child in widget.winfo_children():
-                if not isinstance(child, tk.Toplevel):
-                    if not self.get_widget_by_obj_mem_id(id(child)):
-                        self.delete_tree()
-                        # change - rebuild tree
-                        self.build_tree(self.root)
-                        return
-                    else:
-                        self.collect_widgets(child, acc)
-
-            return acc
-        except Exception as e:
-            logging.error(f"Error collect_widgets: {e}")
-            raise
-
     def handle_tree_select(self, _,):
         try:
-            collect_widgets = self.collect_widgets(self.root)
-            self.root.update_idletasks()
             # get selected tree item viatree api
             selected_tree_id = self.selection()
             if selected_tree_id and selected_tree_id != self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
