@@ -23,6 +23,9 @@ class TreeView(ttk.Treeview):
         self._is_rebuilding = False
         self._needs_refresh = False
         self._observable.register_observer(self)
+        self._highlighted_widget: tk.Widget | None = None
+        self._highlight_saved_config: dict | None = None
+        self._applying_highlight: bool = False
         # use Treeview.insert id like 'I001'
         # use obj mem id from id(obj) - {id: {tree_id:str, widget:tk.Widget}}
         self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
@@ -59,6 +62,9 @@ class TreeView(ttk.Treeview):
             return
         # Ignore events from the devtools window hierarchy to avoid self-trigger loops.
         if self._is_devtools_widget(event_widget):
+            return
+        # Ignore events caused by our own highlight configure calls.
+        if self._applying_highlight:
             return
         # Request a debounced refresh.
         self.schedule_tree_refresh()
@@ -267,6 +273,33 @@ class TreeView(ttk.Treeview):
             logging.error(f"Error build_tree: {e}")
             raise e
 
+    def _apply_highlight(self, widget: tk.Widget):
+        self._applying_highlight = True
+        self._remove_highlight()
+        try:
+            self._highlight_saved_config = {
+                'highlightbackground': widget.cget('highlightbackground'),
+                'highlightthickness': widget.cget('highlightthickness'),
+            }
+            widget.configure(highlightbackground='#FF4500', highlightthickness=2)
+            self._highlighted_widget = widget
+        except tk.TclError:
+            self._highlight_saved_config = None
+        # Clear flag after_idle so queued Tk events from configure fire while flag is still True
+        self.after_idle(self._clear_applying_highlight)
+
+    def _remove_highlight(self):
+        if self._highlighted_widget and self._highlight_saved_config:
+            try:
+                self._highlighted_widget.configure(**self._highlight_saved_config)
+            except tk.TclError:
+                pass
+        self._highlighted_widget = None
+        self._highlight_saved_config = None
+
+    def _clear_applying_highlight(self):
+        self._applying_highlight = False
+
     def handle_tree_select(self, _,):
         try:
             # get selected tree item viatree api
@@ -281,6 +314,7 @@ class TreeView(ttk.Treeview):
 
                 # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
+                    self._apply_highlight(selected_item_widget)
                     try:
                         # HANDLE OPTION LISTBOX TEMPLATE
                         self.stuff_listbox_options_state_into_page_template(selected_item_widget)

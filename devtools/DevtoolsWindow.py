@@ -16,7 +16,7 @@ from devtools.tcl_runtime_utils import TclRunTimeUtility
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, root, title=app_config['app_title'], **kwargs):
         super().__init__(root, name=app_config['top_level_name'])
-        self._devtools_marker = DEVTOOLS_MARKER
+        self.devtools_marker = DEVTOOLS_MARKER
         # run to update page render for before tree maps
         root.update_idletasks()
         # run runtime checks of tcl bridge
