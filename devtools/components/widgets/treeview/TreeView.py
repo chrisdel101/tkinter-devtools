@@ -9,7 +9,6 @@ from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.utils import Utils
-from devtools.config import app_config
 
 
 class TreeView(ttk.Treeview):
@@ -19,29 +18,20 @@ class TreeView(ttk.Treeview):
         self.root = root
         self._observable = observable
         self._store = store
-        self._refresh_job = None
-        self._is_rebuilding = False
-        self._needs_refresh = False
         self._observable.register_observer(self)
         self._highlighted_widget: tk.Widget | None = None
         self._highlight_saved_config: dict | None = None
         self._applying_highlight: bool = False
-        # use Treeview.insert id like 'I001'
-        # use obj mem id from id(obj) - {id: {tree_id:str, widget:tk.Widget}}
         self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
         self.column("#0", width=300)
-        # main listener for tree item selects
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
         self.build_tree(root)
         self._bind_tree_change_events()
 
         self.selection_set(self.get_children()[0])
         # self.event_generate("<<TreeviewSelect>>")
-    # bind tcls events to montitor for changes in the App that might need a tree rebuild
+
     def _bind_tree_change_events(self):
-        # Event-driven tree sync for dynamic UIs (no polling).
-        # Tcl/Tk dispatches events through bindtags; bind_all hooks the shared "all" bindtag.
-        # add=True appends our callback so existing app/Tk bindings are preserved.
         self.root.bind_all("<Map>", self._on_widget_tree_event, add=True)
         self.root.bind_all("<Unmap>", self._on_widget_tree_event, add=True)
         self.root.bind_all("<Destroy>", self._on_widget_tree_event, add=True)
@@ -49,67 +39,63 @@ class TreeView(ttk.Treeview):
     def _is_devtools_widget(self, widget: tk.Widget) -> bool:
         current = widget
         while current is not None:
-            # block events that occur inside the dev tools
             if getattr(current, "devtools_marker", None) == DEVTOOLS_MARKER:
                 return True
             current = getattr(current, "master", None)
         return False
 
+    def _is_relevant_tree_event_widget(self, widget: tk.Widget) -> bool:
+        # Only refresh when event is from current tree nodes or descendants of them.
+        mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
+        current = widget
+        while current is not None:
+            if id(current) in mem_store:
+                return True
+            current = getattr(current, "master", None)
+        return False
+
     def _on_widget_tree_event(self, event):
-        # Pull the widget that raised the Tk event.
         event_widget = getattr(event, "widget", None)
-        if event_widget is None:
+        if event_widget is None or not isinstance(event_widget, tk.BaseWidget):
             return
-        # Ignore events from the devtools window hierarchy to avoid self-trigger loops.
         if self._is_devtools_widget(event_widget):
             return
-        # Ignore events caused by our own highlight configure calls.
         if self._applying_highlight:
             return
-        # Request a debounced refresh.
+        if not self._is_relevant_tree_event_widget(event_widget):
+            return
         self.schedule_tree_refresh()
 
     def schedule_tree_refresh(self):
-        # Coalesce many events into one idle-time rebuild.
-        if self._is_rebuilding:
-            self._needs_refresh = True
+        if self._store.tree_refresh_job is not None:
             return
-        if self._refresh_job is not None:
-            return
-        self._refresh_job = self.after_idle(self.rebuild_tree_from_root)
-    # rebuild logic for new tree state from the App
-    def rebuild_tree_from_root(self):
-        # Clear pending flag because this job is now running.
-        self._refresh_job = None
-        if self._is_rebuilding:
-            return
-        # Guard against re-entrant rebuilds from nested Tk callbacks.
-        self._is_rebuilding = True
-        try:
-            # Preserve current selection if that widget still exists after rebuild.
-            selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
-            self.delete_tree()
-            self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
-            self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-            self.build_tree(self.root)
+        self._store.tree_refresh_job = self.after_idle(self.rebuild_tree_from_root)
 
-            if selected_widget and selected_widget.winfo_exists():
-                selected_item = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(id(selected_widget))
-                if selected_item:
-                    self.selection_set(selected_item.get("tree_id"))
-            elif self.get_children():
-                # Fall back to the first root node when previous selection is gone.
-                self.selection_set(self.get_children()[0])
-        except tk.TclError:
-            # Widget may be destroyed during teardown; ignore transient Tcl lifecycle errors.
-            logging.debug("Tree refresh skipped due to widget lifecycle change during rebuild (expected transient TclError).")
-            pass
-        finally:
-            # Always release rebuild guard.
-            self._is_rebuilding = False
-            if self._needs_refresh:
-                self._needs_refresh = False
-                self.schedule_tree_refresh()
+    def rebuild_tree_from_root(self):
+        self._store.tree_refresh_job = None
+        mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
+        expanded_mem_ids = {
+            mem_id for mem_id, entry in mem_store.items()
+            if (tree_id := entry.get("tree_id")) and self.item(tree_id, "open")
+        }
+        selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+        self.delete_tree()
+        self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
+        self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
+        self.build_tree(self.root)
+
+        mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
+        for mem_id in expanded_mem_ids:
+            if entry := mem_store.get(mem_id):
+                if tree_id := entry.get("tree_id"):
+                    self.item(tree_id, open=True)
+
+        if selected_widget and selected_widget.winfo_exists():
+            selected_item = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(id(selected_widget))
+            if selected_item:
+                self.selection_set(selected_item.get("tree_id"))
+        elif self.get_children():
+            self.selection_set(self.get_children()[0])
 
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
@@ -252,8 +238,8 @@ class TreeView(ttk.Treeview):
                 insert_parent_memory_id = parent_widget_insert_id
             # method gives all child widgets of tk obj
             for child in self.get_display_ordered_children(parent_widget):
-                # dev tools window - skip this top level in tree
-                if self._is_devtools_widget(child):
+                # skip the devtools window branch
+                if getattr(child, "devtools_marker", None) == DEVTOOLS_MARKER:
                     continue
                 # hide unmapped widgets - optional
                 if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
