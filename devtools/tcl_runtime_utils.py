@@ -33,17 +33,24 @@ class TclRunTimeUtility:
 
         cbox = ttk.Combobox(root, values=["A", "B", "C"])
         cbox.place()
+        root.update_idletasks()
 
-       
+        # Get the popdown window path (does NOT open it)
         popdown = root.tk.call("ttk::combobox::PopdownWindow", cbox)
 
         # Bind <Unmap> to the popdown window
         root.tk.call("bind", popdown, "<Unmap>", root.register(_probe))
-        cbox.current(1)
-        cbox.set("A") 
-        cbox.event_generate("<<ComboboxSelected>>")
-        root.after(1000, lambda: cbox.event_generate('<Escape>'))  # Close after 1s
-        root.update_idletasks()
+
+        # Actually open (map) the popdown via the internal Tcl post command
+        root.tk.call("ttk::combobox::Post", cbox)
+        root.update()
+
+        # Close it - this triggers <Unmap> on the popdown
+        # Use Tcl Unpost directly - Escape via event_generate won't fire without focus
+        root.tk.call("ttk::combobox::Unpost", cbox)
+        root.update()
+
+        cbox.destroy()
         if not fired:
             raise RuntimeError(
                 "Tk command callbacks are not working in this process.\n"
@@ -68,6 +75,11 @@ class TclRunTimeUtility:
                 "Tk command callbacks are not working in this process.\n"
                 "This Python/Tk environment is broken."
             )
-    def runtime_checks(root):
+    def runtime_checks(root, include_ttk_popdown_check=False):
         TclRunTimeUtility.assert_tk_bridge(root)
         TclRunTimeUtility.assert_button_command_valid(root)
+        # Optional: this probes ttk combobox popdown internals.
+        # Keep it opt-in because it validates a specific Tcl/Ttk path,
+        # not the core Python<->Tcl callback bridge.
+        if include_ttk_popdown_check:
+            TclRunTimeUtility.assert_combobox_command_valid(root)
