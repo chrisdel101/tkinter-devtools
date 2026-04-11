@@ -1,4 +1,5 @@
 from logging import root
+import threading
 import tkinter as tk
 from tkinter import ttk
 
@@ -75,11 +76,51 @@ class TclRunTimeUtility:
                 "Tk command callbacks are not working in this process.\n"
                 "This Python/Tk environment is broken."
             )
-    def runtime_checks(root, include_ttk_popdown_check=False):
+    @staticmethod
+    def assert_worker_thread_after_delivery(root):
+        """Checks whether after(0, callback) from a worker thread is actually
+        delivered when the mainloop is running.
+
+        On Tk 8.6 (properly configured): delivery works → PASS.
+        On Tk 9.0: after(0, cb) is silently discarded → FAIL.
+
+        A mini mainloop is used because after() from a worker thread requires
+        the event loop to be running to dispatch callbacks.
+
+        Fix: use a queue + after(ms, drain) polling loop on the main thread.
+        """
+        delivered = []
+        timeout_id = [None]
+
+        def on_delivery():
+            delivered.append(True)
+            if timeout_id[0]:
+                root.after_cancel(timeout_id[0])
+            root.quit()
+
+        def worker():
+            try:
+                root.after(0, on_delivery)
+            except Exception:
+                root.after(0, root.quit)
+
+        root.after(50, lambda: threading.Thread(target=worker, daemon=True).start())
+        timeout_id[0] = root.after(500, root.quit)  # safety timeout
+        root.mainloop()
+
+        if not delivered:
+            raise RuntimeError(
+                "Worker thread after(0, callback) is not delivered to the main thread.\n"
+                "Use a queue + after(ms, drain) pattern for cross-thread GUI updates."
+            )
+
+    def runtime_checks(root, include_ttk_popdown_check=True, include_thread_check=True):
         TclRunTimeUtility.assert_tk_bridge(root)
         TclRunTimeUtility.assert_button_command_valid(root)
-        # Optional: this probes ttk combobox popdown internals.
-        # Keep it opt-in because it validates a specific Tcl/Ttk path,
-        # not the core Python<->Tcl callback bridge.
+        # Optional: probes ttk combobox popdown internals via Tcl-level event binding.
         if include_ttk_popdown_check:
             TclRunTimeUtility.assert_combobox_command_valid(root)
+        # Optional: confirms after(0, cb) from a worker thread reaches the main thread.
+        # Fails on both Tk 8.6 and 9.0 without the queue+drain fix in the caller.
+        if include_thread_check:
+            TclRunTimeUtility.assert_worker_thread_after_delivery(root)

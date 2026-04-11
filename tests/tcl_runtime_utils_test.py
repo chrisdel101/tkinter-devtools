@@ -75,6 +75,16 @@ class TclRuntimeUtilsTests(unittest.TestCase):
          self.root.register = real_register
 
    # ------------------------------------------------------------------ #
+   # assert_worker_thread_after_delivery                                  #
+   # ------------------------------------------------------------------ #
+
+   def test_assert_worker_thread_after_delivery_passes_on_tk86(self):
+      # On Tk 8.6 (properly configured), after(0, cb) from a worker thread
+      # IS delivered when the mainloop is running. The check uses a mini
+      # mainloop internally, so this should pass in this environment.
+      TclRunTimeUtility.assert_worker_thread_after_delivery(self.root)
+
+   # ------------------------------------------------------------------ #
    # runtime_checks                                                       #
    # ------------------------------------------------------------------ #
 
@@ -83,6 +93,10 @@ class TclRuntimeUtilsTests(unittest.TestCase):
 
    def test_runtime_checks_passes_with_ttk_popdown(self):
       TclRunTimeUtility.runtime_checks(self.root, include_ttk_popdown_check=True)
+
+   def test_runtime_checks_with_thread_check_passes_on_tk86(self):
+      # include_thread_check=True should pass on Tk 8.6 (the fix target).
+      TclRunTimeUtility.runtime_checks(self.root, include_thread_check=True)
 
    def test_runtime_checks_raises_when_bridge_broken(self):
       real_register = self.root.register
