@@ -21,6 +21,8 @@ class TreeView(ttk.Treeview):
         self._observable.register_observer(self)
         self._highlighted_widget: tk.Widget | None = None
         self._highlight_saved_config: dict | None = None
+        self._highlight_overlay_edges: list[tk.Frame] = []
+        self._highlight_overlay_parent: tk.Misc | None = None
         self._applying_highlight: bool = False
         self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
         self.column("#0", width=300)
@@ -263,12 +265,20 @@ class TreeView(ttk.Treeview):
         self._applying_highlight = True
         self._remove_highlight()
         try:
-            self._highlight_saved_config = {
-                'highlightbackground': widget.cget('highlightbackground'),
-                'highlightthickness': widget.cget('highlightthickness'),
-            }
-            widget.configure(highlightbackground='#FF4500', highlightthickness=2)
-            self._highlighted_widget = widget
+            if self._show_highlight_overlay(widget):
+                self._highlight_saved_config = {'strategy': 'overlay'}
+                self._highlighted_widget = widget
+            else:
+                # Fallback to direct widget config only if overlay cannot be placed.
+                self._highlight_saved_config = {
+                    'strategy': 'config',
+                    'config': {
+                        'highlightbackground': widget.cget('highlightbackground'),
+                        'highlightthickness': widget.cget('highlightthickness'),
+                    },
+                }
+                widget.configure(highlightbackground='#FF4500', highlightthickness=2)
+                self._highlighted_widget = widget
         except tk.TclError:
             self._highlight_saved_config = None
         # Clear flag after_idle so queued Tk events from configure fire while flag is still True
@@ -277,11 +287,82 @@ class TreeView(ttk.Treeview):
     def _remove_highlight(self):
         if self._highlighted_widget and self._highlight_saved_config:
             try:
-                self._highlighted_widget.configure(**self._highlight_saved_config)
+                strategy = self._highlight_saved_config.get('strategy')
+                if strategy == 'overlay':
+                    self._hide_highlight_overlay()
+                elif strategy == 'config':
+                    self._highlighted_widget.configure(**self._highlight_saved_config.get('config', {}))
             except tk.TclError:
                 pass
+        self._hide_highlight_overlay()
         self._highlighted_widget = None
         self._highlight_saved_config = None
+
+    def _show_highlight_overlay(self, widget: tk.Widget) -> bool:
+        if not widget.winfo_exists():
+            return False
+        parent = getattr(widget, 'master', None)
+        if parent is None:
+            return False
+
+        widget.update_idletasks()
+        x = widget.winfo_x()
+        y = widget.winfo_y()
+        width = widget.winfo_width()
+        height = widget.winfo_height()
+
+        if width <= 1 or height <= 1:
+            return False
+
+        if (
+            len(self._highlight_overlay_edges) != 4
+            or any(not edge.winfo_exists() for edge in self._highlight_overlay_edges)
+            or self._highlight_overlay_parent is not parent
+        ):
+            self._hide_highlight_overlay()
+            self._highlight_overlay_parent = parent
+            self._highlight_overlay_edges = [
+                tk.Frame(parent, bg='#FF4500', bd=0, highlightthickness=0)
+                for _ in range(4)
+            ]
+
+        border_size = 2
+        top_edge, right_edge, bottom_edge, left_edge = self._highlight_overlay_edges
+
+        top_edge.place(
+            x=x,
+            y=y,
+            width=width,
+            height=border_size,
+        )
+        right_edge.place(
+            x=x + max(width - border_size, 0),
+            y=y,
+            width=border_size,
+            height=height,
+        )
+        bottom_edge.place(
+            x=x,
+            y=y + max(height - border_size, 0),
+            width=width,
+            height=border_size,
+        )
+        left_edge.place(
+            x=x,
+            y=y,
+            width=border_size,
+            height=height,
+        )
+
+        # Keep border visible while not covering the widget interior.
+        for edge in self._highlight_overlay_edges:
+            edge.lift(widget)
+        return True
+
+    def _hide_highlight_overlay(self):
+        for edge in self._highlight_overlay_edges:
+            if edge.winfo_exists():
+                edge.place_forget()
 
     def _clear_applying_highlight(self):
         self._applying_highlight = False
