@@ -1,4 +1,5 @@
 import threading
+import queue
 import unittest
 import tkinter as tk
 from tkinter import ttk
@@ -75,16 +76,6 @@ class TclRuntimeUtilsTests(unittest.TestCase):
          self.root.register = real_register
 
    # ------------------------------------------------------------------ #
-   # assert_worker_thread_after_delivery                                  #
-   # ------------------------------------------------------------------ #
-
-   def test_assert_worker_thread_after_delivery_passes_on_tk86(self):
-      # On Tk 8.6 (properly configured), after(0, cb) from a worker thread
-      # IS delivered when the mainloop is running. The check uses a mini
-      # mainloop internally, so this should pass in this environment.
-      TclRunTimeUtility.assert_worker_thread_after_delivery(self.root)
-
-   # ------------------------------------------------------------------ #
    # runtime_checks                                                       #
    # ------------------------------------------------------------------ #
 
@@ -93,10 +84,6 @@ class TclRuntimeUtilsTests(unittest.TestCase):
 
    def test_runtime_checks_passes_with_ttk_popdown(self):
       TclRunTimeUtility.runtime_checks(self.root, include_ttk_popdown_check=True)
-
-   def test_runtime_checks_with_thread_check_passes_on_tk86(self):
-      # include_thread_check=True should pass on Tk 8.6 (the fix target).
-      TclRunTimeUtility.runtime_checks(self.root, include_thread_check=True)
 
    def test_runtime_checks_raises_when_bridge_broken(self):
       real_register = self.root.register
@@ -111,6 +98,43 @@ class TclRuntimeUtilsTests(unittest.TestCase):
             TclRunTimeUtility.runtime_checks(self.root)
       finally:
          self.root.register = real_register
+
+   # ------------------------------------------------------------------ #
+   # threading contract                                                   #
+   # ------------------------------------------------------------------ #
+
+   def test_worker_thread_to_tk_via_queue_and_after(self):
+      msg_queue = queue.Queue()
+      delivered = []
+      done = threading.Event()
+      timed_out = {"value": False}
+
+      def drain_queue_on_main_thread():
+         try:
+            while True:
+               item = msg_queue.get_nowait()
+               delivered.append(item)
+               if item == "ok":
+                  done.set()
+         except queue.Empty:
+            pass
+
+         if done.is_set():
+            self.root.quit()
+         else:
+            self.root.after(10, drain_queue_on_main_thread)
+
+      def worker_thread_fn():
+         # Worker thread must not call Tk APIs directly.
+         msg_queue.put("ok")
+
+      self.root.after(0, drain_queue_on_main_thread)
+      threading.Thread(target=worker_thread_fn, daemon=True).start()
+      self.root.after(1000, lambda: (timed_out.__setitem__("value", True), self.root.quit()))
+      self.root.mainloop()
+
+      self.assertFalse(timed_out["value"], "Timed out waiting for worker to main-thread delivery")
+      self.assertEqual(delivered, ["ok"])
 
 
 if __name__ == "__main__":

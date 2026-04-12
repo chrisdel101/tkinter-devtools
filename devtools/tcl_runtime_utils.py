@@ -1,4 +1,5 @@
 from logging import root
+import logging
 import threading
 import tkinter as tk
 from tkinter import ttk
@@ -76,51 +77,66 @@ class TclRunTimeUtility:
                 "Tk command callbacks are not working in this process.\n"
                 "This Python/Tk environment is broken."
             )
-    @staticmethod
-    def assert_worker_thread_after_delivery(root):
-        """Checks whether after(0, callback) from a worker thread is actually
-        delivered when the mainloop is running.
-
-        On Tk 8.6 (properly configured): delivery works → PASS.
-        On Tk 9.0: after(0, cb) is silently discarded → FAIL.
-
-        A mini mainloop is used because after() from a worker thread requires
-        the event loop to be running to dispatch callbacks.
-
-        Fix: use a queue + after(ms, drain) polling loop on the main thread.
-        """
-        delivered = []
-        timeout_id = [None]
-
-        def on_delivery():
-            delivered.append(True)
-            if timeout_id[0]:
-                root.after_cancel(timeout_id[0])
-            root.quit()
-
-        def worker():
-            try:
-                root.after(0, on_delivery)
-            except Exception:
-                root.after(0, root.quit)
-
-        root.after(50, lambda: threading.Thread(target=worker, daemon=True).start())
-        timeout_id[0] = root.after(500, root.quit)  # safety timeout
-        root.mainloop()
-
-        if not delivered:
-            raise RuntimeError(
-                "Worker thread after(0, callback) is not delivered to the main thread.\n"
-                "Use a queue + after(ms, drain) pattern for cross-thread GUI updates."
-            )
-
-    def runtime_checks(root, include_ttk_popdown_check=True, include_thread_check=True):
+    def runtime_checks(root, include_ttk_popdown_check=False):
         TclRunTimeUtility.assert_tk_bridge(root)
         TclRunTimeUtility.assert_button_command_valid(root)
-        # Optional: probes ttk combobox popdown internals via Tcl-level event binding.
+        # Optional: this probes ttk combobox popdown internals.
+        # Keep it opt-in because it validates a specific Tcl/Ttk path,
+        # not the core Python<->Tcl callback bridge.
         if include_ttk_popdown_check:
             TclRunTimeUtility.assert_combobox_command_valid(root)
-        # Optional: confirms after(0, cb) from a worker thread reaches the main thread.
-        # Fails on both Tk 8.6 and 9.0 without the queue+drain fix in the caller.
-        if include_thread_check:
-            TclRunTimeUtility.assert_worker_thread_after_delivery(root)
+        TclRunTimeUtility.start_worker_after_runtime_probe(root, skip_thread_checks=False)
+
+    @staticmethod
+    def start_worker_after_runtime_probe(root, timeout_ms=1200, skip_thread_checks=False):
+        """Probe whether worker thread -> root.after(0, cb) is delivered.
+
+        This is intentionally non-blocking and relies on the real app mainloop,
+        so it can be used at startup without running a nested event loop.
+        """
+        if getattr(root, "_devtools_worker_after_probe_started", False):
+            return
+        setattr(root, "_devtools_worker_after_probe_started", True)
+
+        state = {
+            "delivered": False,
+            "worker_error": None,
+        }
+
+        def _delivered_on_main_thread():
+            state["delivered"] = True
+
+        def _worker_probe():
+            try:
+                # This call is exactly what we want to validate for runtime behavior.
+                root.after(0, _delivered_on_main_thread)
+            except Exception as exc:
+                state["worker_error"] = exc
+
+        def _fail(message):
+            if skip_thread_checks:
+                logging.warning(
+                    f"{message} Continuing because skip_thread_checks=True."
+                )
+                return
+            logging.error(message)
+            raise SystemExit(message)
+
+        def _poll_remaining(remaining_ms):
+            if state["delivered"]:
+                return
+            if state["worker_error"] is not None:
+                _fail(
+                    "Worker thread could not call Tk after(0, callback). "
+                    "Cross-thread Tk callback delivery is broken in this runtime."
+                )
+                return
+            if remaining_ms <= 0:
+                _fail(
+                    "Threading probe failed for runtime version of tcl/tk. Threads will not work properly with this version. Set skip_thread_checks=True to run anyway. "
+                )
+                return
+            root.after(25, lambda: _poll_remaining(remaining_ms - 25))
+
+        threading.Thread(target=_worker_probe, daemon=True).start()
+        root.after(0, lambda: _poll_remaining(timeout_ms))

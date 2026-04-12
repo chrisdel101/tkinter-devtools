@@ -49,7 +49,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
         self.wm_geometry(window_geometry)
-    
+
     @try_except_catcher
     def on_focus_out(self, _):
         if self._store.devtools_window_in_focus:
