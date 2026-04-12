@@ -3,7 +3,7 @@ import logging
 import tkinter as tk
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
-from devtools.constants import DEVTOOLS_MARKER, ActionType, CustomLogLevel, ListBoxEntryInputAction
+from devtools.constants import IS_DEVTOOLS_MARKER, ActionType, CustomLogLevel, ListBoxEntryInputAction
 from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -15,10 +15,11 @@ from devtools.tcl_runtime_utils import TclRunTimeUtility
 
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, root, title=app_config['app_title'], **kwargs):
+        self.devtools_marker = IS_DEVTOOLS_MARKER
         super().__init__(root, name=app_config['top_level_name'])
-        self.devtools_marker = DEVTOOLS_MARKER
         # run to update page render for before tree maps
         root.update_idletasks()
+        
         # run runtime checks of tcl bridge
         TclRunTimeUtility.runtime_checks(root)
         window_geometry = Style.devtools_window["geometry"]
@@ -28,7 +29,10 @@ class DevtoolsWindow(tk.Toplevel):
         LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
         self.title(title)
         self.root = root
+        # apply app styles
+        self.style = Style(root=root)
         self._observable = Observable()
+        # load the store 
         self._store = Store(root=root, observable=self._observable, config=kwargs_config)
         
         self.left_window = LeftWindowFrame(

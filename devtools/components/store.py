@@ -24,8 +24,6 @@ class Store:
         # state state values
         self.block_active_adding: bool = False
         self.existing_combobox_wrappers: list[tk.Widget] | list = []
-        self.style = Style(root=root)
-        self.selected_combobox: tk.Widget | None = None
         self.devtools_window_in_focus: bool = True
         self.tree_refresh_job = None
         self.key_combobox_popdown_open: bool = False
@@ -39,8 +37,7 @@ class Store:
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }
         # store the listbox manager templates
-        self.listbox_templates: dict[ListboxPageTemplateEnum,
-                                   ConfigListboxManager] = {}
+        self.listbox_templates: dict[ListboxPageTemplateEnum, ConfigListboxManager] = {}
         # which template is inserted as shown in the listbox
         self.current_listbox_template: ConfigListboxManager | None = None
         # store the state of the active template in the listbox 

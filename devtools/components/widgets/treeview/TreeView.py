@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 
 from devtools.components.observable import Action
-from devtools.constants import DEVTOOLS_MARKER, ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import IS_DEVTOOLS_MARKER, ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
@@ -41,7 +41,7 @@ class TreeView(ttk.Treeview):
     def _is_devtools_widget(self, widget: tk.Widget) -> bool:
         current = widget
         while current is not None:
-            if getattr(current, "devtools_marker", None) == DEVTOOLS_MARKER:
+            if getattr(current, "devtools_marker", None) == IS_DEVTOOLS_MARKER:
                 return True
             current = getattr(current, "master", None)
         return False
@@ -241,7 +241,7 @@ class TreeView(ttk.Treeview):
             # method gives all child widgets of tk obj
             for child in self.get_display_ordered_children(parent_widget):
                 # skip the devtools window branch
-                if getattr(child, "devtools_marker", None) == DEVTOOLS_MARKER:
+                if getattr(child, "devtools_marker", None) == IS_DEVTOOLS_MARKER:
                     continue
                 # hide unmapped widgets - optional
                 if not self._store.show_unmapped_widgets and not child.winfo_ismapped():

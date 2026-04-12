@@ -392,7 +392,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         listbox_item_pairs_dict: dict = {},
     ):
         self._store.listbox_entry_input_action = ListBoxEntryInputAction.UPDATE
-        self._store.editting_item_index = index
         y_coord = self.bbox(index)[1]
         self.key_box_wrapper = tk.Frame(self, name="key_box_wrapper")
         key_entry = tk.Entry(self.key_box_wrapper, **
@@ -446,8 +445,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             self,
             index: int):
         self._store.listbox_entry_input_action = ListBoxEntryInputAction.CREATE
-        # store current editting index
-        self._store.editting_item_index = index
         # using listbox state stored - already filtered/extracted
         page_insert = self._store.current_listbox_template._listbox_page_insert_enum
         current_item_options_list = list(self._store.current_listbox_template_internal_state.get(

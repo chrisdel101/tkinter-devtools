@@ -2,7 +2,7 @@ from enum import Enum, auto
 import tkinter as tk
 from typing import Any, NotRequired, TypedDict
 
-DEVTOOLS_MARKER = "DEVTOOLS_MARKER" 
+IS_DEVTOOLS_MARKER = "IS_DEVTOOLS_MARKER"  # attach to identify if parent widget is devtools window
 MAX_KEY_WIDTH = 30  # adjust as needed
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
