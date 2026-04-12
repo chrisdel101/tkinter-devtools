@@ -56,6 +56,12 @@ class Store:
         self.hidden_widgets = {}
         self.show_geometry_button = False
         self.row_shift = True
+        self.tree_highlighted_widget: tk.Widget | None = None
+        self.tree_highlight_saved_config: dict | None = None
+        self.tree_highlight_overlay_edges: list[tk.Frame] = []
+        self.tree_highlight_overlay_parent: tk.Misc | None = None
+        self.tree_applying_highlight: bool = False
+        self.tree_store_widget_by_obj_mem_id: dict[int, dict[str, tk.Widget]] = {}
 
     @try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
@@ -229,3 +235,51 @@ class Store:
     def block_active_adding(self, value):
         # logging.debug(f'SETTING block_active_adding TO {value}')
         self._block_active_adding = value
+
+    @property
+    def tree_highlighted_widget(self):
+        return self._tree_highlighted_widget
+
+    @tree_highlighted_widget.setter
+    def tree_highlighted_widget(self, value):
+        self._tree_highlighted_widget = value
+
+    @property
+    def tree_highlight_saved_config(self):
+        return self._tree_highlight_saved_config
+
+    @tree_highlight_saved_config.setter
+    def tree_highlight_saved_config(self, value):
+        self._tree_highlight_saved_config = value
+
+    @property
+    def tree_highlight_overlay_edges(self):
+        return self._tree_highlight_overlay_edges
+
+    @tree_highlight_overlay_edges.setter
+    def tree_highlight_overlay_edges(self, value):
+        self._tree_highlight_overlay_edges = value
+
+    @property
+    def tree_highlight_overlay_parent(self):
+        return self._tree_highlight_overlay_parent
+
+    @tree_highlight_overlay_parent.setter
+    def tree_highlight_overlay_parent(self, value):
+        self._tree_highlight_overlay_parent = value
+
+    @property
+    def tree_applying_highlight(self):
+        return self._tree_applying_highlight
+
+    @tree_applying_highlight.setter
+    def tree_applying_highlight(self, value):
+        self._tree_applying_highlight = value
+
+    @property
+    def tree_store_widget_by_obj_mem_id(self):
+        return self._tree_store_widget_by_obj_mem_id
+
+    @tree_store_widget_by_obj_mem_id.setter
+    def tree_store_widget_by_obj_mem_id(self, value):
+        self._tree_store_widget_by_obj_mem_id = value

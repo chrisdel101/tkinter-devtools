@@ -19,12 +19,6 @@ class TreeView(ttk.Treeview):
         self._observable = observable
         self._store = store
         self._observable.register_observer(self)
-        self._highlighted_widget: tk.Widget | None = None
-        self._highlight_saved_config: dict | None = None
-        self._highlight_overlay_edges: list[tk.Frame] = []
-        self._highlight_overlay_parent: tk.Misc | None = None
-        self._applying_highlight: bool = False
-        self.store_widget_by_obj_mem_id: dict[int, dict[str,tk.Widget]] = {}
         self.column("#0", width=300)
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
         self.build_tree(root)
@@ -62,7 +56,7 @@ class TreeView(ttk.Treeview):
             return
         if self._is_devtools_widget(event_widget):
             return
-        if self._applying_highlight:
+        if self._store.tree_applying_highlight:
             return
         if not self._is_relevant_tree_event_widget(event_widget):
             return
@@ -112,10 +106,12 @@ class TreeView(ttk.Treeview):
     # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
     def add_tree_item_to_obj_mem_id_store(self, memory_id: int, tree_insert_id: str, widget: tk.Widget):
         # """Store the widget by Treeview.insert ID."""
-        self.store_widget_by_obj_mem_id[memory_id] = {
+        current_by_mem_id = self._store.tree_store_widget_by_obj_mem_id or {}
+        current_by_mem_id[memory_id] = {
             "tree_id": tree_insert_id,
              "widget": widget
             }
+        self._store.tree_store_widget_by_obj_mem_id = current_by_mem_id
         # get current id(widget) state
         current_mem_id_widget_state = self._store.tree_state_get(
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
@@ -262,15 +258,15 @@ class TreeView(ttk.Treeview):
             raise e
 
     def _apply_highlight(self, widget: tk.Widget):
-        self._applying_highlight = True
+        self._store.tree_applying_highlight = True
         self._remove_highlight()
         try:
             if self._show_highlight_overlay(widget):
-                self._highlight_saved_config = {'strategy': 'overlay'}
-                self._highlighted_widget = widget
+                self._store.tree_highlight_saved_config = {'strategy': 'overlay'}
+                self._store.tree_highlighted_widget = widget
             else:
                 # Fallback to direct widget config only if overlay cannot be placed.
-                self._highlight_saved_config = {
+                self._store.tree_highlight_saved_config = {
                     'strategy': 'config',
                     'config': {
                         'highlightbackground': widget.cget('highlightbackground'),
@@ -278,25 +274,25 @@ class TreeView(ttk.Treeview):
                     },
                 }
                 widget.configure(highlightbackground='#FF4500', highlightthickness=2)
-                self._highlighted_widget = widget
+                self._store.tree_highlighted_widget = widget
         except tk.TclError:
-            self._highlight_saved_config = None
+            self._store.tree_highlight_saved_config = None
         # Clear flag after_idle so queued Tk events from configure fire while flag is still True
         self.after_idle(self._clear_applying_highlight)
 
     def _remove_highlight(self):
-        if self._highlighted_widget and self._highlight_saved_config:
+        if self._store.tree_highlighted_widget and self._store.tree_highlight_saved_config:
             try:
-                strategy = self._highlight_saved_config.get('strategy')
+                strategy = self._store.tree_highlight_saved_config.get('strategy')
                 if strategy == 'overlay':
                     self._hide_highlight_overlay()
                 elif strategy == 'config':
-                    self._highlighted_widget.configure(**self._highlight_saved_config.get('config', {}))
+                    self._store.tree_highlighted_widget.configure(**self._store.tree_highlight_saved_config.get('config', {}))
             except tk.TclError:
                 pass
         self._hide_highlight_overlay()
-        self._highlighted_widget = None
-        self._highlight_saved_config = None
+        self._store.tree_highlighted_widget = None
+        self._store.tree_highlight_saved_config = None
 
     def _show_highlight_overlay(self, widget: tk.Widget) -> bool:
         if not widget.winfo_exists():
@@ -315,19 +311,19 @@ class TreeView(ttk.Treeview):
             return False
 
         if (
-            len(self._highlight_overlay_edges) != 4
-            or any(not edge.winfo_exists() for edge in self._highlight_overlay_edges)
-            or self._highlight_overlay_parent is not parent
+            len(self._store.tree_highlight_overlay_edges) != 4
+            or any(not edge.winfo_exists() for edge in self._store.tree_highlight_overlay_edges)
+            or self._store.tree_highlight_overlay_parent is not parent
         ):
             self._hide_highlight_overlay()
-            self._highlight_overlay_parent = parent
-            self._highlight_overlay_edges = [
+            self._store.tree_highlight_overlay_parent = parent
+            self._store.tree_highlight_overlay_edges = [
                 tk.Frame(parent, bg='#FF4500', bd=0, highlightthickness=0)
                 for _ in range(4)
             ]
 
         border_size = 2
-        top_edge, right_edge, bottom_edge, left_edge = self._highlight_overlay_edges
+        top_edge, right_edge, bottom_edge, left_edge = self._store.tree_highlight_overlay_edges
 
         top_edge.place(
             x=x,
@@ -355,17 +351,17 @@ class TreeView(ttk.Treeview):
         )
 
         # Keep border visible while not covering the widget interior.
-        for edge in self._highlight_overlay_edges:
+        for edge in self._store.tree_highlight_overlay_edges:
             edge.lift(widget)
         return True
 
     def _hide_highlight_overlay(self):
-        for edge in self._highlight_overlay_edges:
+        for edge in self._store.tree_highlight_overlay_edges:
             if edge.winfo_exists():
                 edge.place_forget()
 
     def _clear_applying_highlight(self):
-        self._applying_highlight = False
+        self._store.tree_applying_highlight = False
 
     def handle_tree_select(self, _,):
         try:
