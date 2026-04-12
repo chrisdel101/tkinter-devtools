@@ -6,13 +6,13 @@ from typing import Any
 
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxTemplateNotifyStateKey, Store
+from devtools.components.widgets.config_listbox.ConfigListboxOpsMixin import ConfigListboxOpsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import CONFIG_OPTION_SETTINGS, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.utils import Utils
-from devtools.components.widgets.config_listbox.ConfigListboxUtils import ConfigListboxUtils
 from devtools.style import Style
 
 """
@@ -24,7 +24,7 @@ https://stackoverflow.com/a/64611569/5972531
 """
 
 
-class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
+class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
 
     def __init__(self,
                  master,
@@ -57,21 +57,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             CONFIG_OPTION_SETTINGS
         )
 
-    @staticmethod
-    def _to_bool(value) -> bool:
-        if isinstance(value, bool):
-            return value
-        return str(value).strip().lower() in ("1", "true", "yes", "on")
-
-    # use event x and y w tk index - get listbox item index
-    def _get_index_from_event_coords(self, event):
-        selected_index: int = self.index(f"@{event.x},{event.y}")
-        return selected_index
-
     def start_update(self, event):
         option_setting_map = None
+        index = self.index
         # index of clicked item on list
-        updating_item_index: int = self._get_index_from_event_coords(event)
+        updating_item_index: int = self._get_index_from_event_coords(index=self.index, event=event)
         # extract starting values from list item
         full_txt_str = self.get(updating_item_index)
 
@@ -83,12 +73,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             return "break"
         # ListboxPageTemplateEnum - {'values': None, 'type': <class 'int'>}
         if self._listbox_page_insert_enum == ListboxPageTemplateEnum.OPTIONS:
-            # UPDATE CONFIG ATTTRIBUTES
-            option_setting_map = self.map_config_option_to_setting(
+            # UPDATE OPTIONS ATTTRIBUTES when clicked
+            option_setting_map = self.map_option_key_to_config_setting_value(
                 listbox_item_pairs_dict.get('key'))
         else:
-            # UPDATE GEOMETRY OPTIONS
-            # match clicked row to widget
+            # UPDATE GEOMETRY OPTIONS when click
+            # - match clicked row to widget
             current_widget = self._store.tree_state_get(
                 TreeStateKey.SELECTED_ITEM_WIDGET)
             geometry_info: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(
@@ -97,9 +87,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             item_key = listbox_item_pairs_dict.get('key')
             # check if key maps to alias i.e geometry type -> geometry_type
             resolved_item_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(item_key)
+            # handle geo type abd visibiility 
             if resolved_item_key in (CommonGeometryOption.GEOMETRY_TYPE, CommonGeometryOption.VISIBILITY):
-                option_setting_map = self.map_unmapped_geometry_option_to_setting(
-                    resolved_item_key)
+                option_setting_map = self.map_geometry_key_to_config_setting_value(resolved_item_key)
                 if resolved_item_key == CommonGeometryOption.GEOMETRY_TYPE:
                     sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(current_widget)
                     if sibling_geo_type and option_setting_map:
@@ -118,7 +108,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 option_setting_map = self.map_place_geometry_option_to_setting(
                     resolved_item_key)
             elif geometry_info_type == GeometryType.UNMAPPED:
-                option_setting_map = self.map_unmapped_geometry_option_to_setting(
+                option_setting_map = self.map_geometry_key_to_config_setting_value(
                     resolved_item_key)
         if option_setting_map is None:
             logging.debug(
@@ -155,8 +145,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             }))
         else:
             # GEOMETRY UPDATE HANDLING
-            selected_widget = self._store.tree_state.get(
-                TreeStateKey.SELECTED_ITEM_WIDGET.value)
+            selected_widget = self._store.tree_state.get(TreeStateKey.SELECTED_ITEM_WIDGET.value)
             resolved_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
             # current geometry listbox state snapshot (used for UI refresh)
             current_geometry_state = Utils.resolve_geometry_aliases(self._store.listbox_manager_state_get_value(
@@ -285,7 +274,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
     def handle_build_value_combobox_box_from_key_combo_box(
             self,
             index: int,
-            build_combo_box: ttk.Combobox,
             value_inside: tk.StringVar,
             item_option_vals_list: list[str]):
         value_combo_box = self.build_value_combo_box(
@@ -297,10 +285,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         self.value_box_wrapper.place(
             relx=0.5, y=self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.value_box_wrapper)
-        # self.allow_input_focus_out_logic = True
+        # set focus to value box
         value_combo_box.focus_set()
-        # self.allow_input_focus_out_logic = False
-
         self._set_selected_by_index(index)
 
     @block_allow_input_focus_out_logic
@@ -395,8 +381,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                         *self._store.existing_combobox_wrappers),
                     logging.trace("--focusout callee entry update--"),
                     setattr(self._store, 'block_active_adding', False)))
+    
     # run funcs for entering row update - called from double click on row
-
     @block_allow_input_focus_out_logic
     @try_except_catcher
     def handle_entry_input_update(
@@ -419,7 +405,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
         key_entry.pack(fill='x')
         self.key_box_wrapper.place(relx=0, y=y_coord, relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
-        # check mapping for int type - spinbox
+        # check mapping for int type - add a spinbox
         if config_setting_map and config_setting_map.get("type") == int or config_setting_map.get("type") == float:
             self.spin_box_wrapper = tk.Frame(self)
             spinbox = self.build_value_spin_box(
@@ -432,7 +418,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             self._store.add_existing_store_wrapper(self.spin_box_wrapper)
             # self.allow_input_focus_out_logic = True
             spinbox.focus_set()
-        # check mapping for option config value options - combobox
+        # check mapping for option config value options - add combobox
         elif (item_option_vals_list := config_setting_map and config_setting_map.get('values')):
             value_combo_box = self.build_value_combo_box(
                 key_entry_value=listbox_item_pairs_dict.get('key'),
@@ -445,7 +431,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
             # self.allow_input_focus_out_logic = True
             value_combo_box.focus_set()
         else:
-            # no mapping - entry
+            # no mapping - add plainentry box
             self.handle_build_value_entry_from_key_entry(
                 index=index,
                 key_entry_widget=key_entry,
@@ -453,8 +439,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxUtils):
                 y_coord=y_coord,
                 current_option_val=listbox_item_pairs_dict.get('value'),
             )
-    # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
 
+    # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
     @try_except_catcher
     def handle_entry_input_create(
             self,

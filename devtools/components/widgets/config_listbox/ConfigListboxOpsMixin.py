@@ -3,13 +3,14 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
+from devtools.components.widgets.config_listbox.ConfigListboxUtilsMixin import ConfigListboxUtilsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, PackGeometryOptionName, TreeStateKey
 from devtools.decorators import try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.style import Style
 from devtools.utils import Utils
 
-class ConfigListboxUtils:
+class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
     @try_except_catcher
     def _map_key_to_setting_for_current_template(self, option_name: str) -> ConfigOptionMapSetting:
         if not option_name:
@@ -20,11 +21,11 @@ class ConfigListboxUtils:
         current_page = current_template._listbox_page_insert_enum if current_template else None
 
         if current_page == ListboxPageTemplateEnum.OPTIONS:
-            return self.map_config_option_to_setting(resolved_option_name) or {}
+            return self.map_option_key_to_config_setting_value(resolved_option_name) or {}
 
         # common geometry keys are valid regardless of current geometry manager state
         if resolved_option_name in (CommonGeometryOption.GEOMETRY_TYPE, CommonGeometryOption.VISIBILITY):
-            return self.map_unmapped_geometry_option_to_setting(resolved_option_name) or {}
+            return self.map_geometry_key_to_config_setting_value(resolved_option_name) or {}
 
         selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
         geometry_info = Utils.build_widget_geometry_manager_info(selected_widget) if selected_widget else None
@@ -38,7 +39,7 @@ class ConfigListboxUtils:
             case GeometryType.PLACE:
                 return self.map_place_geometry_option_to_setting(resolved_option_name) or {}
             case GeometryType.UNMAPPED:
-                return self.map_unmapped_geometry_option_to_setting(resolved_option_name) or {}
+                return self.map_geometry_key_to_config_setting_value(resolved_option_name) or {}
             case _:
                 return {}
 
@@ -58,22 +59,6 @@ class ConfigListboxUtils:
         if not selected_widget:
             return None
         return Utils.conform_option_lisbox_config(selected_widget.config()).get(key_entry_value)
-
-    @staticmethod
-    def _visibility_display_bool(value) -> str:
-        if isinstance(value, bool):
-            return "true" if value else "false"
-        if isinstance(value, (int, float)):
-            return "true" if int(value) != 0 else "false"
-        value_str = str(value).strip().lower()
-        return "true" if value_str in ("1", "true", "yes", "on") else "false"
-
-    @staticmethod
-     # Convert a value to its canonical boolean string representation in the UI
-    def _normalize_bool_dropdown_values(key_entry_value: str, option_values: list) -> list:
-        if key_entry_value in (CommonGeometryOption.VISIBILITY, "expand"):
-            return ["true", "false"]
-        return option_values
 
     @try_except_catcher
     def build_value_spin_box(self, 
@@ -195,7 +180,6 @@ class ConfigListboxUtils:
                 lambda _: ( 
                     self.handle_build_value_combobox_box_from_key_combo_box( 
                         index=index,
-                        build_combo_box=key_combo_box,
                     value_inside=value_inside,
                     item_option_vals_list=config_setting_map.get('values')
                 ) 
@@ -348,7 +332,7 @@ class ConfigListboxUtils:
     @staticmethod
     # handle unmapped type geometry widget 
     @try_except_catcher
-    def map_unmapped_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
+    def map_geometry_key_to_config_setting_value(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
         options_map_setting: ConfigOptionMapSetting | None = {
@@ -362,9 +346,9 @@ class ConfigListboxUtils:
             },
         }.get(option_name)
         if options_map_setting is None:
-            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+            logging.debug(f"map_geometry_key_to_config_setting_value: No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:
-            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+            logging.debug(f"map_geometry_key_to_config_setting_value: No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
     
     @staticmethod
@@ -383,13 +367,13 @@ class ConfigListboxUtils:
     # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
     @staticmethod
     @try_except_catcher
-    def map_config_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
+    def map_option_key_to_config_setting_value(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
         # check for options in map
         options_map_setting: ConfigOptionMapSetting|None = CONFIG_OPTION_SETTINGS.get(option_name)
         if options_map_setting is None:
-            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+            logging.debug(f"map_option_key_to_config_setting_value: No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:
             logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
