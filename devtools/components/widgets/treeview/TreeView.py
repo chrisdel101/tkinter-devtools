@@ -13,25 +13,28 @@ from devtools.utils import Utils
 
 class TreeView(ttk.Treeview):
 
+    # Initialize the TreeView widget, build the tree, and set the initial selection.
     def __init__(self, root, parent, observable, store):
         super().__init__(parent, show="tree", style="My.Treeview")
         self.root = root
         self._observable = observable
         self._store = store
         self._observable.register_observer(self)
+        # "#0" is special built-in first column - width of 300
         self.column("#0", width=300)
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
         self.build_tree(root)
         self._bind_tree_change_events()
-
+        # select the first tree item - trigger the listbox build
         self.selection_set(self.get_children()[0])
-        # self.event_generate("<<TreeviewSelect>>")
 
+    # Bind Map, Unmap, and Destroy on root to watch for widget tree changes.
     def _bind_tree_change_events(self):
-        self.root.bind_all("<Map>", self._on_widget_tree_event, add=True)
-        self.root.bind_all("<Unmap>", self._on_widget_tree_event, add=True)
-        self.root.bind_all("<Destroy>", self._on_widget_tree_event, add=True)
+        self.root.bind_all("<Map>", self.handle_tcl_event_emit, add=True)
+        self.root.bind_all("<Unmap>", self.handle_tcl_event_emit, add=True)
+        self.root.bind_all("<Destroy>", self.handle_tcl_event_emit, add=True)
 
+    # Return True if the widget or any ancestor belongs to the devtools window.
     def _is_devtools_widget(self, widget: tk.Widget) -> bool:
         current = widget
         while current is not None:
@@ -50,7 +53,8 @@ class TreeView(ttk.Treeview):
             current = getattr(current, "master", None)
         return False
 
-    def _on_widget_tree_event(self, event):
+    # Filter widget tree events and schedule a refresh if the source is relevant - comes from tcl when these events are emitted
+    def handle_tcl_event_emit(self, event):
         event_widget = getattr(event, "widget", None)
         if event_widget is None or not isinstance(event_widget, tk.BaseWidget):
             return
@@ -62,11 +66,13 @@ class TreeView(ttk.Treeview):
             return
         self.schedule_tree_refresh()
 
+    # Schedule a single deferred tree rebuild, ignoring duplicate pending requests.
     def schedule_tree_refresh(self):
         if self._store.tree_refresh_job is not None:
             return
         self._store.tree_refresh_job = self.after_idle(self.rebuild_tree_from_root)
 
+    # Rebuild the full widget tree from root, restoring expanded nodes and selection - allows page changes 
     def rebuild_tree_from_root(self):
         self._store.tree_refresh_job = None
         mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
@@ -127,13 +133,15 @@ class TreeView(ttk.Treeview):
         self._store.tree_state_set(
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
 
+    # Return the widget stored under the given Treeview insert ID.
     def get_widget_by_tree_insert_id(self, item_id: str):
         return self._store.tree_state_get(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT).get(item_id)
 
+    # Return the widget stored under the given Python object memory ID.
     def get_widget_by_obj_mem_id(self, item_id: int):
         return self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(item_id).get("widget")
 
-
+    # Return a sort key ordering a child widget by visual position with geometry fallbacks.
     def tree_order_key(
         self,
         child: tk.Widget,
@@ -176,6 +184,7 @@ class TreeView(ttk.Treeview):
         # Final fallback: keep original sibling declaration order
         return (2, original_index)
 
+    # Return children of parent_widget sorted by their visible display order.
     def get_display_ordered_children(self, parent_widget: tk.Widget) -> list[tk.Widget]:
         # Raw sibling order from Tk (creation/declaration order under this parent)
         children = list(parent_widget.winfo_children())
@@ -257,6 +266,7 @@ class TreeView(ttk.Treeview):
             logging.error(f"Error build_tree: {e}")
             raise e
 
+    # Highlight the selected widget using an overlay frame or a direct config fallback.
     def _apply_highlight(self, widget: tk.Widget):
         self._store.tree_applying_highlight = True
         self._remove_highlight()
@@ -280,6 +290,7 @@ class TreeView(ttk.Treeview):
         # Clear flag after_idle so queued Tk events from configure fire while flag is still True
         self.after_idle(self._clear_applying_highlight)
 
+    # Remove the highlight from the previously highlighted widget.
     def _remove_highlight(self):
         if self._store.tree_highlighted_widget and self._store.tree_highlight_saved_config:
             try:
@@ -294,6 +305,7 @@ class TreeView(ttk.Treeview):
         self._store.tree_highlighted_widget = None
         self._store.tree_highlight_saved_config = None
 
+    # Place four thin Frame edges around the widget to draw a highlight border overlay.
     def _show_highlight_overlay(self, widget: tk.Widget) -> bool:
         if not widget.winfo_exists():
             return False
@@ -355,27 +367,31 @@ class TreeView(ttk.Treeview):
             edge.lift(widget)
         return True
 
+    # Hide all overlay edge frames by removing them from the layout.
     def _hide_highlight_overlay(self):
         for edge in self._store.tree_highlight_overlay_edges:
             if edge.winfo_exists():
                 edge.place_forget()
 
+    # Clear the applying-highlight guard flag after queued Tk events have been processed.
     def _clear_applying_highlight(self):
         self._store.tree_applying_highlight = False
 
+    # Handle a Treeview selection event and update the highlight and listbox state.
     def handle_tree_select(self, _,):
         try:
-            # get selected tree item viatree api
+            # get selected tree item via tree api
             selected_tree_id = self.selection()
-            if selected_tree_id and selected_tree_id != self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
-                # .selection give tree insert item ID
+            if selected_tree_id:
+                # .selection gives tree insert item ID
                 item_id = selected_tree_id[0]
+                incoming_widget = self.get_widget_by_tree_insert_id(item_id)
+                # skip if same widget is already selected
+                if incoming_widget is self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
+                    return
                 # set tree state selected item
-                self._store.tree_state_set(
-                    TreeStateKey.SELECTED_ITEM_WIDGET, self.get_widget_by_tree_insert_id(item_id))
-               
+                self._store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, incoming_widget)
 
-                # TODO check if current select is already selected
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     self._apply_highlight(selected_item_widget)
                     try:
@@ -400,6 +416,7 @@ class TreeView(ttk.Treeview):
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
     @try_except_catcher
+    # Populate the options listbox page with the selected widget's configure values.
     def stuff_listbox_options_state_into_page_template(self, selected_item_widget):
         # delete prev content in listbox
         self._observable.notify_observers(
@@ -422,6 +439,7 @@ class TreeView(ttk.Treeview):
             state_to_set=key_value_config_sorted_dict,  page_insert_override=ListboxPageTemplateEnum.OPTIONS)
 
     @try_except_catcher
+    # Populate the geometry listbox page with the selected widget's geometry values.
     def stuff_listbox_geometry_state_into_page_template(self, selected_item_widget):
 
         current_widget_geo_manager: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(selected_item_widget)
@@ -500,5 +518,6 @@ class TreeView(ttk.Treeview):
             parent_item_id, index, text=widget.winfo_class())
         return tree_insert_id
 
+    # Dispatch incoming observable actions to the matching handler on this widget.
     def notify(self, action: Action):
         Utils.dispatch_action(self, action)
