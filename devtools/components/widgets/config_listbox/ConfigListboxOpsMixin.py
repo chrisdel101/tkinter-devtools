@@ -379,8 +379,8 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         return options_map_setting or {}
     
     @staticmethod
+    # remove all added added widgets
     def cancel_update_listbox(*args):
-        # args[2].destroy()
         for arg in filter(None, args):
             arg.destroy()
     

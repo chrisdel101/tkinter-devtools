@@ -5,7 +5,7 @@ from devtools.components.widgets.treeview.TreeView import TreeView
 
 class LeftWindowFrame(tk.Frame):
     def __init__(self, 
-            root, 
+            master, 
             parent, 
             observable, 
             store):
@@ -13,7 +13,7 @@ class LeftWindowFrame(tk.Frame):
         self._observable = observable
         self._store = store
         self.tree = TreeView(
-            root=root, 
+            master=master, 
             parent=self, 
             observable=self._observable,
             store=self._store)

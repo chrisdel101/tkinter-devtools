@@ -56,6 +56,7 @@ app.pack(side=tk.TOP, fill="both", expand=True)
 #     "My.Treeview",    
 #     **Style.treeview
 # )
-DevtoolsWindow(app, title="Devtools", show_unmapped_widgets=True)
+DevtoolsWindow(app, devtools_title="TK Devtools", show_unmapped_widgets=True,
+skip_runtime_checks=False)
 # root.after(100, lambda: DevtoolsWindow(root, title="Devtools"))
 root.mainloop()

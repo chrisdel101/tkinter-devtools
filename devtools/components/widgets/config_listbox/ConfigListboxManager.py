@@ -326,7 +326,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             self.spin_box_wrapper.place(
                 relx=0.5, y=y_coord, relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.spin_box_wrapper)
-            # self.allow_input_focus_out_logic = True
             spinbox.focus_set()
         else:
             # no mapping or values - empty entry widget for value entry
@@ -415,7 +414,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             self.spin_box_wrapper.place(
                 relx=0.45, y=y_coord, relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.spin_box_wrapper)
-            # self.allow_input_focus_out_logic = True
             spinbox.focus_set()
         # check mapping for option config value options - add combobox
         elif (item_option_vals_list := config_setting_map and config_setting_map.get('values')):
@@ -427,7 +425,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             self.value_box_wrapper.place(
                 relx=0.45, y=y_coord + self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.value_box_wrapper)
-            # self.allow_input_focus_out_logic = True
             value_combo_box.focus_set()
         else:
             # no mapping - add plainentry box

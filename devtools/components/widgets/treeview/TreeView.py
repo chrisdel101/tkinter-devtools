@@ -14,25 +14,25 @@ from devtools.utils import Utils
 class TreeView(ttk.Treeview):
 
     # Initialize the TreeView widget, build the tree, and set the initial selection.
-    def __init__(self, root, parent, observable, store):
+    def __init__(self, master, parent, observable, store):
         super().__init__(parent, show="tree", style="My.Treeview")
-        self.root = root
+        self.master = master
         self._observable = observable
         self._store = store
         self._observable.register_observer(self)
         # "#0" is special built-in first column - width of 300
         self.column("#0", width=300)
         self.bind("<<TreeviewSelect>>", self.handle_tree_select)
-        self.build_tree(root)
+        self.build_tree(master)
         self._bind_tree_change_events()
         # select the first tree item - trigger the listbox build
         self.selection_set(self.get_children()[0])
 
-    # Bind Map, Unmap, and Destroy on root to watch for widget tree changes.
+    # Bind Map, Unmap, and Destroy on master to watch for widget tree changes.
     def _bind_tree_change_events(self):
-        self.root.bind_all("<Map>", self.handle_tcl_event_emit, add=True)
-        self.root.bind_all("<Unmap>", self.handle_tcl_event_emit, add=True)
-        self.root.bind_all("<Destroy>", self.handle_tcl_event_emit, add=True)
+        self.master.bind_all("<Map>", self.handle_tcl_event_emit, add=True)
+        self.master.bind_all("<Unmap>", self.handle_tcl_event_emit, add=True)
+        self.master.bind_all("<Destroy>", self.handle_tcl_event_emit, add=True)
 
     # Return True if the widget or any ancestor belongs to the devtools window.
     def _is_devtools_widget(self, widget: tk.Widget) -> bool:
@@ -70,10 +70,10 @@ class TreeView(ttk.Treeview):
     def schedule_tree_refresh(self):
         if self._store.tree_refresh_job is not None:
             return
-        self._store.tree_refresh_job = self.after_idle(self.rebuild_tree_from_root)
+        self._store.tree_refresh_job = self.after_idle(self.rebuild_tree_from_master_root)
 
     # Rebuild the full widget tree from root, restoring expanded nodes and selection - allows page changes 
-    def rebuild_tree_from_root(self):
+    def rebuild_tree_from_master_root(self):
         self._store.tree_refresh_job = None
         mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
         expanded_mem_ids = {
@@ -84,7 +84,7 @@ class TreeView(ttk.Treeview):
         self.delete_tree()
         self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
         self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-        self.build_tree(self.root)
+        self.build_tree(self.master)
 
         mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
         for mem_id in expanded_mem_ids:
@@ -224,6 +224,7 @@ class TreeView(ttk.Treeview):
 
     # on first call insert widget and get insert id - recurse
     # on next calls used vals passed in
+    @try_except_catcher
     def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
         try:
             # if no parent node it's first call - no id to use yet

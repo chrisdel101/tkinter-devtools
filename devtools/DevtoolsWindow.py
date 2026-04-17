@@ -1,42 +1,51 @@
 from __future__ import annotations
 import logging
 import tkinter as tk
+from typing import TypedDict, Unpack
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
-from devtools.constants import IS_DEVTOOLS_MARKER, ActionType, CustomLogLevel, ListBoxEntryInputAction
+from devtools.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_MARKER, ActionType, CustomLogLevel, ListBoxEntryInputAction
 from devtools.decorators import try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
-from devtools.config import kwargs_config, app_config
 from devtools.logging_utils import LoggingUtils
 from devtools.style import Style
 from devtools.tcl_runtime_utils import TclRunTimeUtility
 
 
+class DevtoolsWindowKwargs(TypedDict, total=False):
+    show_unmapped_widgets: bool
+    devtools_title: str
+    skip_runtime_checks: bool
+
 class DevtoolsWindow(tk.Toplevel):
-    def __init__(self, root, title=app_config['app_title'], **kwargs):
+    def __init__(self, 
+            master: tk.Misc, # root or app 
+            **kwargs: Unpack[DevtoolsWindowKwargs]
+        ):
+        super().__init__(master, name=DEVTOOLS_TOP_LEVEL_NAME)
+
         self.devtools_marker = IS_DEVTOOLS_MARKER
-        super().__init__(root, name=app_config['top_level_name'])
         # run to update page render for before tree maps
-        root.update_idletasks()
+        master.update_idletasks()
         
         # run runtime checks of tcl bridge
-        TclRunTimeUtility.runtime_checks(root)
+        TclRunTimeUtility.runtime_checks(master)
         window_geometry = Style.devtools_window["geometry"]
-        # overwrite any default config with kwargs
-        kwargs_config.update(**kwargs)
         # set logging level
         LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
-        self.title(title)
-        self.root = root
+        self.title(kwargs.get("devtools_title"))
+        self.master = master
         # apply app styles
-        self.style = Style(root=root)
+        self.style = Style(master=master)
         self._observable = Observable()
         # load the store 
-        self._store = Store(root=root, observable=self._observable, config=kwargs_config)
+        self._store = Store(
+            observable=self._observable,
+            **kwargs)
         
         self.left_window = LeftWindowFrame(
-            root=root, 
+            master=master, 
             parent=self,
             observable=self._observable,
             store=self._store)
@@ -61,8 +70,6 @@ class DevtoolsWindow(tk.Toplevel):
             if len(self._store.existing_combobox_wrappers) > 0:
                 self._observable.notify_observers(Action(type=ActionType.CANCEL_UPDATE_LISTBOX,
                     data=self._store.existing_combobox_wrappers))
-                # remove all comboxes from the page
-                # self.config_listbox_mngr.cancel_update_listbox(*self._store.existing_combobox_wrappers)
                 # remove all comboxes from state
                 self._store.remove_existing_store_wrappers()
                 if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE:

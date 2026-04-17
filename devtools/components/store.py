@@ -8,7 +8,6 @@ from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManag
 from typing import TYPE_CHECKING
 
 from devtools.decorators import try_except_catcher
-from devtools.style import Style
 
 if TYPE_CHECKING:
     # ONLY for type checkers
@@ -17,30 +16,24 @@ if TYPE_CHECKING:
 
 class Store:
     @try_except_catcher
-    def __init__(self, root, observable, config):
+    def __init__(self, observable, **kwargs):
         self._observable = observable
-        # map all config values to store
-        [setattr(self, k, v) for k, v in config.items()]
-        # state state values
-        self.block_active_adding: bool = False
-        self.existing_combobox_wrappers: list[tk.Widget] | list = []
-        self.devtools_window_in_focus: bool = True
-        self.tree_refresh_job = None
-        self.key_combobox_popdown_open: bool = False
-        self.value_combobox_popdown_open: bool = False
-        self.listbox_entry_input_action:   ListBoxEntryInputAction | None = None
-        self.editting_item_index: int | None = None
-        self.allow_input_focus_out_logic: bool = True
+        self.block_active_adding: bool = False # block add button during adding prevent multiple
+        self.existing_combobox_wrappers: list[tk.Widget] | list = [] # store wrappers around all comboboxes to allow remove all
+        self.devtools_window_in_focus: bool = True # tracking to trigger destroy state on devtools window focus out 
+        self.tree_refresh_job = None # blocks tree rebuild while one is active
+        self.key_combobox_popdown_open: bool = False # track when open to apply focus out destroy logic
+        self.value_combobox_popdown_open: bool = False # track when open to apply focus out destroy logic
+        self.show_unmapped_widgets = kwargs.get("show_unmapped_widgets", True) # toggle to omit unmappeed default shows anything in the code
+        self.listbox_entry_input_action:   ListBoxEntryInputAction | None = None # sets type of input as create or update
+        self.allow_input_focus_out_logic: bool = True # guard to allow subract/cancel focus out
         self.tree_state: TreeState = {
             TreeStateKey.SELECTED_ITEM_WIDGET.value: None,
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT.value: {},
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }
-        # store the listbox manager templates
-        self.listbox_templates: dict[ListboxPageTemplateEnum, ConfigListboxManager] = {}
-        # which template is inserted as shown in the listbox
-        self.current_listbox_template: ConfigListboxManager | None = None
-        # store the state of the active template in the listbox 
+        self.listbox_templates: dict[ListboxPageTemplateEnum, ConfigListboxManager] = {} # store the listbox manager option or geometry
+        self.current_listbox_template: ConfigListboxManager | None = None  # currrent template inserted as shown in the listbox
         self.current_listbox_template_internal_state: ListboxManagerState = {
             ListboxPageTemplateEnum.OPTIONS: {
                 ListboxTemplateNotifyStateKey.SELECTED_INDEX.value: None,
@@ -52,16 +45,16 @@ class Store:
                 ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value: None,
                 ListboxTemplateNotifyStateKey.LISTBOX_PAGE_TEMPLATE.value: ListboxPageTemplateEnum.GEOMETRY
             }
-        }
-        self.hidden_widgets = {}
-        self.show_geometry_button = False
-        self.row_shift = True
-        self.tree_highlighted_widget: tk.Widget | None = None
-        self.tree_highlight_saved_config: dict | None = None
-        self.tree_highlight_overlay_edges: list[tk.Frame] = []
-        self.tree_highlight_overlay_parent: tk.Misc | None = None
-        self.tree_applying_highlight: bool = False
-        self.tree_store_widget_by_obj_mem_id: dict[int, dict[str, tk.Widget]] = {}
+        } # store the state of the active template in the listbox 
+        self.hidden_widgets = {} # store hidden state in case restored
+        self.show_geometry_button = False # hides geometry button when widget has none
+        self.row_shift = True # guard to toggle when row shift is applied
+        self.tree_highlighted_widget: tk.Widget | None = None # track highlighted to remove highlight on next highlight or deselect
+        self.tree_highlight_saved_config: dict | None = None # store original config to restore after highlight
+        self.tree_highlight_overlay_edges: list[tk.Frame] = [] # overlay on top of widget to show highlight - stored to remove after
+        self.tree_highlight_overlay_parent: tk.Misc | None = None # parent of overlay to lift after highlight
+        self.tree_applying_highlight: bool = False # guard to block multiple highlight at once
+        self.tree_store_widget_by_obj_mem_id: dict[int, dict[str, tk.Widget]] = {} # widget by mem id to find widgets
 
     @try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
@@ -189,13 +182,6 @@ class Store:
     @listbox_templates.setter
     def listbox_templates(self, value):
         self._listbox_templates = value
-    @property
-    def editting_item_index(self):
-        return self._editting_item_index
-
-    @editting_item_index.setter
-    def editting_item_index(self, value):
-        self._editting_item_index = value
 
     @property
     def listbox_entry_input_action(self):

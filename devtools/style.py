@@ -3,8 +3,8 @@ from tkinter import ttk
 
 
 class Style:
-    def __init__(self, root=None):
-        tree_style = ttk.Style(root)
+    def __init__(self, master=None):
+        tree_style = ttk.Style(master)
         tree_style.configure(
             "My.Treeview",
             **self.treeview

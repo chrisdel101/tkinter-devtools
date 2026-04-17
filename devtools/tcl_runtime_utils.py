@@ -97,11 +97,11 @@ class TclRunTimeUtility:
         # not the core Python<->Tcl callback bridge.
         if include_ttk_popdown_check:
             TclRunTimeUtility.assert_combobox_command_valid(root)
-        TclRunTimeUtility.start_worker_after_runtime_probe(root, skip_thread_checks=False)
+        TclRunTimeUtility.start_worker_after_runtime_probe(root)
 
     @staticmethod
     # Probe cross-thread delivery by having a worker schedule a main-thread callback.
-    def start_worker_after_runtime_probe(root, timeout_ms=1200, skip_thread_checks=False):
+    def start_worker_after_runtime_probe(root, timeout_ms=1200):
         """Probe whether worker thread -> root.after(0, cb) is delivered.
 
         This is intentionally non-blocking and relies on the real app mainloop,
@@ -145,11 +145,6 @@ class TclRunTimeUtility:
         def _fail(message):
             state["done"] = True
             _cancel_pending_after()
-            if skip_thread_checks:
-                logging.warning(
-                    f"{message} Continuing because skip_thread_checks=True."
-                )
-                return
             raise SystemExit(message)
 
         # Schedule callbacks defensively so probe shutdown does not leave stale Tcl jobs.
@@ -201,7 +196,7 @@ class TclRunTimeUtility:
                 return
             if remaining_ms <= 0:
                 _fail(
-                    "Threading probe failed for runtime version of tcl/tk. Threads will not work properly with this version. Set skip_thread_checks=True to run anyway. "
+                    "Threading probe failed for runtime version of tcl/tk. Threads will not work properly with this version. "
                 )
                 return
             _schedule_after(25, _poll_remaining, remaining_ms - 25)

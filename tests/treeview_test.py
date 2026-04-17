@@ -89,7 +89,7 @@ class TreeViewTests(unittest.TestCase):
         self.assertEqual(tree._store.tree_refresh_job, "job-id")
         tree.after_idle.assert_called_once()
 
-    def test_on_widget_tree_event_schedules_refresh_for_relevant_widget(self):
+    def test_handle_tcl_event_emit_schedules_refresh_for_relevant_widget(self):
         root = tk.Tk()
         root.withdraw()
         try:
@@ -99,18 +99,18 @@ class TreeViewTests(unittest.TestCase):
             tree._is_devtools_widget = Mock(return_value=False)
             tree._is_relevant_tree_event_widget = Mock(return_value=True)
             tree.schedule_tree_refresh = Mock()
-
-            tree._on_widget_tree_event(SimpleNamespace(widget=frame))
+    
+            tree.handle_tcl_event_emit(SimpleNamespace(widget=frame))
 
             tree.schedule_tree_refresh.assert_called_once()
         finally:
             root.destroy()
 
-    def test_on_widget_tree_event_ignores_non_tk_widget(self):
+    def test_handle_tcl_event_emit_ignores_non_tk_widget(self):
         tree = TreeView.__new__(TreeView)
         tree.schedule_tree_refresh = Mock()
 
-        tree._on_widget_tree_event(SimpleNamespace(widget=object()))
+        tree.handle_tcl_event_emit(SimpleNamespace(widget=object()))
 
         tree.schedule_tree_refresh.assert_not_called()
 

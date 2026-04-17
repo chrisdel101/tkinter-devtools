@@ -4,12 +4,12 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from devtools.DevtoolsWindow import DevtoolsWindowKwargs
 from devtools.components.observable import Action
 from devtools.components.observable import Observable
 from devtools.components.store import Store
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
-from devtools.config import kwargs_config
 from devtools.constants import ActionType, CommonGeometryOption, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, PackGeometryOptionName
 
 
@@ -19,6 +19,13 @@ class RecordingObserver:
 
     def notify(self, action):
         self.actions.append(action)
+
+
+TEST_RUNTIME_SETTINGS: DevtoolsWindowKwargs = {
+    "show_unmapped_widgets": True,
+    "devtools_title": "Devtools Test",
+    "skip_runtime_checks": True,
+}
 
 
 class ConfigListboxManagerTests(unittest.TestCase):
@@ -31,7 +38,7 @@ class ConfigListboxManagerTests(unittest.TestCase):
         self.root = tk.Tk()
         self.root.withdraw()
         self.observable = Observable()
-        self.store = Store(root=self.root, observable=self.observable, config=dict(kwargs_config))
+        self.store = Store(observable=self.observable, **TEST_RUNTIME_SETTINGS)
         self.parent = tk.Frame(self.root)
         self.parent.pack()
         self.listbox = ConfigListboxManager(
