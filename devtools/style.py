@@ -27,8 +27,10 @@ class Style:
         "selectbackground": "yellow",
         'font': ("Helvetica New", 13),
         'fieldbackground': "#C0C0C0",
-        'background': "#C0C0C0",  # bg does not work here
-        "foreground": "#000",  # fg does not work here
+        'background': "#C0C0C0",  # bg version does not work here - must be long version
+        "foreground": "#000",  # fg version does not work here
+        "highlightbackground": "#FF4500",
+        "highlightthickness": 2,
     }
     devtools_window = {
         'geometry': '700x500+700+0',

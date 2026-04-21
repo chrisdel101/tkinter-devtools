@@ -2,7 +2,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 import logging
-
+from devtools.style import Style
 from devtools.components.observable import Action
 from devtools.constants import IS_DEVTOOLS_MARKER, ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import try_except_catcher
@@ -68,36 +68,51 @@ class TreeView(ttk.Treeview):
 
     # Schedule a single deferred tree rebuild, ignoring duplicate pending requests.
     def schedule_tree_refresh(self):
+        if getattr(self._store, "tree_rebuild_in_progress", False):
+            self._store.tree_rebuild_requested = True
+            return
         if self._store.tree_refresh_job is not None:
             return
         self._store.tree_refresh_job = self.after_idle(self.rebuild_tree_from_master_root)
 
     # Rebuild the full widget tree from root, restoring expanded nodes and selection - allows page changes 
     def rebuild_tree_from_master_root(self):
+        if getattr(self._store, "tree_rebuild_in_progress", False):
+            self._store.tree_rebuild_requested = True
+            return
+
+        self._store.tree_rebuild_in_progress = True
         self._store.tree_refresh_job = None
-        mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
-        expanded_mem_ids = {
-            mem_id for mem_id, entry in mem_store.items()
-            if (tree_id := entry.get("tree_id")) and self.item(tree_id, "open")
-        }
-        selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
-        self.delete_tree()
-        self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
-        self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-        self.build_tree(self.master)
+        try:
+            mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
+            expanded_mem_ids = {
+                mem_id for mem_id, entry in mem_store.items()
+                if (tree_id := entry.get("tree_id")) and self.exists(tree_id) and self.item(tree_id, "open")
+            }
+            selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+            self.delete_tree()
+            self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
+            self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
+            self.build_tree(self.master)
 
-        mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
-        for mem_id in expanded_mem_ids:
-            if entry := mem_store.get(mem_id):
-                if tree_id := entry.get("tree_id"):
-                    self.item(tree_id, open=True)
+            mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
+            for mem_id in expanded_mem_ids:
+                if entry := mem_store.get(mem_id):
+                    if tree_id := entry.get("tree_id"):
+                        if self.exists(tree_id):
+                            self.item(tree_id, open=True)
 
-        if selected_widget and selected_widget.winfo_exists():
-            selected_item = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(id(selected_widget))
-            if selected_item:
-                self.selection_set(selected_item.get("tree_id"))
-        elif self.get_children():
-            self.selection_set(self.get_children()[0])
+            if selected_widget and selected_widget.winfo_exists():
+                selected_item = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(id(selected_widget))
+                if selected_item and self.exists(selected_item.get("tree_id")):
+                    self.selection_set(selected_item.get("tree_id"))
+            elif self.get_children():
+                self.selection_set(self.get_children()[0])
+        finally:
+            self._store.tree_rebuild_in_progress = False
+            if getattr(self._store, "tree_rebuild_requested", False):
+                self._store.tree_rebuild_requested = False
+                self.schedule_tree_refresh()
 
     # store the ID and use to retrieve with self.selection()
     def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
@@ -284,7 +299,10 @@ class TreeView(ttk.Treeview):
                         'highlightthickness': widget.cget('highlightthickness'),
                     },
                 }
-                widget.configure(highlightbackground='#FF4500', highlightthickness=2)
+                widget.configure(
+                    highlightbackground=Style.treeview['highlightbackground'],
+                    highlightthickness=Style.treeview['highlightthickness'],
+                )
                 self._store.tree_highlighted_widget = widget
         except tk.TclError:
             self._store.tree_highlight_saved_config = None
@@ -296,9 +314,7 @@ class TreeView(ttk.Treeview):
         if self._store.tree_highlighted_widget and self._store.tree_highlight_saved_config:
             try:
                 strategy = self._store.tree_highlight_saved_config.get('strategy')
-                if strategy == 'overlay':
-                    self._hide_highlight_overlay()
-                elif strategy == 'config':
+                if strategy == 'config':
                     self._store.tree_highlighted_widget.configure(**self._store.tree_highlight_saved_config.get('config', {}))
             except tk.TclError:
                 pass
@@ -310,13 +326,15 @@ class TreeView(ttk.Treeview):
     def _show_highlight_overlay(self, widget: tk.Widget) -> bool:
         if not widget.winfo_exists():
             return False
-        parent = getattr(widget, 'master', None)
-        if parent is None:
+        overlay_parent = widget.winfo_toplevel()
+        if overlay_parent is None:
             return False
 
         widget.update_idletasks()
-        x = widget.winfo_x()
-        y = widget.winfo_y()
+        # Convert widget position to toplevel-relative coordinates so the border
+        # is correct regardless of nesting depth.
+        x = widget.winfo_rootx() - overlay_parent.winfo_rootx()
+        y = widget.winfo_rooty() - overlay_parent.winfo_rooty()
         width = widget.winfo_width()
         height = widget.winfo_height()
 
@@ -326,46 +344,26 @@ class TreeView(ttk.Treeview):
         if (
             len(self._store.tree_highlight_overlay_edges) != 4
             or any(not edge.winfo_exists() for edge in self._store.tree_highlight_overlay_edges)
-            or self._store.tree_highlight_overlay_parent is not parent
+            or self._store.tree_highlight_overlay_parent is not overlay_parent
         ):
             self._hide_highlight_overlay()
-            self._store.tree_highlight_overlay_parent = parent
+            self._store.tree_highlight_overlay_parent = overlay_parent
             self._store.tree_highlight_overlay_edges = [
-                tk.Frame(parent, bg='#FF4500', bd=0, highlightthickness=0)
+                tk.Frame(overlay_parent, bg=Style.treeview['highlightbackground'], bd=0, highlightthickness=0)
                 for _ in range(4)
             ]
 
-        border_size = 2
+        border_size = Style.treeview['highlightthickness']
         top_edge, right_edge, bottom_edge, left_edge = self._store.tree_highlight_overlay_edges
 
-        top_edge.place(
-            x=x,
-            y=y,
-            width=width,
-            height=border_size,
-        )
-        right_edge.place(
-            x=x + max(width - border_size, 0),
-            y=y,
-            width=border_size,
-            height=height,
-        )
-        bottom_edge.place(
-            x=x,
-            y=y + max(height - border_size, 0),
-            width=width,
-            height=border_size,
-        )
-        left_edge.place(
-            x=x,
-            y=y,
-            width=border_size,
-            height=height,
-        )
+        top_edge.place(x=x, y=y, width=width, height=border_size)
+        right_edge.place(x=x + width - border_size, y=y, width=border_size, height=height)
+        bottom_edge.place(x=x, y=y + height - border_size, width=width, height=border_size)
+        left_edge.place(x=x, y=y, width=border_size, height=height)
 
-        # Keep border visible while not covering the widget interior.
+        # Raise edges to the top of the toplevel's stacking order so nothing covers them.
         for edge in self._store.tree_highlight_overlay_edges:
-            edge.lift(widget)
+            edge.lift()
         return True
 
     # Hide all overlay edge frames by removing them from the layout.

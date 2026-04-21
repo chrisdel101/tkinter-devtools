@@ -22,6 +22,8 @@ class Store:
         self.existing_combobox_wrappers: list[tk.Widget] | list = [] # store wrappers around all comboboxes to allow remove all
         self.devtools_window_in_focus: bool = True # tracking to trigger destroy state on devtools window focus out 
         self.tree_refresh_job = None # blocks tree rebuild while one is active
+        self.tree_rebuild_in_progress: bool = False # guard to block re-entrant tree rebuild
+        self.tree_rebuild_requested: bool = False # queue one extra rebuild when requested mid-rebuild
         self.key_combobox_popdown_open: bool = False # track when open to apply focus out destroy logic
         self.value_combobox_popdown_open: bool = False # track when open to apply focus out destroy logic
         self.show_unmapped_widgets = kwargs.get("show_unmapped_widgets", True) # toggle to omit unmappeed default shows anything in the code
@@ -157,6 +159,22 @@ class Store:
     @tree_refresh_job.setter
     def tree_refresh_job(self, value):
         self._tree_refresh_job = value
+
+    @property
+    def tree_rebuild_in_progress(self):
+        return self._tree_rebuild_in_progress
+
+    @tree_rebuild_in_progress.setter
+    def tree_rebuild_in_progress(self, value):
+        self._tree_rebuild_in_progress = value
+
+    @property
+    def tree_rebuild_requested(self):
+        return self._tree_rebuild_requested
+
+    @tree_rebuild_requested.setter
+    def tree_rebuild_requested(self, value):
+        self._tree_rebuild_requested = value
 
 
     @property
