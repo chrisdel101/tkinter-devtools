@@ -43,8 +43,8 @@ class ListboxTemplateNotifyStateKey(Enum):
 
 # name to use to display specific listbox template within frame
 class ListboxPageTemplateEnum(Enum):
-    OPTIONS = 1
-    GEOMETRY = 2
+    OPTIONS = 1 # for widget resource options
+    GEOMETRY = 2 # for widget geometry settings
 
 class ActionType(Enum):
     INSERT_LISTBOX_ITEM = "insert_listbox_item"

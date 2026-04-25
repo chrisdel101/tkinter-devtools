@@ -65,13 +65,14 @@ class Store:
     # handles tracking store state or tree - i.e. selected item
     @try_except_catcher
     def tree_state_set(self, enum_key: TreeStateKey, state_to_set: Any):
+        # store
         self.tree_state[enum_key.value] = state_to_set
 
     # get single value from listbox manager state
     @try_except_catcher
     def listbox_manager_state_get_value(self, enum_key: ListboxTemplateNotifyStateKey, page_insert_override: ListboxPageTemplateEnum | None = None):
         # get current insert key ListboxPageTemplateEnum or manual param
-        page_insert = page_insert_override if page_insert_override else self.current_listbox_template._listbox_page_insert_enum
+        page_insert = page_insert_override if page_insert_override else self.current_listbox_template._listbox_page_template_insert_enum
         return self.current_listbox_template_internal_state.get(page_insert).get(enum_key.value)
 
     # key for name current_listbox_template_internal_state, value is dict of values
@@ -80,7 +81,7 @@ class Store:
     def listbox_manager_state_set(self, enum_key: ListboxTemplateNotifyStateKey, state_to_set: Any, page_insert_override: ListboxPageTemplateEnum | None = None):
         # use current page insert or override param - get listbox by enum key
         current_target_listbox = self.listbox_templates.get(page_insert_override) if page_insert_override else self.current_listbox_template
-        current_target_listbox_enum = current_target_listbox._listbox_page_insert_enum if current_target_listbox else None
+        current_target_listbox_enum = current_target_listbox._listbox_page_template_insert_enum if current_target_listbox else None
         
         match current_target_listbox_enum:
             # set one of the ListboxTemplateNotifyStateKey values by ListboxPageTemplateEnum

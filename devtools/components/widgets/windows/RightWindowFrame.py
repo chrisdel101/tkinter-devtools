@@ -138,7 +138,7 @@ class RightWindowFrame(tk.Frame):
     # run pack_listbox_page_insert with check to not repack same insert
     def handle_pack_listbox_page_insert_click(self, insert_type_enum: ListboxPageTemplateEnum):
         # guard logic - block re-packing same listbox
-        if current_listbox_insert_enum := (self._store.current_listbox_template and self._store.current_listbox_template._listbox_page_insert_enum):
+        if current_listbox_insert_enum := (self._store.current_listbox_template and self._store.current_listbox_template._listbox_page_template_insert_enum):
             if current_listbox_insert_enum == insert_type_enum:
                 # button clicked on current - already packed 
                 return
@@ -171,11 +171,10 @@ class RightWindowFrame(tk.Frame):
         # setter for state store
         self._store.block_active_adding = True
         current_listbox_insert_widget = self._store.current_listbox_template
-        current_listbox_insert_enum = ListboxPageTemplateEnum
-        # if current_listbox_insert_widget._listbox_page_insert_enum == ListboxPageTemplateEnum.OPTIONS:
+
         current_listbox_selection = current_listbox_insert_widget.curselection()
-        # current_treeview_item = self._store.tree_state_get('selected_item')
         if index is not None:
+            # where entry widget will be packed
             insert_at_index = index
         elif len(current_listbox_selection) == 0:
             # if none selected insert at top

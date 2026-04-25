@@ -109,7 +109,7 @@ class Utils:
             for key, val in config.items():
                 # resolve alias to full name - or just return name ie borderwidth
                 canonical = Utils.listbox_option_bi_direction_alias_resolver(key)
-                # check that name is part is one if valid ones - stop if not
+                # check that name is oneof valid ones - don't use if not
                 if canonical not in valid_names:
                     continue             
                 # in 5 len tuple we want last item for value

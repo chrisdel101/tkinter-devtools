@@ -415,8 +415,9 @@ class TreeView(ttk.Treeview):
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
     @try_except_catcher
+    # ---- LIST WIDGETS VALUES HERE----
     # Populate the options listbox page with the selected widget's configure values.
-    def stuff_listbox_options_state_into_page_template(self, selected_item_widget):
+    def     stuff_listbox_options_state_into_page_template(self, selected_item_widget):
         # delete prev content in listbox
         self._observable.notify_observers(
             Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))

@@ -70,7 +70,7 @@ class ConfigListboxManagerTests(unittest.TestCase):
 
     def test_init_sets_name_and_registers_observer(self):
         self.assertEqual(self.listbox.name, "OPTIONS listbox")
-        self.assertEqual(self.listbox._listbox_page_insert_enum, ListboxPageTemplateEnum.OPTIONS)
+        self.assertEqual(self.listbox._listbox_page_template_insert_enum, ListboxPageTemplateEnum.OPTIONS)
         self.assertIn(self.listbox, self.observable._observers)
 
     def test_delete_all_listbox_items_clears_entries(self):

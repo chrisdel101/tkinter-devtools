@@ -18,7 +18,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
 
         resolved_option_name = Utils.listbox_type_to_option_alias_direction_alias_resolver(option_name)
         current_template = self._store.current_listbox_template
-        current_page = current_template._listbox_page_insert_enum if current_template else None
+        current_page = current_template._listbox_page_template_insert_enum if current_template else None
 
         if current_page == ListboxPageTemplateEnum.OPTIONS:
             return self.map_option_key_to_config_setting_value(resolved_option_name) or {}
@@ -46,7 +46,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
     @try_except_catcher
     def _get_current_value_for_create_input(self, key_entry_value: str):
         current_template = self._store.current_listbox_template
-        current_page = current_template._listbox_page_insert_enum if current_template else None
+        current_page = current_template._listbox_page_template_insert_enum if current_template else None
 
         if current_page == ListboxPageTemplateEnum.GEOMETRY:
             current_geometry_state = self._store.listbox_manager_state_get_value(
