@@ -35,11 +35,15 @@ class Store:
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID.value: {}
         }
         self.listbox_templates: dict[ListboxPageTemplateEnum, ConfigListboxManager] = {} # store the listbox manager option or geometry
-        self.current_listbox_template: ConfigListboxManager | None = None  # currrent template inserted as shown in the listbox
+        # tracks whichever listbox tab is currently visible — updated by RightWindowFrame
+        # when the user switches between Options and Geometry tabs.
+        # store functions use this as the default target when no page_insert_override is given.
+        self.current_listbox_template: ConfigListboxManager | None = None
         self.current_listbox_template_internal_state: ListboxManagerState = {
             ListboxPageTemplateEnum.OPTIONS: {
                 ListboxTemplateNotifyStateKey.SELECTED_INDEX.value: None,
                 ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value: None,
+                ListboxTemplateNotifyStateKey.ALL_WIDGET_POSSIBLE_KEYS.value: None,
                 ListboxTemplateNotifyStateKey.LISTBOX_PAGE_TEMPLATE.value: ListboxPageTemplateEnum.OPTIONS
             },
             ListboxPageTemplateEnum.GEOMETRY: {
@@ -68,39 +72,68 @@ class Store:
         # store
         self.tree_state[enum_key.value] = state_to_set
 
+    # get all values from one of the listboxs 
+    @try_except_catcher
+    def listbox_manager_template_values_state_get(self, 
+            template_enum_key: ListboxPageTemplateEnum) -> ListboxManagerState:
+        return self.current_listbox_template_internal_state.get(template_enum_key)
+    
     # get single value from listbox manager state
     @try_except_catcher
-    def listbox_manager_state_get_value(self, enum_key: ListboxTemplateNotifyStateKey, page_insert_override: ListboxPageTemplateEnum | None = None):
+    def listbox_manager_template_value_state_get(self, 
+            enum_key: ListboxTemplateNotifyStateKey, 
+            page_insert_override: ListboxPageTemplateEnum | None = None):
         # get current insert key ListboxPageTemplateEnum or manual param
         page_insert = page_insert_override if page_insert_override else self.current_listbox_template._listbox_page_template_insert_enum
         return self.current_listbox_template_internal_state.get(page_insert).get(enum_key.value)
 
-    # key for name current_listbox_template_internal_state, value is dict of values
-    # - updates whole dict whenever a change occurs
+    # - updates the single attr inside options or geometry state
     @try_except_catcher
-    def listbox_manager_state_set(self, enum_key: ListboxTemplateNotifyStateKey, state_to_set: Any, page_insert_override: ListboxPageTemplateEnum | None = None):
-        # use current page insert or override param - get listbox by enum key
-        current_target_listbox = self.listbox_templates.get(page_insert_override) if page_insert_override else self.current_listbox_template
-        current_target_listbox_enum = current_target_listbox._listbox_page_template_insert_enum if current_target_listbox else None
-        
-        match current_target_listbox_enum:
+    def listbox_manager_template_value_state_set(self,
+        enum_key: ListboxTemplateNotifyStateKey,
+        state_to_set: Any,
+        # explicit page to target — bypasses current_listbox_template when provided
+        page_insert_override: ListboxPageTemplateEnum | None = None):
+        # resolve which page to write to: explicit override or fall back to the active tab
+        page_insert = page_insert_override if page_insert_override else self.current_listbox_template._listbox_page_template_insert_enum
+
+        match page_insert:
             # set one of the ListboxTemplateNotifyStateKey values by ListboxPageTemplateEnum
             case ListboxPageTemplateEnum.OPTIONS:
                 self.current_listbox_template_internal_state[
                     ListboxPageTemplateEnum.OPTIONS][enum_key.value] = state_to_set
-                self._observable.notify_observers(
-                    Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.OPTIONS].get(enum_key.value),
-                           target=current_target_listbox)
-                )
             case ListboxPageTemplateEnum.GEOMETRY:
                 self.current_listbox_template_internal_state[
                     ListboxPageTemplateEnum.GEOMETRY][enum_key.value] = state_to_set
-                self._observable.notify_observers(
-                    Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                        data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.GEOMETRY].get(enum_key.value),
-                        target=current_target_listbox)
-                    )
+
+    # - updates then entire options or geometry state dict
+    @try_except_catcher
+    def listbox_manager_template_values_state_set(self, 
+        state_to_set: Any, # widget state to set for page
+        page_insert_override: ListboxPageTemplateEnum | None = None):
+        # use current page insert or override param - get listbox by enum key
+        current_target_listbox_insert: tk.Listbox = self.listbox_templates.get(page_insert_override) if page_insert_override else self.current_listbox_template
+        current_target_listbox_insert_enum: ListboxPageTemplateEnum = current_target_listbox_insert._listbox_page_template_insert_enum if current_target_listbox_insert else None
+        
+        match current_target_listbox_insert_enum:
+            # set one of the ListboxTemplateNotifyStateKey values by ListboxPageTemplateEnum
+            case ListboxPageTemplateEnum.OPTIONS:
+                self.current_listbox_template_internal_state[
+                    ListboxPageTemplateEnum.OPTIONS] = state_to_set
+                # self._observable.notify_observers(
+                #     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
+                #            data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.OPTIONS].get(enum_key.value),
+                #            target=current_target_listbox_insert)
+                # )
+            case ListboxPageTemplateEnum.GEOMETRY:
+                self.current_listbox_template_internal_state[
+                    ListboxPageTemplateEnum.GEOMETRY] = state_to_set
+                # self._observable.notify_observers(
+                #     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
+                #         data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.GEOMETRY].get(enum_key.value),
+                #         target=current_target_listbox_insert)
+                #     )
+
 
     @property
     def show_geometry_button(self):

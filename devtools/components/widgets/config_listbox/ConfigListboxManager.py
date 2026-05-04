@@ -57,6 +57,32 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             CONFIG_OPTION_SETTINGS
         )
 
+    def load_template_value_state(self,
+        enum_key: ListboxTemplateNotifyStateKey,
+        page_insert_to_set: ListboxPageTemplateEnum | None = None):
+        target_enum = page_insert_to_set or self._listbox_page_template_insert_enum
+        if target_enum != self._listbox_page_template_insert_enum:
+            return
+        current_target_listbox = self._store.listbox_templates.get(target_enum)
+        data = self._store.listbox_manager_template_value_state_get(
+                enum_key=enum_key, page_insert_override=target_enum)
+        match target_enum:
+            case ListboxPageTemplateEnum.OPTIONS:
+                self._observable.notify_observers(
+                            Action(type=ActionType.INSERT_LISTBOX_ITEMS,
+                                data=data,
+                                target=current_target_listbox)
+                        )
+            case ListboxPageTemplateEnum.GEOMETRY:
+                self._observable.notify_observers(
+                            Action(type=ActionType.INSERT_LISTBOX_ITEMS,
+                                data=data,
+                                target=current_target_listbox)
+                )
+       
+   
+
+    @try_except_catcher
     def start_update(self, event):
         option_setting_map = None
         index = self.index
@@ -139,16 +165,18 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         # --- OPTION UPDATE HANDLING
         if self._listbox_page_template_insert_enum == ListboxPageTemplateEnum.OPTIONS:
             # run update_tree_item_to_page_widget_option_config on widget.config
-            self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, data={
-                'key': key_entry_value,
-                'value': value_entry_value
-            }))
+            self._observable.notify_observers(Action(
+                type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, 
+                data={
+                    'key': key_entry_value,
+                    'value': value_entry_value
+                }))
         else:
             # GEOMETRY UPDATE HANDLING
             selected_widget = self._store.tree_state.get(TreeStateKey.SELECTED_ITEM_WIDGET.value)
             resolved_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
             # current geometry listbox state snapshot (used for UI refresh)
-            current_geometry_state = Utils.resolve_geometry_aliases(self._store.listbox_manager_state_get_value(
+            current_geometry_state = Utils.resolve_geometry_aliases(self._store.listbox_manager_template_value_state_get(
                 ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
                 page_insert_override=ListboxPageTemplateEnum.GEOMETRY,
             ) or {})
@@ -245,8 +273,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                             value_entry_value = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE, value_entry_value)
          # delete data at current index and insert new data there
         self.delete_all_listbox_items()
-        # current_listbox_insert_widget = self._store.current_listbox_template
-        prev_listbox_store_dict = self._store.listbox_manager_state_get_value(
+        
+        prev_listbox_store_dict = self._store.listbox_manager_template_value_state_get(
             ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE) or {}
         if self._listbox_page_template_insert_enum == ListboxPageTemplateEnum.GEOMETRY:
             prev_listbox_store_dict = Utils.resolve_geometry_aliases(prev_listbox_store_dict)
@@ -259,8 +287,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             listbox_key = Utils.listbox_option_to_type_alias_direction_alias_resolver(listbox_key)
         updated_listbox_store_dict = Utils.sorted_dict(Utils.merge_dicts(
             prev_listbox_store_dict, {listbox_key: value_entry_value}))
-        self._store.listbox_manager_state_set(
+        self._store.listbox_manager_template_value_state_set(
             enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_listbox_store_dict)
+        self.load_template_value_state(
+            enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
+        )
         self.after_idle(lambda: self.yview_moveto(y0))
 
         # submit succeeded; avoid CREATE focus-out cleanup removing a row

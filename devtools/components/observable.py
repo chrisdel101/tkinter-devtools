@@ -7,8 +7,11 @@ from devtools.constants import ActionType
 @dataclass(frozen=True)
 class Action:
     type: ActionType
+    # payload passed to the handler method as args/kwargs
     data: Any | None = None
-    # isolate instances 
+    # optional widget instance to restrict delivery — when set, only the observer
+    # whose identity matches target will handle the action; all others skip it.
+    # when None, every observer that has a matching handler will run.
     target: Any | None = None
 
 # this is the Subject

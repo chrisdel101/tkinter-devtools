@@ -417,15 +417,15 @@ class TreeView(ttk.Treeview):
     @try_except_catcher
     # ---- LIST WIDGETS VALUES HERE----
     # Populate the options listbox page with the selected widget's configure values.
-    def     stuff_listbox_options_state_into_page_template(self, selected_item_widget):
+    def stuff_listbox_options_state_into_page_template(self, selected_item_widget):
         # delete prev content in listbox
         self._observable.notify_observers(
             Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
         # get configure vals - these will populate the list box
-        original_options_config: dict = selected_item_widget.configure()
-        # filter out unwanted config values not in ConfigOptionName - keep original dict formating
+        current_options_config: dict = selected_item_widget.configure()
+        # filter out unwanted config values not in ConfigOptionKeyName - keep original dict formating
         filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_options(
-            original_options_config)
+            current_options_config)
         # extract the actual set value from value tuples 
         # - is key val str pairs
         key_value_config_dict: dict[str, str] = Utils.conform_option_lisbox_config(
@@ -433,10 +433,22 @@ class TreeView(ttk.Treeview):
         # sort by alpha order
         key_value_config_sorted_dict = Utils.sorted_dict(
             key_value_config_dict)
+        # store all possible keys for widget too w .keys()
+        all_widget_possible_keys = selected_item_widget.keys()
+        new_state_dict = Utils.patch_base_dict(
+            self._store.listbox_manager_template_values_state_get(ListboxPageTemplateEnum.OPTIONS) or {},
+            **{
+                ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value: key_value_config_sorted_dict,
+                ListboxTemplateNotifyStateKey.ALL_WIDGET_POSSIBLE_KEYS.value: all_widget_possible_keys
+            }
+        )
         # stuff listbox state template state values
-        self._store.listbox_manager_state_set(
-            enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
-            state_to_set=key_value_config_sorted_dict,  page_insert_override=ListboxPageTemplateEnum.OPTIONS)
+        self._store.listbox_manager_template_values_state_set(
+            state_to_set=new_state_dict,  page_insert_override=ListboxPageTemplateEnum.OPTIONS)
+        self._observable.notify_observers(
+            Action(type=ActionType.LOAD_TEMPLATE_VALUE_STATE,
+                data={'enum_key': ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, 'page_insert_to_set': ListboxPageTemplateEnum.OPTIONS},
+                target=self._store.listbox_templates.get(ListboxPageTemplateEnum.OPTIONS)))
 
     @try_except_catcher
     # Populate the geometry listbox page with the selected widget's geometry values.
@@ -466,8 +478,12 @@ class TreeView(ttk.Treeview):
         sorted_widget_geometry_dict = Utils.sorted_dict(
             widget_geometry_dict)
         # set geometry listbox state
-        self._store.listbox_manager_state_set(enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
+        self._store.listbox_manager_template_value_state_set(enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
         state_to_set=sorted_widget_geometry_dict, page_insert_override=ListboxPageTemplateEnum.GEOMETRY)
+        self._observable.notify_observers(
+        Action(type=ActionType.LOAD_TEMPLATE_VALUE_STATE,
+            data={'enum_key': ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, 'page_insert_to_set': ListboxPageTemplateEnum.GEOMETRY},
+            target=self._store.listbox_templates.get(ListboxPageTemplateEnum.GEOMETRY)))
 
     @try_except_catcher
     # listbox calls to make updates to grid geomtetry

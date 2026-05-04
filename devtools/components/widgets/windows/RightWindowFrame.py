@@ -33,7 +33,6 @@ class RightWindowFrame(tk.Frame):
             ListboxPageTemplateEnum.OPTIONS: self._options_config_listbox_mngr,
             ListboxPageTemplateEnum.GEOMETRY: self._geometry_config_listbox_mngr  
         }
-        # self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
         self._observable.register_observer(self)
         # button header
         self.header_frame = tk.Frame(self, **Style.right_window['header']['frame'])
@@ -149,12 +148,12 @@ class RightWindowFrame(tk.Frame):
     def pack_listbox_page_insert(self, insert_type_enum: ListboxPageTemplateEnum):
         match insert_type_enum:
             case ListboxPageTemplateEnum.OPTIONS:
-                    # set new current list
+                    # set current_listbox_template
                     self._store.current_listbox_template = self._options_config_listbox_mngr
                     self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
                     self._store.row_shift = True
             case ListboxPageTemplateEnum.GEOMETRY:
-                    # set new current list
+                    # set current_listbox_template
                     self._store.current_listbox_template = self._geometry_config_listbox_mngr
                     self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
                     self._store.row_shift = False

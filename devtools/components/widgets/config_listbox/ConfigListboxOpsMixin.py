@@ -49,7 +49,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         current_page = current_template._listbox_page_template_insert_enum if current_template else None
 
         if current_page == ListboxPageTemplateEnum.GEOMETRY:
-            current_geometry_state = self._store.listbox_manager_state_get_value(
+            current_geometry_state = self._store.listbox_manager_template_value_state_get(
                 ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
                 page_insert_override=ListboxPageTemplateEnum.GEOMETRY,
             ) or {}
@@ -379,6 +379,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         return options_map_setting or {}
     
     @staticmethod
+    @try_except_catcher
     # remove all added added widgets
     def cancel_update_listbox(*args):
         for arg in filter(None, args):
@@ -386,6 +387,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
     
     # on init - load selected tree items options into listbox
     # runs from treeview
+    @try_except_catcher
     def insert_listbox_items(self, **config_dict):
         try:
             for key in config_dict:

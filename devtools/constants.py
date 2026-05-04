@@ -38,6 +38,7 @@ class TreeStateKey(Enum):
 
 class ListboxTemplateNotifyStateKey(Enum):
     SELECTED_INDEX = "selected_index"
+    ALL_WIDGET_POSSIBLE_KEYS = "all_widget_possible_keys"
     CURRENT_VALUES_STATE = "current_values_state"
     LISTBOX_PAGE_TEMPLATE = "listbox_page_template_enum"
 
@@ -47,6 +48,7 @@ class ListboxPageTemplateEnum(Enum):
     GEOMETRY = 2 # for widget geometry settings
 
 class ActionType(Enum):
+    LOAD_TEMPLATE_VALUE_STATE = "load_template_value_state"
     INSERT_LISTBOX_ITEM = "insert_listbox_item"
     INSERT_LISTBOX_ITEMS = "insert_listbox_items"
     HANDLE_SUBTRACT_INDEX = "handle_subtract_index"
@@ -108,29 +110,34 @@ class PackGeometryOptionName(CommonGeometryOption):
     SIDE = "side"
     ANCHOR = "anchor"
     
-class ConfigOptionName(Enum):
-    RELIEF = "relief"
+class ConfigOptionKeyName(Enum):
+    ACTIVEBACKGROUND = "activebackground"
+    ACTIVEFOREGROUND = "activeforeground"
     ANCHOR = "anchor"
-    JUSTIFY = "justify"
-    FONT = "font"
-    CURSOR = "cursor"
+    BACKGROUND = "background"
+    BITMAP = "bitmap"
     BORDERWIDTH = "borderwidth"
-    BD = "bd"
-    HIGHLIGHTTHICKNESS = "highlightthickness"
+    CURSOR = "cursor"
+    DISABLEDFOREGROUND = "disabledforeground"
+    FONT = "font"
+    FOREGROUND = "foreground"
+    HEIGHT = "height"
     HIGHLIGHTBACKGROUND = "highlightbackground"
     HIGHLIGHTCOLOR = "highlightcolor"  
-    STATE = "state"
-    TEXT = "text"
+    HIGHLIGHTTHICKNESS = "highlightthickness"
+    IMAGE= "image"
+    JUSTIFY = "justify"
     PADX = "padx"
     PADY = "pady"
+    RELIEF = "relief"
+    STATE = "state"
+    TEXT = "text"
+    WIDTH = "width"
 
+    BD = "bd"
     BG = "bg"
     FG = "fg"
-    BACKGROUND = "background"
-    FOREGROUND = "foreground"
     
-    WIDTH = "width"
-    HEIGHT = "height"
 
 class AliasRename(Enum):
     PARENT_WIDGET = "parent widget" 

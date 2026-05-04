@@ -1,4 +1,4 @@
-from devtools.constants import ActionType, AliasRename, ConfigOptionName, ConfigOptionValueTypeEnum, CommonGeometryOption, GeometryType, GridGeometryOption, ListboxItemState, PackGeometryOptionName, PlaceGeometryOption
+from devtools.constants import ActionType, AliasRename, ConfigOptionKeyName, ConfigOptionValueTypeEnum, CommonGeometryOption, GeometryType, GridGeometryOption, ListboxItemState, PackGeometryOptionName, PlaceGeometryOption
 from devtools.constants import ConfigOptionMapSetting
 
 PACK_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
@@ -139,77 +139,77 @@ PLACE_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
 
 CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
     # relief
-    ConfigOptionName.RELIEF.value: {
+    ConfigOptionKeyName.RELIEF.value: {
         'values': ["flat","raised","sunken","groove","ridge","solid"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.ANCHOR.value: {
+    ConfigOptionKeyName.ANCHOR.value: {
         'values': ["n","ne","e","se","s","sw","w","nw","center"],
          'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.JUSTIFY.value: {
+    ConfigOptionKeyName.JUSTIFY.value: {
         'values': ["left","center","right"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.FONT.value: {
+    ConfigOptionKeyName.FONT.value: {
         'values': ["Arial","Helvetica","Times New Roman","Courier New","Verdana","Georgia","Comic Sans MS"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.CURSOR.value: {
+    ConfigOptionKeyName.CURSOR.value: {
         'values': ["arrow","circle","clock","cross","dotbox","exchange","fleur","heart,pirate","plus","shuttle","sizing","spider","spraycan","star","target","tcross","trek","watch"],
          'type': ConfigOptionValueTypeEnum.STRING.value,  
     },
-    ConfigOptionName.BACKGROUND.value: {
+    ConfigOptionKeyName.BACKGROUND.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.FOREGROUND.value: {
+    ConfigOptionKeyName.FOREGROUND.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
         'type': ConfigOptionValueTypeEnum.STRING.value,   
     },
-    ConfigOptionName.HIGHLIGHTBACKGROUND.value: {
+    ConfigOptionKeyName.HIGHLIGHTBACKGROUND.value: {
         'values': ["white","lightgrey","grey","darkgrey","black","red","green","blue","yellow","cyan","magenta","orange","purple","pink"],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.STATE.value: {
+    ConfigOptionKeyName.STATE.value: {
         'values': ['active', 'disabled', 'normal'],
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.TEXT.value: {
+    ConfigOptionKeyName.TEXT.value: {
         'values': "",
         'type': ConfigOptionValueTypeEnum.STRING.value,
     },
-    ConfigOptionName.BORDERWIDTH.value: {
+    ConfigOptionKeyName.BORDERWIDTH.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ConfigOptionName.HIGHLIGHTTHICKNESS.value: {
+    ConfigOptionKeyName.HIGHLIGHTTHICKNESS.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ConfigOptionName.PADX.value: {
+    ConfigOptionKeyName.PADX.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ConfigOptionName.PADY.value: {
+    ConfigOptionKeyName.PADY.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ConfigOptionName.WIDTH.value: {
+    ConfigOptionKeyName.WIDTH.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    ConfigOptionName.HEIGHT.value: {
+    ConfigOptionKeyName.HEIGHT.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     }
 }
 
 BI_DIRECTIONAL_ALIASES = {
-    ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
-    ConfigOptionName.BD.value: ConfigOptionName.BORDERWIDTH.value,
-    ConfigOptionName.BG.value: ConfigOptionName.BACKGROUND.value,
-    ConfigOptionName.FG.value: ConfigOptionName.FOREGROUND.value,
+    ConfigOptionKeyName.BD.value: ConfigOptionKeyName.BORDERWIDTH.value,
+    ConfigOptionKeyName.BD.value: ConfigOptionKeyName.BORDERWIDTH.value,
+    ConfigOptionKeyName.BG.value: ConfigOptionKeyName.BACKGROUND.value,
+    ConfigOptionKeyName.FG.value: ConfigOptionKeyName.FOREGROUND.value,
 }
 
 OPTION_TO_TYPE_ALIASES = {

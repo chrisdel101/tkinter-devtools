@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from devtools.components.observable import Action
-from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionName, GridGeometryOption, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
+from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionKeyName, GridGeometryOption, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
 from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import (
@@ -47,7 +47,7 @@ class Utils:
     # remove any non standard unusable options like screen, use
     def filter_non_used_config_options(config):
         try:
-            common_options = [e.value for e in ConfigOptionName]
+            common_options = [e.value for e in ConfigOptionKeyName]
             # value can be tuple or str/int
             for key in list(config.keys()):
             # delete unwanted config values from dict in place using list
@@ -105,7 +105,7 @@ class Utils:
         try:
             key_val_dict = {}
             # use names from enum values
-            valid_names = {e.value for e in ConfigOptionName}
+            valid_names = {e.value for e in ConfigOptionKeyName}
             for key, val in config.items():
                 # resolve alias to full name - or just return name ie borderwidth
                 canonical = Utils.listbox_option_bi_direction_alias_resolver(key)
@@ -121,6 +121,10 @@ class Utils:
                         # if not already added and value is not empty str
                         if key_val_dict.get(key) == None and actual_value != "":
                             key_val_dict[canonical] = actual_value
+                    elif len(config_named_lookup) != 5:
+                        # it's not an alias but a n-tuple
+                        if key_val_dict.get(key) == None and config_named_lookup[-1] != "":
+                            key_val_dict[canonical] = config_named_lookup[-1]
                     else: 
                         # if not 5 len tuple break error
                         err_msg = f"get_valid_key_value_differences: tuple is len {len(config_named_lookup)}, not len 5. Invalid len"
@@ -189,23 +193,47 @@ class Utils:
            return
         except Exception:
             logging.error("Error determining if click was on combobox arrow.", exc_info=True)
+            
+    @try_except_catcher
+    @staticmethod
+    def patch_base_dict(base_dict: dict, **overrides) -> dict:
+        """
+        if kwargs in dict and true overwrite main dict, else add new key val to dict
+        """
+        # 1. Start with a copy of the original state
+        new_state = (base_dict or {}).copy()
+        
+        for key, value in overrides.items():
+            # Check if key exists in the original dict
+            if key in new_state:
+                # Only update if the new value has content/is truthy
+                if value:
+                    new_state[key] = value
+            else:
+                # If it's a brand new key, we usually want to add it regardless
+                new_state[key] = value
+                
+        return new_state
     @staticmethod
     @try_except_catcher
     # universal fn called in class notify methods
     def dispatch_action(self, action: Action):
-            # check any targets match the current obj - for multi instance
+            # target guards against running the same action on every instance of a widget type.
+            # if target is set, only the exact object that matches handles it; others bail out.
+            # if target is None, every observer with a matching handler runs — so handlers must
+            # guard themselves (e.g. check their own enum) to avoid duplicate side-effects.
             if action.target is not None and action.target is not self:
                 logging.low_trace(f"Target set to {action.target.name}. Ignoring mismatch to {self}.")
                 return
-            # check if action maps to a method on this class
+            # look up the method name for this action type in the registry and call it
             fn = getattr(self, ACTION_REGISTRY.get(action.type.name), None)
             if fn:
+                # unpack data as positional args, keyword args, or a single value
                 if isinstance(action.data, (list, tuple)):
                     fn(*action.data)
                 elif isinstance(action.data, (dict)):
                     fn(**action.data)
                 else:
-                    # don't input anything if no data
                     fn(action.data) if action.data is not None else fn()
     @staticmethod    
     @try_except_catcher
