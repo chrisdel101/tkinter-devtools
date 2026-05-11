@@ -7,7 +7,7 @@ from typing import Any
 from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxTemplateNotifyStateKey, Store
 from devtools.components.widgets.config_listbox.ConfigListboxOpsMixin import ConfigListboxOpsMixin
-from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionKeyName, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
 from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import CONFIG_OPTION_SETTINGS, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
@@ -61,8 +61,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         enum_key: ListboxTemplateNotifyStateKey,
         page_insert_to_set: ListboxPageTemplateEnum | None = None):
         target_enum = page_insert_to_set or self._listbox_page_template_insert_enum
-        if target_enum != self._listbox_page_template_insert_enum:
-            return
         current_target_listbox = self._store.listbox_templates.get(target_enum)
         data = self._store.listbox_manager_template_value_state_get(
                 enum_key=enum_key, page_insert_override=target_enum)
@@ -145,7 +143,23 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             listbox_item_pairs_dict=listbox_item_pairs_dict,
             config_setting_map=option_setting_map
         )
-    # main entry point to page app - pass value widget input to apply to actual page app widget 
+    def _load_image_from_path(self, path: str):
+        selected = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+        try:
+            photo = tk.PhotoImage(file=path)
+        except tk.TclError:
+            raise tk.TclError(f"Unsupported image format. Tk natively supports PNG and GIF only.")
+        selected._devtools_image = photo
+        return photo
+
+    def _resolve_image_option_value(self, key: str, value: str):
+        if key != ConfigOptionKeyName.IMAGE.value or not value:
+            return value
+        if value in self.tk.call('image', 'names'):
+            return value
+        return self._load_image_from_path(value)
+
+    # main entry point to page app - pass value widget input to apply to actual page app widget
     @try_except_catcher
     def insert_value_output_and_apply_to_page(
         self,
@@ -164,9 +178,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         # UPDATE THE PAGE WIDGETS HERE - calls tree
         # --- OPTION UPDATE HANDLING
         if self._listbox_page_template_insert_enum == ListboxPageTemplateEnum.OPTIONS:
-            # run update_tree_item_to_page_widget_option_config on widget.config
+            value_entry_value = self._resolve_image_option_value(key_entry_value, value_entry_value)
             self._observable.notify_observers(Action(
-                type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, 
+                type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG,
                 data={
                     'key': key_entry_value,
                     'value': value_entry_value

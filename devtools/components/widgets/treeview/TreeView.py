@@ -431,8 +431,8 @@ class TreeView(ttk.Treeview):
         key_value_config_dict: dict[str, str] = Utils.conform_option_lisbox_config(
             filtered_config_dict)
         # sort by alpha order
-        key_value_config_sorted_dict = Utils.sorted_dict(
-            key_value_config_dict)
+        key_value_config_sorted_dict = Utils.sorted_dict(key_value_config_dict)
+        key_value_config_sorted_dict = Utils.resolve_image_name_to_path(selected_item_widget, key_value_config_sorted_dict)
         # store all possible keys for widget too w .keys()
         all_widget_possible_keys = selected_item_widget.keys()
         new_state_dict = Utils.patch_base_dict(

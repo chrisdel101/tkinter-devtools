@@ -202,7 +202,11 @@ CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
     ConfigOptionKeyName.HEIGHT.value: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
-    }
+    },
+    ConfigOptionKeyName.IMAGE.value: {
+        'values': None,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
+    },
 }
 
 BI_DIRECTIONAL_ALIASES = {

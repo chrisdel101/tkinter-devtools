@@ -11,7 +11,6 @@ from devtools.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import (
     ACTION_REGISTRY,
-    CONFIG_OPTION_SETTINGS,
     BI_DIRECTIONAL_ALIASES,
     OPTION_TO_TYPE_ALIASES,
     TYPE_TO_OPTIONS_ALIASES,
@@ -141,6 +140,18 @@ class Utils:
             logging.error(f"Error extracting actual config values: {e}", exc_info=True)
             raise e 
         
+    @staticmethod
+    def resolve_image_name_to_path(widget: tk.Widget, config_dict: dict) -> dict:
+        image_name = config_dict.get(ConfigOptionKeyName.IMAGE.value)
+        if not image_name:
+            return config_dict
+        file_path = widget.tk.call(image_name, 'cget', '-file')
+        if file_path:
+            config_dict[ConfigOptionKeyName.IMAGE.value] = file_path
+        else:
+            del config_dict[ConfigOptionKeyName.IMAGE.value]
+        return config_dict
+
     @staticmethod
     def merge_dicts(*dicts) -> dict:
         try:
