@@ -5,7 +5,7 @@ import logging
 from devtools.style import Style
 from devtools.components.observable import Action
 from devtools.constants import IS_DEVTOOLS_MARKER, ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.utils import Utils

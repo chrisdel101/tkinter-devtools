@@ -61,6 +61,7 @@ class ActionType(Enum):
     DELETE_ALL_LISTBOX_ITEMS = "delete_all_listbox_items"
     TOGGLE_GEO_BUTTON_VISIBLE = "toggle_geo_button_visible"
     TOGGLE_ROW_SHIFT = "toggle_row_shift"
+    SHOW_RIGHT_WINDOW_ERROR = "show_right_window_error"
 
 class ConfigOptionValueTypeEnum(Enum):
     STRING = str

@@ -8,7 +8,7 @@ from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxTemplateNotifyStateKey, Store
 from devtools.components.widgets.config_listbox.ConfigListboxOpsMixin import ConfigListboxOpsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionKeyName, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators import block_allow_input_focus_out_logic, try_except_catcher
+from devtools.decorators.decorators import block_allow_input_focus_out_logic, try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import CONFIG_OPTION_SETTINGS, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
@@ -73,8 +73,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                         )
             case ListboxPageTemplateEnum.GEOMETRY:
                 self._observable.notify_observers(
-                            Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                                data=data,
+                        Action(type=ActionType.INSERT_LISTBOX_ITEMS,
+                            data=data,
                                 target=current_target_listbox)
                 )
        
@@ -145,10 +145,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         )
     def _load_image_from_path(self, path: str):
         selected = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
-        try:
-            photo = tk.PhotoImage(file=path)
-        except tk.TclError:
-            raise tk.TclError(f"Unsupported image format. Tk natively supports PNG and GIF only.")
+        photo = tk.PhotoImage(file=path)
         selected._devtools_image = photo
         return photo
 
@@ -157,7 +154,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             return value
         if value in self.tk.call('image', 'names'):
             return value
-        return self._load_image_from_path(value)
+        try:
+            return self._load_image_from_path(value)
+        except tk.TclError:
+            raise
 
     # main entry point to page app - pass value widget input to apply to actual page app widget
     @try_except_catcher

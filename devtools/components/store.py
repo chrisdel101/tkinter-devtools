@@ -7,7 +7,7 @@ from devtools.components.observable import Action
 from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
-from devtools.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher
 
 if TYPE_CHECKING:
     # ONLY for type checkers

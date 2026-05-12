@@ -3,10 +3,11 @@ import logging
 from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+from devtools.components.widgets.Alert import Alert
 import tkinter as tk
 
 class RightWindowFrame(tk.Frame):
@@ -81,6 +82,7 @@ class RightWindowFrame(tk.Frame):
         self.subtract_config_button.grid(row=1, column=1, padx=5, pady=5, sticky='sw')
         # add focus on click - allows focus out from listbox to work
         self.header_frame.bind("<Button-1>", lambda e: self.header_frame.focus_set())
+        self._alert = Alert(self, style=Style.right_window['error_bar'])
         #  pack header
         self.header_frame.pack(fill='both')
         # load _options_config_listbox_mngr listbox by default
@@ -236,6 +238,10 @@ class RightWindowFrame(tk.Frame):
             self._options_config_listbox_mngr.delete(index)
         except Exception as e:
             logging.error(f"Error in handle_subtract_in_session: {e}", exc_info=True)
+
+    @try_except_catcher
+    def show_right_window_error(self, message: str):
+        self._alert.error(message)
 
     def notify(self, action: Action):
         Utils.dispatch_action(self, action)

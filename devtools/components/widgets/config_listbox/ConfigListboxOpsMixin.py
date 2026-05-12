@@ -5,7 +5,7 @@ from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.components.widgets.config_listbox.ConfigListboxUtilsMixin import ConfigListboxUtilsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, PackGeometryOptionName, TreeStateKey
-from devtools.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.style import Style
 from devtools.utils import Utils

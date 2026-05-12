@@ -86,6 +86,15 @@ class Style:
             },
         }
         ,
+        'error_bar': {
+            'bg': '#5c0000',
+            'fg': '#ffffff',
+            'font': ('Helvetica', 12),
+            'padx': 8,
+            'pady': 4,
+            'anchor': 'w',
+            'auto_clear_ms': 4000,
+        },
         'row_shift_tooltip': {
             'text': 'Disabled. All options shown',
             'x_offset': 16,
