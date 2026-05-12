@@ -7,7 +7,7 @@ from tkinter import ttk
 
 from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionKeyName, GridGeometryOption, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
-from devtools.decorators.decorators import try_except_catcher, static_fn_try_except_catcher
+from devtools.decorators.decorators import static_fn_try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import (
     ACTION_REGISTRY,

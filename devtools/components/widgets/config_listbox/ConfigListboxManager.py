@@ -8,7 +8,7 @@ from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxTemplateNotifyStateKey, Store
 from devtools.components.widgets.config_listbox.ConfigListboxOpsMixin import ConfigListboxOpsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionKeyName, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators.decorators import block_allow_input_focus_out_logic, try_except_catcher, class_fn_try_except_catcher
+from devtools.decorators.decorators import block_allow_input_focus_out_logic, class_fn_try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import CONFIG_OPTION_SETTINGS, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils

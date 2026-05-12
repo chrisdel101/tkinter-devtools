@@ -5,7 +5,7 @@ from typing import TypedDict, Unpack
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
 from devtools.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_MARKER, ActionType, CustomLogLevel, ListBoxEntryInputAction
-from devtools.decorators.decorators import try_except_catcher, class_fn_try_except_catcher
+from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 from devtools.logging_utils import LoggingUtils

@@ -51,15 +51,3 @@ def class_fn_try_except_catcher(func):
         except Exception as e:
             logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
     return wrapper
-
-def try_except_catcher(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except tk.TclError as e:
-            logging.error(f"--tcl error in decorator --- in {func.__name__}: error {e}---", exc_info=True)
-            _get_observable_and_notify_(args[0] if args else None, str(e))
-        except Exception as e:
-            logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
-    return wrapper

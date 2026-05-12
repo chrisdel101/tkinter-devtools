@@ -3,7 +3,7 @@ import logging
 from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators.decorators import try_except_catcher, class_fn_try_except_catcher
+from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
