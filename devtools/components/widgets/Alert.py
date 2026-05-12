@@ -8,6 +8,11 @@ class Alert(tk.Label):
         self._after_id = None
         label_style = {k: v for k, v in style.items() if k != 'auto_clear_ms'}
         super().__init__(parent, **label_style)
+        # contain and wrap alert widtet
+        parent.bind('<Configure>', self._on_parent_resize, add='+')
+
+    def _on_parent_resize(self, event):
+        self.config(wraplength=event.width)
 
     def error(self, message: str):
         if self._after_id:
