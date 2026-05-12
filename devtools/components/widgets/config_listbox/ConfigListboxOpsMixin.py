@@ -5,7 +5,7 @@ from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.components.widgets.config_listbox.ConfigListboxUtilsMixin import ConfigListboxUtilsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, PackGeometryOptionName, TreeStateKey
-from devtools.decorators.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher, static_fn_try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.style import Style
 from devtools.utils import Utils
@@ -303,7 +303,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         self.cancel_update_listbox(*args)
     # map geometry options to any possible setting vals
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     def map_grid_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
@@ -317,7 +317,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
     
     # map geometry options to any possible setting vals
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     def map_pack_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
@@ -330,8 +330,8 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         return options_map_setting or {}
     
     @staticmethod
-    # handle unmapped type geometry widget 
-    @try_except_catcher
+    @static_fn_try_except_catcher
+    # handle unmapped type geometry widget
     def map_geometry_key_to_config_setting_value(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
@@ -352,7 +352,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         return options_map_setting or {}
     
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     def map_place_geometry_option_to_setting(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
@@ -366,7 +366,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
     
     # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     def map_option_key_to_config_setting_value(option_name: str=None) -> ConfigOptionMapSetting:
         if not option_name:
             return 
@@ -379,7 +379,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         return options_map_setting or {}
     
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     # remove all added added widgets
     def cancel_update_listbox(*args):
         for arg in filter(None, args):

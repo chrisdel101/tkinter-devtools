@@ -7,7 +7,7 @@ from tkinter import ttk
 
 from devtools.components.observable import Action
 from devtools.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionKeyName, GridGeometryOption, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
-from devtools.decorators.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher, static_fn_try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import (
     ACTION_REGISTRY,
@@ -18,6 +18,7 @@ from devtools.maps import (
 
 class Utils:
     @staticmethod
+    @static_fn_try_except_catcher
     # Check falsey but excluding zero - we want zero
     def non_zero_falsey(value) -> bool:
         # true for None and ""
@@ -57,7 +58,7 @@ class Utils:
             logging.error(f"Error removing junk config items: {e}", exc_info=True)
             raise e
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     # remove any non standard unusable options
     def build_geometry_standard_options_dict(geo_manager: GeometryManagerInfo):
         # get all common option keys for geo type
@@ -75,7 +76,7 @@ class Utils:
         return Utils.filter_non_used_geometry_options(geo_manager, standard_geo_options)
 
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     # compare actual geo options vals to standard_geo_options and remove all falsey
     def filter_non_used_geometry_options(geo_manager: GeometryManagerInfo, standard_geo_options: list[str]):
         for key, val in list(geo_manager.geometry_options.items()):
@@ -96,7 +97,7 @@ class Utils:
         # filter all unwanted - uppercase only all_class_attrs - then check if each uppercase is an attr on class i.e. AFTER, IPADX
         extract_used_attrs = [getattr(className, k) for k in filter(str.isupper, all_class_attrs)]
         return extract_used_attrs
-    
+    @static_fn_try_except_catcher
     @staticmethod
     # check for each tuple length. if 5 it's last item, if 2 it's an alias
     # This is a tk inter standard for all configs objs
@@ -205,8 +206,8 @@ class Utils:
         except Exception:
             logging.error("Error determining if click was on combobox arrow.", exc_info=True)
             
-    @try_except_catcher
     @staticmethod
+    @static_fn_try_except_catcher
     def patch_base_dict(base_dict: dict, **overrides) -> dict:
         """
         if kwargs in dict and true overwrite main dict, else add new key val to dict
@@ -226,7 +227,7 @@ class Utils:
                 
         return new_state
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     # universal fn called in class notify methods
     def dispatch_action(self, action: Action):
             # target guards against running the same action on every instance of a widget type.
@@ -246,8 +247,8 @@ class Utils:
                     fn(**action.data)
                 else:
                     fn(action.data) if action.data is not None else fn()
-    @staticmethod    
-    @try_except_catcher
+    @staticmethod
+    @static_fn_try_except_catcher
     # takes widget and returns the geo info manager for the widget
     def build_widget_geometry_manager_info(widget: tk.Widget) -> GeometryManagerInfo | None:
         geometry_type = widget.winfo_manager()
@@ -278,8 +279,8 @@ class Utils:
     def _untrack_hidden_widgets(updated_hidden_widgets, store):
         # overwrite with updated copy
         store.hidden_widgets = updated_hidden_widgets
-    @try_except_catcher
     @staticmethod
+    @static_fn_try_except_catcher
     def hide_widget(widget: tk.Widget, store: Store):
         # check if already hidden - do nothing
         is_widget_hidden = store.hidden_widgets.get(id(widget))
@@ -312,8 +313,8 @@ class Utils:
             case GeometryType.PLACE:
                 widget.place_forget()
         
-    @try_except_catcher
     @staticmethod
+    @static_fn_try_except_catcher
     # show an unmapped widget
     def show_widget(widget: tk.Widget, store: Store, geometry_type: GeometryType | None = None):
         # if no state store will be no options set
@@ -349,7 +350,7 @@ class Utils:
         Utils._untrack_hidden_widgets(hidden_widgets_copy, store)
 
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     # combine any extra missing options here
     def combine_additional_geometry_options(geo_manager: GeometryManagerInfo, **kwargs) -> dict:
         if not geo_manager:
@@ -364,7 +365,7 @@ class Utils:
         return combined_widget_geometry
     
     @staticmethod
-    @try_except_catcher
+    @static_fn_try_except_catcher
     def resolve_geometry_aliases(combined_widget_geometry: dict) -> dict:
         new_combined_widget_geometry = {}
         for key, val in combined_widget_geometry.items():

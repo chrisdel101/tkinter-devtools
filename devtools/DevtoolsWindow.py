@@ -31,6 +31,7 @@ class DevtoolsWindow(tk.Toplevel):
         
         # run runtime checks of tcl bridge
         TclRunTimeUtility.runtime_checks(master)
+        # add styles for window size
         window_geometry = Style.devtools_window["geometry"]
         # set logging level
         LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
