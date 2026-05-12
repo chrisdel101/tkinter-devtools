@@ -5,7 +5,7 @@ from typing import TypedDict, Unpack
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
 from devtools.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_MARKER, ActionType, CustomLogLevel, ListBoxEntryInputAction
-from devtools.decorators.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher, class_fn_try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 from devtools.logging_utils import LoggingUtils
@@ -64,7 +64,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.bind("<FocusIn>", self.on_focus_in)
         self.wm_geometry(window_geometry)
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def on_focus_out(self, _):
         if self._store.devtools_window_in_focus:
             self._store.devtools_window_in_focus = False
@@ -77,7 +77,7 @@ class DevtoolsWindow(tk.Toplevel):
                     self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
                 self._store.block_active_adding = False
         
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def on_focus_in(self, _):
         # if state if false
         if not self._store.devtools_window_in_focus:

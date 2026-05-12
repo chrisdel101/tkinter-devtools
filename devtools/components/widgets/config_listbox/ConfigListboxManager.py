@@ -8,7 +8,7 @@ from devtools.components.observable import Action, Observable
 from devtools.components.store import ListboxTemplateNotifyStateKey, Store
 from devtools.components.widgets.config_listbox.ConfigListboxOpsMixin import ConfigListboxOpsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionKeyName, ConfigOptionMapSetting, GeometryType, ListBoxEntryInputAction, ListboxItemPair, ListboxItemState, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators.decorators import block_allow_input_focus_out_logic, try_except_catcher
+from devtools.decorators.decorators import block_allow_input_focus_out_logic, try_except_catcher, class_fn_try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.maps import CONFIG_OPTION_SETTINGS, PACK_GEOMETRY_CONFIG_SETTING_VALUES, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
@@ -80,7 +80,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
        
    
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def start_update(self, event):
         option_setting_map = None
         index = self.index
@@ -160,7 +160,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             raise
 
     # main entry point to page app - pass value widget input to apply to actual page app widget
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def insert_value_output_and_apply_to_page(
         self,
         value_entry_widget: tk.Entry | tk.OptionMenu,
@@ -314,7 +314,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)        
 
     @block_allow_input_focus_out_logic
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # return and place value_combo_box from build_combo_box
     def handle_build_value_combobox_box_from_key_combo_box(
             self,
@@ -335,7 +335,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         self._set_selected_by_index(index)
 
     @block_allow_input_focus_out_logic
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # widget config options here do not have value mapping
     def handle_build_value_entry_from_key_entry(
             self,
@@ -428,7 +428,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
     
     # run funcs for entering row update - called from double click on row
     @block_allow_input_focus_out_logic
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def handle_entry_input_update(
         self,
         index: int,
@@ -482,7 +482,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             )
 
     # run funcs for entering row add - called from parent on add button clicked parent when add button clicked
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def handle_entry_input_create(
             self,
             index: int):

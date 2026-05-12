@@ -5,13 +5,13 @@ from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.components.widgets.config_listbox.ConfigListboxUtilsMixin import ConfigListboxUtilsMixin
 from devtools.constants import ActionType, CommonGeometryOption, ConfigOptionMapSetting, ConfigOptionValueTypeEnum, GeometryType, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, PackGeometryOptionName, TreeStateKey
-from devtools.decorators.decorators import try_except_catcher, static_fn_try_except_catcher
+from devtools.decorators.decorators import try_except_catcher, static_fn_try_except_catcher, class_fn_try_except_catcher
 from devtools.maps import CONFIG_OPTION_SETTINGS, GRID_GEOMETRY_CONFIG_SETTING_VALUES, PACK_GEOMETRY_CONFIG_SETTING_VALUES, PLACE_GEOMETRY_CONFIG_SETTING_VALUES
 from devtools.style import Style
 from devtools.utils import Utils
 
 class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def _map_key_to_setting_for_current_template(self, option_name: str) -> ConfigOptionMapSetting:
         if not option_name:
             return {}
@@ -43,7 +43,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
             case _:
                 return {}
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def _get_current_value_for_create_input(self, key_entry_value: str):
         current_template = self._store.current_listbox_template
         current_page = current_template._listbox_page_template_insert_enum if current_template else None
@@ -60,7 +60,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
             return None
         return Utils.conform_option_lisbox_config(selected_widget.config()).get(key_entry_value)
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def build_value_spin_box(self, 
         key_entry_value: str, 
         current_option_value: str):        
@@ -102,7 +102,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
                     setattr(self._store, 'block_active_adding', False)))
         return spinbox
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def build_value_combo_box(self, 
         key_entry_value: str,
         item_option_vals_list: list[str]
@@ -158,7 +158,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
 
         return value_combobox
         
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def build_key_combo_box(self, 
         index: int,
         item_option_vals_list: list[str]):
@@ -387,7 +387,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
     
     # on init - load selected tree items options into listbox
     # runs from treeview
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def insert_listbox_items(self, **config_dict):
         try:
             for key in config_dict:
@@ -403,7 +403,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         except Exception as e:
             logging.error(f"Error insert_listbox_items: {e}", exc_info=True)
     # kwargs is index, value
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def insert_listbox_item(self, **kwargs):
         index, value = kwargs.get('index'), kwargs.get('value')
         # insert lb item

@@ -5,7 +5,7 @@ import logging
 from devtools.style import Style
 from devtools.components.observable import Action
 from devtools.constants import IS_DEVTOOLS_MARKER, ActionType, CommonGeometryOption, GeometryType, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher, class_fn_try_except_catcher
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.utils import Utils
@@ -239,7 +239,7 @@ class TreeView(ttk.Treeview):
 
     # on first call insert widget and get insert id - recurse
     # on next calls used vals passed in
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
         try:
             # if no parent node it's first call - no id to use yet
@@ -414,7 +414,7 @@ class TreeView(ttk.Treeview):
         except Exception as e:
             logging.error(f"Error handle_tree_select: {e}", exc_info=True)
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # ---- LIST WIDGETS VALUES HERE----
     # Populate the options listbox page with the selected widget's configure values.
     def stuff_listbox_options_state_into_page_template(self, selected_item_widget):
@@ -450,7 +450,7 @@ class TreeView(ttk.Treeview):
                 data={'enum_key': ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, 'page_insert_to_set': ListboxPageTemplateEnum.OPTIONS},
                 target=self._store.listbox_templates.get(ListboxPageTemplateEnum.OPTIONS)))
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # Populate the geometry listbox page with the selected widget's geometry values.
     def stuff_listbox_geometry_state_into_page_template(self, selected_item_widget):
 
@@ -485,7 +485,7 @@ class TreeView(ttk.Treeview):
             data={'enum_key': ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, 'page_insert_to_set': ListboxPageTemplateEnum.GEOMETRY},
             target=self._store.listbox_templates.get(ListboxPageTemplateEnum.GEOMETRY)))
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # listbox calls to make updates to grid geomtetry
     def update_tree_item_to_page_widget_grid_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
@@ -495,7 +495,7 @@ class TreeView(ttk.Treeview):
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
         current_tree_item.update_idletasks()
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # listbox calls to make updates to place geomtetry
     def update_tree_item_to_page_widget_place_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
@@ -504,7 +504,7 @@ class TreeView(ttk.Treeview):
         current_tree_item.place_configure(
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # listbox calls to make updates to pack geomtetry
     def update_tree_item_to_page_widget_pack_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
@@ -515,7 +515,7 @@ class TreeView(ttk.Treeview):
 
     # listbox calls to make updates to widget options
     # - UPDATE THE PAGE WIDGET HERE
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def update_tree_item_to_page_widget_option_config(self, **listbox_item_pairs_dict):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(

@@ -7,7 +7,7 @@ from devtools.components.observable import Action
 from devtools.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
-from devtools.decorators.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher, class_fn_try_except_catcher
 
 if TYPE_CHECKING:
     # ONLY for type checkers
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class Store:
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def __init__(self, observable, **kwargs):
         self._observable = observable
         self.block_active_adding: bool = False # block add button during adding prevent multiple
@@ -62,24 +62,24 @@ class Store:
         self.tree_applying_highlight: bool = False # guard to block multiple highlight at once
         self.tree_store_widget_by_obj_mem_id: dict[int, dict[str, tk.Widget]] = {} # widget by mem id to find widgets
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
         return self.tree_state.get(enum_key.value)
 
     # handles tracking store state or tree - i.e. selected item
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def tree_state_set(self, enum_key: TreeStateKey, state_to_set: Any):
         # store
         self.tree_state[enum_key.value] = state_to_set
 
     # get all values from one of the listboxs 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def listbox_manager_template_values_state_get(self, 
             template_enum_key: ListboxPageTemplateEnum) -> ListboxManagerState:
         return self.current_listbox_template_internal_state.get(template_enum_key)
     
     # get single value from listbox manager state
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def listbox_manager_template_value_state_get(self, 
             enum_key: ListboxTemplateNotifyStateKey, 
             page_insert_override: ListboxPageTemplateEnum | None = None):
@@ -88,7 +88,7 @@ class Store:
         return self.current_listbox_template_internal_state.get(page_insert).get(enum_key.value)
 
     # - updates the single attr inside options or geometry state
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def listbox_manager_template_value_state_set(self,
         enum_key: ListboxTemplateNotifyStateKey,
         state_to_set: Any,
@@ -107,7 +107,7 @@ class Store:
                     ListboxPageTemplateEnum.GEOMETRY][enum_key.value] = state_to_set
 
     # - updates then entire options or geometry state dict
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def listbox_manager_template_values_state_set(self, 
         state_to_set: Any, # widget state to set for page
         page_insert_override: ListboxPageTemplateEnum | None = None):

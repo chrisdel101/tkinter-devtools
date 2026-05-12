@@ -47,7 +47,7 @@ def class_fn_try_except_catcher(func):
         except tk.TclError as e:
             logging.error(f"--tcl error in {func.__name__}: {e}---", exc_info=True)
             if caller_instance:
-                caller_instance
+                _get_observable_and_notify_(caller_instance, str(e))
         except Exception as e:
             logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
     return wrapper

@@ -3,7 +3,7 @@ import logging
 from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListboxPageTemplateEnum, TreeStateKey
-from devtools.decorators.decorators import try_except_catcher
+from devtools.decorators.decorators import try_except_catcher, class_fn_try_except_catcher
 from devtools.style import Style
 from devtools.utils import Utils
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
@@ -88,14 +88,14 @@ class RightWindowFrame(tk.Frame):
         # load _options_config_listbox_mngr listbox by default
         self.pack_listbox_page_insert(insert_type_enum=ListboxPageTemplateEnum.OPTIONS)
     
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def toggle_geo_button_visible(self, visible: bool):
         if visible:
             Utils.show_widget(self.geo_button, self._store)
         else:
             Utils.hide_widget(self.geo_button, self._store)
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # Enable row shift controls (+/-) only when current page supports adding/removing rows.
     def toggle_row_shift(self, enabled: bool):
         self._hide_row_shift_tooltip()
@@ -107,7 +107,7 @@ class RightWindowFrame(tk.Frame):
             self.add_config_button.config(**style_map['disabled'], state=tk.DISABLED)
             self.subtract_config_button.config(**style_map['disabled'], state=tk.DISABLED)
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def _on_row_shift_hover_enter(self, event):
         if event.widget.cget("state") != tk.DISABLED:
             return
@@ -125,17 +125,17 @@ class RightWindowFrame(tk.Frame):
         )
         label.pack()
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def _on_row_shift_hover_leave(self, _):
         self._hide_row_shift_tooltip()
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def _hide_row_shift_tooltip(self):
         if self._row_shift_tooltip:
             self._row_shift_tooltip.destroy()
             self._row_shift_tooltip = None
     
-    @try_except_catcher
+    @class_fn_try_except_catcher
     # run pack_listbox_page_insert with check to not repack same insert
     def handle_pack_listbox_page_insert_click(self, insert_type_enum: ListboxPageTemplateEnum):
         # guard logic - block re-packing same listbox
@@ -146,7 +146,7 @@ class RightWindowFrame(tk.Frame):
             self._store.current_listbox_template.pack_forget()
         self.pack_listbox_page_insert(insert_type_enum=insert_type_enum)
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def pack_listbox_page_insert(self, insert_type_enum: ListboxPageTemplateEnum):
         match insert_type_enum:
             case ListboxPageTemplateEnum.OPTIONS:
@@ -164,7 +164,7 @@ class RightWindowFrame(tk.Frame):
     
     
     # add new item to listbox
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def handle_add(self, index=None):
         if self._store.block_active_adding:
             logging.debug("handle_add state true. Cannot add.")
@@ -193,7 +193,7 @@ class RightWindowFrame(tk.Frame):
         )
         
     # remove current selection
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def handle_subtract_selection(self, _=None):
         if self._store.block_active_adding:
             logging.debug("addning state is blocked/in session. Cannot subtract.")
@@ -232,14 +232,14 @@ class RightWindowFrame(tk.Frame):
             current_listbox.delete(current_selection_index)
 
     # remove current session by index - not yet saved to tree or page
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def handle_subtract_index(self, index: int):
         try:
             self._options_config_listbox_mngr.delete(index)
         except Exception as e:
             logging.error(f"Error in handle_subtract_in_session: {e}", exc_info=True)
 
-    @try_except_catcher
+    @class_fn_try_except_catcher
     def show_right_window_error(self, message: str):
         self._alert.error(message)
 
