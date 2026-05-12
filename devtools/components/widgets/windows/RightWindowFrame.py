@@ -82,7 +82,7 @@ class RightWindowFrame(tk.Frame):
         self.subtract_config_button.grid(row=1, column=1, padx=5, pady=5, sticky='sw')
         # add focus on click - allows focus out from listbox to work
         self.header_frame.bind("<Button-1>", lambda e: self.header_frame.focus_set())
-        self._alert = Alert(self, style=Style.right_window['error_bar'])
+        self._alert = Alert(self)
         #  pack header
         self.header_frame.pack(fill='both')
         # load _options_config_listbox_mngr listbox by default

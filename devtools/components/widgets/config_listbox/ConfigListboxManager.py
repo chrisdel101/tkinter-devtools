@@ -33,7 +33,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                  store: Store
                  ):
         tk.Listbox.__init__(self, master=master, **
-                            Style.config_listbox_manager.get('listbox'))
+        Style.config_listbox_manager.get('listbox'))
         self.name = f"{listbox_page_template_enum.name} listbox"
         self._observable: Observable = observable
         self._store: Store = store

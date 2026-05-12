@@ -14,15 +14,6 @@ class Style:
         background=[("selected", "grey")],
         foreground=[("selected", "black")]
     )
-    left_window = {
-        'frame': {
-            # 'font': ("Courier New", 14),
-
-            # 'width': 300,
-            # 'height': 300,
-            # 'bg': 'red',
-        }
-    }
     treeview = {
         "selectbackground": "yellow",
         'font': ("Helvetica New", 13),
@@ -93,7 +84,6 @@ class Style:
             'padx': 8,
             'pady': 4,
             'anchor': 'w',
-            'auto_clear_ms': 4000,
         },
         'row_shift_tooltip': {
             'text': 'Disabled. All options shown',
