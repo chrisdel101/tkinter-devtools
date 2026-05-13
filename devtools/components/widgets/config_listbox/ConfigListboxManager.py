@@ -143,21 +143,18 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             listbox_item_pairs_dict=listbox_item_pairs_dict,
             config_setting_map=option_setting_map
         )
+    @class_fn_try_except_catcher
     def _load_image_from_path(self, path: str):
-        selected = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
         photo = tk.PhotoImage(file=path)
-        selected._devtools_image = photo
         return photo
-
+    
+    @class_fn_try_except_catcher
     def _resolve_image_option_value(self, key: str, value: str):
         if key != ConfigOptionKeyName.IMAGE.value or not value:
             return value
         if value in self.tk.call('image', 'names'):
             return value
-        try:
-            return self._load_image_from_path(value)
-        except tk.TclError:
-            raise
+        return self._load_image_from_path(value)
 
     # main entry point to page app - pass value widget input to apply to actual page app widget
     @class_fn_try_except_catcher
@@ -187,7 +184,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                 }))
         else:
             # GEOMETRY UPDATE HANDLING
-            selected_widget = self._store.tree_state.get(TreeStateKey.SELECTED_ITEM_WIDGET.value)
+            selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
             resolved_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
             # current geometry listbox state snapshot (used for UI refresh)
             current_geometry_state = Utils.resolve_geometry_aliases(self._store.listbox_manager_template_value_state_get(

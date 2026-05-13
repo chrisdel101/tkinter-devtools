@@ -13,7 +13,7 @@ class Style:
         "Treeview",
         background=[("selected", "grey")],
         foreground=[("selected", "black")]
-    )
+    ),
     treeview = {
         "selectbackground": "yellow",
         'font': ("Helvetica New", 13),

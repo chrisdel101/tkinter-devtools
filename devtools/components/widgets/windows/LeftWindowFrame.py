@@ -1,15 +1,14 @@
 from __future__ import annotations
 import tkinter as tk
-from devtools.style import Style
 from devtools.components.widgets.treeview.TreeView import TreeView
 
 class LeftWindowFrame(tk.Frame):
-    def __init__(self, 
-            master, 
-            parent, 
-            observable, 
+    def __init__(self,
+            master,
+            parent,
+            observable,
             store):
-        super().__init__(parent,  **Style.left_window['frame'])
+        super().__init__(parent)
         self._observable = observable
         self._store = store
         self.tree = TreeView(
