@@ -120,19 +120,19 @@ class Store:
             case ListboxPageTemplateEnum.OPTIONS:
                 self.current_listbox_template_internal_state[
                     ListboxPageTemplateEnum.OPTIONS] = state_to_set
-                # self._observable.notify_observers(
-                #     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                #            data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.OPTIONS].get(enum_key.value),
-                #            target=current_target_listbox_insert)
-                # )
+                self._observable.notify_observers(
+                    Action(type=ActionType.INSERT_LISTBOX_ITEMS,
+                           data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.OPTIONS],
+                           target=current_target_listbox_insert)
+                )
             case ListboxPageTemplateEnum.GEOMETRY:
                 self.current_listbox_template_internal_state[
                     ListboxPageTemplateEnum.GEOMETRY] = state_to_set
-                # self._observable.notify_observers(
-                #     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                #         data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.GEOMETRY].get(enum_key.value),
-                #         target=current_target_listbox_insert)
-                #     )
+                self._observable.notify_observers(
+                    Action(type=ActionType.INSERT_LISTBOX_ITEMS,
+                        data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.GEOMETRY],
+                        target=current_target_listbox_insert)
+                    )
 
 
     @property

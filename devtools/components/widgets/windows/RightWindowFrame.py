@@ -242,6 +242,7 @@ class RightWindowFrame(tk.Frame):
     @class_fn_try_except_catcher
     def show_right_window_error(self, message: str):
         self._alert.error(message)
-
+        
+    @class_fn_try_except_catcher
     def notify(self, action: Action):
         Utils.dispatch_action(self, action)
