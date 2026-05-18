@@ -30,7 +30,7 @@ class TreeView(ttk.Treeview):
         self.selection_set(self.get_children()[0])
 
     @class_fn_try_except_catcher
-    # Bind Map, Unmap, and Destroy on master to watch for widget tree changes.
+    # Bind Map, Unmap, and Destroy on master to watch for widget tree change - like when pages are changed
     def _bind_tree_change_events(self):
         self.master.bind_all("<Map>", self.handle_tcl_event_emit, add=True)
         self.master.bind_all("<Unmap>", self.handle_tcl_event_emit, add=True)
@@ -59,7 +59,6 @@ class TreeView(ttk.Treeview):
 
     # Filter widget tree events and schedule a refresh if the source is relevant - comes from tcl when these events are emitted
     @class_fn_try_except_catcher
-
     def handle_tcl_event_emit(self, event):
         event_widget = getattr(event, "widget", None)
         if event_widget is None or not isinstance(event_widget, tk.BaseWidget):
@@ -534,6 +533,7 @@ class TreeView(ttk.Treeview):
     # delete tree and all branches
     def delete_tree(self):
         self.delete(*self.get_children())
+        
     @class_fn_try_except_catcher
     # insert item into treeview
     def insert_item(self, parent_item_id, index: str, widget: tk.Widget):

@@ -2,6 +2,7 @@ from __future__ import annotations
 import tkinter as tk
 
 from devtools.constants import CommonGeometryOption, GeometryType, GridGeometryOption, PackGeometryOptionName, PlaceGeometryOption
+from devtools.decorators.decorators import static_fn_try_except_catcher
 from devtools.utils import Utils
 
 
@@ -27,6 +28,13 @@ class TreeViewUtils:
 				return geometry_type
 
 	@staticmethod
+	@static_fn_try_except_catcher
+	def _grid_pos(widget: tk.Widget):
+		info = widget.grid_info()
+		return (TreeViewUtils._safe_int(info.get("row"), 0), TreeViewUtils._safe_int(info.get("column"), 0))
+
+	@staticmethod
+	@static_fn_try_except_catcher
 	def _nearest_grid_sibling_positions(widget: tk.Widget):
 		parent = widget.master
 		if parent is None:
@@ -38,26 +46,17 @@ class TreeViewUtils:
 
 		index = siblings.index(widget)
 
-		def to_grid_pos(target_widget: tk.Widget):
-			try:
-				info = target_widget.grid_info()
-				row = TreeViewUtils._safe_int(info.get("row"), 0)
-				column = TreeViewUtils._safe_int(info.get("column"), 0)
-				return row, column
-			except Exception:
-				return None
-
 		prev_grid = None
 		for sibling in reversed(siblings[:index]):
 			if sibling.winfo_ismapped() and sibling.winfo_manager() == GeometryType.GRID.value:
-				prev_grid = to_grid_pos(sibling)
+				prev_grid = TreeViewUtils._grid_pos(sibling)
 				if prev_grid is not None:
 					break
 
 		next_grid = None
 		for sibling in siblings[index + 1:]:
 			if sibling.winfo_ismapped() and sibling.winfo_manager() == GeometryType.GRID.value:
-				next_grid = to_grid_pos(sibling)
+				next_grid = TreeViewUtils._grid_pos(sibling)
 				if next_grid is not None:
 					break
 

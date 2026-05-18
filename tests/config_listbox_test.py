@@ -10,7 +10,7 @@ from devtools.components.observable import Observable
 from devtools.components.store import Store
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
-from devtools.constants import ActionType, CommonGeometryOption, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, PackGeometryOptionName
+from devtools.constants import ActionType, CommonGeometryOption, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, PackGeometryOptionName, TreeStateKey
 
 
 class RecordingObserver:
@@ -317,3 +317,228 @@ class RightWindowAddFlowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# ---------------------------------------------------------------------------
+# RightWindowFrame — tab switching, row shift, geo button visibility
+# ---------------------------------------------------------------------------
+
+class RightWindowTabTests(unittest.TestCase):
+    def setUp(self):
+        self.trace_patcher = patch.object(logging, "trace", create=True)
+        self.trace_patcher.start()
+        self.root = tk.Tk()
+        self.root.withdraw()
+        self.observable = Observable()
+        self.store = Store(observable=self.observable, **TEST_RUNTIME_SETTINGS)
+        self.parent = tk.Frame(self.root)
+        self.parent.pack()
+        from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+        self.rw = RightWindowFrame(
+            parent=self.parent,
+            observable=self.observable,
+            store=self.store,
+        )
+
+    def tearDown(self):
+        self.root.destroy()
+        self.trace_patcher.stop()
+
+    def test_options_tab_active_by_default(self):
+        from devtools.constants import ListboxPageTemplateEnum
+        self.assertEqual(
+            self.store.current_listbox_template._listbox_page_template_insert_enum,
+            ListboxPageTemplateEnum.OPTIONS,
+        )
+
+    def test_switching_to_geometry_tab_updates_current_template(self):
+        from devtools.constants import ListboxPageTemplateEnum
+        self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
+        self.assertEqual(
+            self.store.current_listbox_template._listbox_page_template_insert_enum,
+            ListboxPageTemplateEnum.GEOMETRY,
+        )
+
+    def test_switching_to_options_tab_updates_current_template(self):
+        from devtools.constants import ListboxPageTemplateEnum
+        self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
+        self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.OPTIONS)
+        self.assertEqual(
+            self.store.current_listbox_template._listbox_page_template_insert_enum,
+            ListboxPageTemplateEnum.OPTIONS,
+        )
+
+    def test_geometry_tab_sets_row_shift_false(self):
+        from devtools.constants import ListboxPageTemplateEnum
+        self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
+        self.assertFalse(self.store.row_shift)
+
+    def test_options_tab_sets_row_shift_true(self):
+        from devtools.constants import ListboxPageTemplateEnum
+        self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
+        self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.OPTIONS)
+        self.assertTrue(self.store.row_shift)
+
+    def test_handle_pack_click_same_tab_is_noop(self):
+        from devtools.constants import ListboxPageTemplateEnum
+        # Already on OPTIONS; clicking it again must not re-pack
+        original_template = self.store.current_listbox_template
+        self.rw.handle_pack_listbox_page_insert_click(ListboxPageTemplateEnum.OPTIONS)
+        self.assertIs(self.store.current_listbox_template, original_template)
+
+    def test_toggle_row_shift_enables_add_subtract_buttons(self):
+        self.rw.toggle_row_shift(True)
+        self.assertEqual(str(self.rw.add_config_button.cget("state")), tk.NORMAL)
+        self.assertEqual(str(self.rw.subtract_config_button.cget("state")), tk.NORMAL)
+
+    def test_toggle_row_shift_disables_add_subtract_buttons(self):
+        self.rw.toggle_row_shift(False)
+        self.assertEqual(str(self.rw.add_config_button.cget("state")), tk.DISABLED)
+        self.assertEqual(str(self.rw.subtract_config_button.cget("state")), tk.DISABLED)
+
+
+class RightWindowSubtractTests(unittest.TestCase):
+    def setUp(self):
+        self.trace_patcher = patch.object(logging, "trace", create=True)
+        self.trace_patcher.start()
+        self.root = tk.Tk()
+        self.root.withdraw()
+        self.observable = Observable()
+        self.store = Store(observable=self.observable, **TEST_RUNTIME_SETTINGS)
+        self.parent = tk.Frame(self.root)
+        self.parent.pack()
+        from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+        self.rw = RightWindowFrame(
+            parent=self.parent,
+            observable=self.observable,
+            store=self.store,
+        )
+        # wire a page widget with a frozen config so subtract can look it up
+        self.page_widget = tk.Frame(self.root)
+        self.page_widget.pack()
+        self.root.update_idletasks()
+        from devtools.utils import Utils
+        frozen = Utils.conform_option_lisbox_config(
+            Utils.filter_non_used_config_options(self.page_widget.configure())
+        )
+        self.store.tree_state_set(
+            TreeStateKey.SELECTED_ITEM_WIDGET, self.page_widget
+        )
+        self.store.tree_state_set(
+            TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID,
+            {id(self.page_widget): {
+                "tree_id": "I_FAKE",
+                "widget": self.page_widget,
+                "widget_config_init_frozen": frozen,
+            }}
+        )
+
+    def tearDown(self):
+        self.root.destroy()
+        self.trace_patcher.stop()
+
+    def test_subtract_selection_removes_listbox_row(self):
+        lb = self.store.current_listbox_template
+        lb.insert(tk.END, "relief: flat")
+        lb.selection_set(0)
+        lb.activate(0)
+        before = lb.size()
+        self.rw.handle_subtract_selection()
+        self.assertEqual(lb.size(), before - 1)
+
+    def test_subtract_selection_noop_when_nothing_selected(self):
+        lb = self.store.current_listbox_template
+        lb.insert(tk.END, "relief: flat")
+        # no selection
+        before = lb.size()
+        self.rw.handle_subtract_selection()
+        self.assertEqual(lb.size(), before)
+
+    def test_subtract_selection_blocked_when_add_in_progress(self):
+        lb = self.store.current_listbox_template
+        lb.insert(tk.END, "relief: flat")
+        lb.selection_set(0)
+        self.store.block_active_adding = True
+        before = lb.size()
+        self.rw.handle_subtract_selection()
+        self.assertEqual(lb.size(), before)
+
+    def test_handle_subtract_index_removes_row_at_index(self):
+        lb = self.store.current_listbox_template
+        lb.insert(tk.END, "alpha: 1")
+        lb.insert(tk.END, "beta: 2")
+        self.rw.handle_subtract_index(0)
+        self.assertEqual(lb.size(), 1)
+        self.assertEqual(lb.get(0), "beta: 2")
+
+
+class RightWindowErrorTests(unittest.TestCase):
+    def setUp(self):
+        self.trace_patcher = patch.object(logging, "trace", create=True)
+        self.trace_patcher.start()
+        self.root = tk.Tk()
+        self.root.withdraw()
+        self.observable = Observable()
+        self.store = Store(observable=self.observable, **TEST_RUNTIME_SETTINGS)
+        self.parent = tk.Frame(self.root)
+        self.parent.pack()
+        from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+        self.rw = RightWindowFrame(
+            parent=self.parent,
+            observable=self.observable,
+            store=self.store,
+        )
+
+    def tearDown(self):
+        self.root.destroy()
+        self.trace_patcher.stop()
+
+    def test_show_right_window_error_displays_message(self):
+        self.rw.show_right_window_error("something broke")
+        self.assertEqual(self.rw._alert._label.cget("text"), "something broke")
+
+    def test_show_right_window_error_packs_alert(self):
+        self.rw.show_right_window_error("oops")
+        self.assertNotEqual(self.rw._alert.winfo_manager(), "")
+
+
+# ---------------------------------------------------------------------------
+# Alert — show / auto-clear / close
+# ---------------------------------------------------------------------------
+
+class AlertTests(unittest.TestCase):
+    def setUp(self):
+        self.root = tk.Tk()
+        self.root.withdraw()
+        from devtools.components.widgets.Alert import Alert
+        self.parent = tk.Frame(self.root)
+        self.parent.pack()
+        self.alert = Alert(self.parent)
+
+    def tearDown(self):
+        self.root.destroy()
+
+    def test_error_sets_label_text(self):
+        self.alert.error("test error")
+        self.assertEqual(self.alert._label.cget("text"), "test error")
+
+    def test_error_packs_alert(self):
+        self.alert.error("visible now")
+        self.assertNotEqual(self.alert.winfo_manager(), "")
+
+    def test_clear_hides_alert(self):
+        self.alert.error("something")
+        self.alert._clear()
+        self.assertEqual(self.alert.winfo_manager(), "")
+
+    def test_clear_cancels_after_id(self):
+        self.alert.error("something")
+        after_id = self.alert._after_id
+        self.assertIsNotNone(after_id)
+        self.alert._clear()
+        self.assertIsNone(self.alert._after_id)
+
+    def test_second_error_replaces_text(self):
+        self.alert.error("first")
+        self.alert.error("second")
+        self.assertEqual(self.alert._label.cget("text"), "second")

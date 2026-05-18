@@ -59,7 +59,7 @@ class DevtoolsWindow(tk.Toplevel):
         self.left_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
         # pack right window
         self.right_window.pack(side="left", fill="both", expand=True, padx=0, pady=0, ipady=0, ipadx=0)
-
+        # Deactivate tracks when focus is lost - focus out useless in tk
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
         self.wm_geometry(window_geometry)
