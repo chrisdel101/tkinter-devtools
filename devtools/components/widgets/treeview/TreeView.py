@@ -447,10 +447,12 @@ class TreeView(ttk.Treeview):
         # filter out unwanted config values not in ConfigOptionName - keep original dict formating
         filtered_config_dict: dict[str, tuple] = Utils.filter_non_used_config_options(
             original_options_config)
-        # extract the actual set value from value tuples 
+        # extract the actual set value from value tuples
         # - is key val str pairs
         key_value_config_dict: dict[str, str] = Utils.conform_option_lisbox_config(
             filtered_config_dict)
+        # resolve image internal name (e.g. pyimage8) to the file path it was loaded from
+        key_value_config_dict = Utils.resolve_image_name_to_path(selected_item_widget, key_value_config_dict)
         # sort by alpha order
         key_value_config_sorted_dict = Utils.sorted_dict(
             key_value_config_dict)
