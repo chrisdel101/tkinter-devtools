@@ -6,8 +6,9 @@ from devtools.components.observable import Action
 from devtools.constants import ActionType
 
 
-def _get_observable_and_notify_(instance, message: str):
+def _display_error_alert(instance, message: str):
     observable = getattr(instance, '_observable', None)
+    # _get_observable_and_notify_
     if observable:
         observable.notify_observers(Action(type=ActionType.SHOW_RIGHT_WINDOW_ERROR, data=message))
 
@@ -26,6 +27,7 @@ def block_allow_input_focus_out_logic(func):
     except Exception as e:
         logging.error("Error in block_allow_input_focus_out_logic decorator.", exc_info=True)
 
+# wraps static funcs and has different args[0]
 def static_fn_try_except_catcher(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -36,7 +38,7 @@ def static_fn_try_except_catcher(func):
         except Exception as e:
             logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
     return wrapper
-
+# wraps class instance funcs and has self as caller_instance 
 def class_fn_try_except_catcher(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -47,7 +49,7 @@ def class_fn_try_except_catcher(func):
         except tk.TclError as e:
             logging.error(f"--tcl error in {func.__name__}: {e}---", exc_info=True)
             if caller_instance:
-                _get_observable_and_notify_(caller_instance, str(e))
+                _display_error_alert(caller_instance, str(e))
         except Exception as e:
             logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
     return wrapper

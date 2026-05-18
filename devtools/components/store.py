@@ -119,18 +119,18 @@ class Store:
             # set one of the ListboxTemplateNotifyStateKey values by ListboxPageTemplateEnum
             case ListboxPageTemplateEnum.OPTIONS:
                 self.current_listbox_template_internal_state[
-                    ListboxPageTemplateEnum.OPTIONS] = state_to_set
+                    ListboxPageTemplateEnum.OPTIONS][ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                           data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.OPTIONS],
+                           data=state_to_set,
                            target=current_target_listbox_insert)
                 )
             case ListboxPageTemplateEnum.GEOMETRY:
                 self.current_listbox_template_internal_state[
-                    ListboxPageTemplateEnum.GEOMETRY] = state_to_set
+                    ListboxPageTemplateEnum.GEOMETRY][ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE.value] = state_to_set
                 self._observable.notify_observers(
                     Action(type=ActionType.INSERT_LISTBOX_ITEMS,
-                        data=self.current_listbox_template_internal_state[ListboxPageTemplateEnum.GEOMETRY],
+                        data=state_to_set,
                         target=current_target_listbox_insert)
                     )
 
