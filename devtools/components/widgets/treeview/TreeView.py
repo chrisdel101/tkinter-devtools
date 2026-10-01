@@ -35,9 +35,17 @@ class TreeView(ttk.Treeview):
         self.master.bind_all("<Map>", self.handle_tcl_event_emit, add=True)
         self.master.bind_all("<Unmap>", self.handle_tcl_event_emit, add=True)
         self.master.bind_all("<Destroy>", self.handle_tcl_event_emit, add=True)
+        self.master.winfo_toplevel().bind("<Configure>", self._on_toplevel_configure, add=True)
 
     @class_fn_try_except_catcher
-    # Return True if the widget or any ancestor belongs to the devtools window.
+    # Reposition the overlay to track window moves/resizes - done in place keeps the Sborder visible.
+    def _on_toplevel_configure(self, _):
+        widget = self._store.tree_highlighted_widget
+        if widget is not None and widget.winfo_exists():
+            self._show_highlight_overlay(widget)
+
+    @class_fn_try_except_catcher
+    # Return True if the widget or any ancestor belongs to the devtools window vs appS
     def _is_devtools_widget(self, widget: tk.Widget) -> bool:
         current = widget
         while current is not None:
@@ -381,7 +389,16 @@ class TreeView(ttk.Treeview):
         # Raise edges to the top of the toplevel's stacking order so nothing covers them.
         for edge in self._store.tree_highlight_overlay_edges:
             edge.lift()
+        # Repaint once idle - otherwise some sides don't draw on open or when devtools is focused
+        self.after_idle(self._repaint_highlight_overlay)
         return True
+
+    @class_fn_try_except_catcher
+    # Force each edge to redraw by re-setting its background.
+    def _repaint_highlight_overlay(self):
+        for edge in self._store.tree_highlight_overlay_edges:
+            if edge.winfo_exists():
+                edge.configure(bg=edge.cget('bg'))
 
     @class_fn_try_except_catcher
     # Hide all overlay edge frames by removing them from the layout.

@@ -61,6 +61,7 @@ class Store:
         self.tree_highlight_overlay_parent: tk.Misc | None = None # parent of overlay to lift after highlight
         self.tree_applying_highlight: bool = False # guard to block multiple highlight at once
         self.tree_store_widget_by_obj_mem_id: dict[int, dict[str, tk.Widget]] = {} # widget by mem id to find widgets
+        self.tree_highlight_resize_job = None # debounce token for re-showing overlay after window resize
 
     @class_fn_try_except_catcher
     def tree_state_get(self, enum_key:  TreeStateKey):
@@ -321,3 +322,11 @@ class Store:
     @tree_store_widget_by_obj_mem_id.setter
     def tree_store_widget_by_obj_mem_id(self, value):
         self._tree_store_widget_by_obj_mem_id = value
+
+    @property
+    def tree_highlight_resize_job(self):
+        return self._tree_highlight_resize_job
+
+    @tree_highlight_resize_job.setter
+    def tree_highlight_resize_job(self, value):
+        self._tree_highlight_resize_job = value
