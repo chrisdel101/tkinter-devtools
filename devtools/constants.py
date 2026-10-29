@@ -3,8 +3,7 @@ import tkinter as tk
 from typing import Any, NotRequired, TypedDict
 
 DEVTOOLS_TOP_LEVEL_NAME = "tk_devtools_window"
-IS_DEVTOOLS_MARKER = "IS_DEVTOOLS_MARKER"  # attach to identify if parent widget is devtools window
-MAX_KEY_WIDTH = 30  # adjust as needed
+IS_DEVTOOLS_SENTINEL = "IS_DEVTOOLS_SENTINEL"  # attach to identify if parent widget is devtools window
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
 
 # define log levels by value

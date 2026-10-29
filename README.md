@@ -103,3 +103,8 @@ print("Tcl library:", tk._tkinter.__file__)
 EOF
 ```
 
+## Run Tests
+
+```python
+python3 -m unittest discover -s tests -p "*_test.py"
+```

@@ -4,7 +4,7 @@ import tkinter as tk
 from typing import TypedDict, Unpack
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
-from devtools.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_MARKER, ActionType, CustomLogLevel, ListBoxEntryInputAction
+from devtools.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_SENTINEL, ActionType, CustomLogLevel, ListBoxEntryInputAction
 from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -20,12 +20,12 @@ class DevtoolsWindowKwargs(TypedDict, total=False):
 
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, 
-            master: tk.Misc, # root or app 
+            master: tk.Misc, # app 
             **kwargs: Unpack[DevtoolsWindowKwargs]
         ):
         super().__init__(master, name=DEVTOOLS_TOP_LEVEL_NAME)
 
-        self.devtools_marker = IS_DEVTOOLS_MARKER
+        self.devtools_marker = IS_DEVTOOLS_SENTINEL
         # run to update page render for before tree maps
         master.update_idletasks()
         
