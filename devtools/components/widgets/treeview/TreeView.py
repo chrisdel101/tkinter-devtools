@@ -195,8 +195,8 @@ class TreeView(ttk.Treeview):
         # Fallback for grid-managed widgets: row/column order
         if geo_manager_info and geo_manager_info.geometry_type == GeometryType.GRID:
             info = child.grid_info()
-            row = TreeViewUtils._safe_int(info.get("row"), 0)
-            column = TreeViewUtils._safe_int(info.get("column"), 0)
+            row = TreeViewUtils.safe_int(info.get("row"), 0)
+            column = TreeViewUtils.safe_int(info.get("column"), 0)
             return (1, row, column, original_index)
 
         # Fallback for pack-managed widgets: Tk pack sibling order
@@ -207,8 +207,8 @@ class TreeView(ttk.Treeview):
         # Fallback for place-managed widgets: y/x coordinates
         if geo_manager_info and geo_manager_info.geometry_type == GeometryType.PLACE:
             info = child.place_info()
-            y = TreeViewUtils._safe_int(info.get("y"), 0)
-            x = TreeViewUtils._safe_int(info.get("x"), 0)
+            y = TreeViewUtils.safe_int(info.get("y"), 0)
+            x = TreeViewUtils.safe_int(info.get("x"), 0)
             return (1, y, x, original_index)
 
         # Final fallback: keep original sibling declaration order

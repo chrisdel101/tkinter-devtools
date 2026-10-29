@@ -8,7 +8,7 @@ from devtools.utils import Utils
 
 class TreeViewUtils:
 	@staticmethod
-	def _safe_int(value, default=0) -> int:
+	def safe_int(value, default=0) -> int:
 		try:
 			return int(value)
 		except (TypeError, ValueError):
@@ -31,7 +31,7 @@ class TreeViewUtils:
 	@static_fn_try_except_catcher
 	def _grid_pos(widget: tk.Widget):
 		info = widget.grid_info()
-		return (TreeViewUtils._safe_int(info.get("row"), 0), TreeViewUtils._safe_int(info.get("column"), 0))
+		return (TreeViewUtils.safe_int(info.get("row"), 0), TreeViewUtils.safe_int(info.get("column"), 0))
 
 	@staticmethod
 	@static_fn_try_except_catcher

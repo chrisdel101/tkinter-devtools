@@ -15,20 +15,20 @@ from devtools.utils import Utils
 class SafeIntTests(unittest.TestCase):
 
     def test_integer_string_converts(self):
-        self.assertEqual(TreeViewUtils._safe_int("5"), 5)
+        self.assertEqual(TreeViewUtils.safe_int("5"), 5)
 
     def test_none_returns_default(self):
-        self.assertEqual(TreeViewUtils._safe_int(None, 99), 99)
+        self.assertEqual(TreeViewUtils.safe_int(None, 99), 99)
 
     def test_empty_string_returns_default(self):
-        self.assertEqual(TreeViewUtils._safe_int("", 0), 0)
+        self.assertEqual(TreeViewUtils.safe_int("", 0), 0)
 
     def test_float_string_returns_default(self):
         # "1.5" cannot be cast to int directly — must return default
-        self.assertEqual(TreeViewUtils._safe_int("1.5", -1), -1)
+        self.assertEqual(TreeViewUtils.safe_int("1.5", -1), -1)
 
     def test_zero_string_converts_to_zero(self):
-        self.assertEqual(TreeViewUtils._safe_int("0"), 0)
+        self.assertEqual(TreeViewUtils.safe_int("0"), 0)
 
 
 class CheckSiblingGeometryTypeTests(unittest.TestCase):
