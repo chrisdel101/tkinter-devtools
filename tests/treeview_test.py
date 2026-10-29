@@ -106,7 +106,7 @@ class TreeViewTests(unittest.TestCase):
         try:
             frame = tk.Frame(root)
             tree = TreeView.__new__(TreeView)
-            tree._store = SimpleNamespace(tree_applying_highlight=False)
+            tree._store = SimpleNamespace(is_tree_applying_highlight=False)
             tree._is_devtools_widget = Mock(return_value=False)
             tree._is_relevant_tree_event_widget = Mock(return_value=True)
             tree.schedule_tree_refresh = Mock()
@@ -228,6 +228,11 @@ class _TreeFixture(unittest.TestCase):
         self.root.update_idletasks()
 
     def tearDown(self):
+        # Remove the tree's bind_all handlers so destroying the window doesn't queue a tree rebuild
+        for event in ("<Map>", "<Unmap>", "<Destroy>"):
+            self.root.unbind_all(event)
+        # Run already-queued callbacks while the tree still exists
+        self.root.update_idletasks()
         self.root.destroy()
         self.trace_patcher.stop()
         self.low_trace_patcher.stop()
@@ -380,51 +385,51 @@ class StoreLookupTests(_TreeFixture):
 class HighlightTests(_TreeFixture):
 
     def test_apply_sets_highlighted_widget(self):
-        with patch.object(self.tree, "_show_highlight_overlay", return_value=False):
-            self.tree._apply_highlight(self.frame_a)
+        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
+            self.tree._highlighter.apply_highlight(self.frame_a)
             self.root.update_idletasks()
         self.assertIs(self.store.tree_highlighted_widget, self.frame_a)
 
     def test_apply_saves_config(self):
-        with patch.object(self.tree, "_show_highlight_overlay", return_value=False):
-            self.tree._apply_highlight(self.frame_a)
+        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
+            self.tree._highlighter.apply_highlight(self.frame_a)
             self.root.update_idletasks()
         self.assertIsNotNone(self.store.tree_highlight_saved_config)
 
     def test_remove_clears_highlighted_widget(self):
-        with patch.object(self.tree, "_show_highlight_overlay", return_value=False):
-            self.tree._apply_highlight(self.frame_a)
+        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
+            self.tree._highlighter.apply_highlight(self.frame_a)
             self.root.update_idletasks()
-        self.tree._remove_highlight()
+        self.tree._highlighter._remove_highlight()
         self.assertIsNone(self.store.tree_highlighted_widget)
 
     def test_remove_clears_saved_config(self):
-        with patch.object(self.tree, "_show_highlight_overlay", return_value=False):
-            self.tree._apply_highlight(self.frame_a)
+        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
+            self.tree._highlighter.apply_highlight(self.frame_a)
             self.root.update_idletasks()
-        self.tree._remove_highlight()
+        self.tree._highlighter._remove_highlight()
         self.assertIsNone(self.store.tree_highlight_saved_config)
 
     def test_config_strategy_restores_original_highlightthickness(self):
         original = self.frame_a.cget("highlightthickness")
-        with patch.object(self.tree, "_show_highlight_overlay", return_value=False):
-            self.tree._apply_highlight(self.frame_a)
+        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
+            self.tree._highlighter.apply_highlight(self.frame_a)
             self.root.update_idletasks()
-        self.tree._remove_highlight()
+        self.tree._highlighter._remove_highlight()
         self.assertEqual(self.frame_a.cget("highlightthickness"), original)
 
     def test_remove_with_nothing_highlighted_does_not_raise(self):
         self.store.tree_highlighted_widget = None
         self.store.tree_highlight_saved_config = None
         try:
-            self.tree._remove_highlight()
+            self.tree._highlighter._remove_highlight()
         except Exception as exc:
             self.fail(f"_remove_highlight raised unexpectedly: {exc}")
 
     def test_hide_overlay_calls_place_forget_on_all_edges(self):
         edges = [Mock(winfo_exists=Mock(return_value=True)) for _ in range(4)]
         self.store.tree_highlight_overlay_edges = edges
-        self.tree._hide_highlight_overlay()
+        self.tree._highlighter._hide_highlight_overlay()
         for edge in edges:
             edge.place_forget.assert_called_once()
 
@@ -444,7 +449,7 @@ class TclEventEmitTests(unittest.TestCase):
 
     def _tree(self):
         t = TreeView.__new__(TreeView)
-        t._store = SimpleNamespace(tree_applying_highlight=False)
+        t._store = SimpleNamespace(is_tree_applying_highlight=False)
         t.schedule_tree_refresh = Mock()
         return t
 
@@ -477,7 +482,7 @@ class TclEventEmitTests(unittest.TestCase):
         try:
             frame = tk.Frame(root)
             t = self._tree()
-            t._store.tree_applying_highlight = True
+            t._store.is_tree_applying_highlight = True
             t._is_devtools_widget = Mock(return_value=False)
             t._is_relevant_tree_event_widget = Mock(return_value=True)
             t.handle_tcl_event_emit(SimpleNamespace(widget=frame))

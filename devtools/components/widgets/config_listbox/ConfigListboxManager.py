@@ -83,7 +83,6 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
     @class_fn_try_except_catcher
     def start_update(self, event):
         option_setting_map = None
-        index = self.index
         # index of clicked item on list
         updating_item_index: int = self._get_index_from_event_coords(index=self.index, event=event)
         # extract starting values from list item

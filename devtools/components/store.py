@@ -59,7 +59,7 @@ class Store:
         self.tree_highlight_saved_config: dict | None = None # store original config to restore after highlight
         self.tree_highlight_overlay_edges: list[tk.Frame] = [] # overlay on top of widget to show highlight - stored to remove after
         self.tree_highlight_overlay_parent: tk.Misc | None = None # parent of overlay to lift after highlight
-        self.tree_applying_highlight: bool = False # guard to block multiple highlight at once
+        self.is_tree_applying_highlight: bool = False # guard to block multiple highlight at once
         self.tree_store_widget_by_obj_mem_id: dict[int, dict[str, tk.Widget]] = {} # widget by mem id to find widgets
         self.tree_highlight_resize_job = None # debounce token for re-showing overlay after window resize
 
@@ -308,12 +308,12 @@ class Store:
         self._tree_highlight_overlay_parent = value
 
     @property
-    def tree_applying_highlight(self):
-        return self._tree_applying_highlight
+    def is_tree_applying_highlight(self):
+        return self._is_tree_applying_highlight
 
-    @tree_applying_highlight.setter
-    def tree_applying_highlight(self, value):
-        self._tree_applying_highlight = value
+    @is_tree_applying_highlight.setter
+    def is_tree_applying_highlight(self, value):
+        self._is_tree_applying_highlight = value
 
     @property
     def tree_store_widget_by_obj_mem_id(self):
