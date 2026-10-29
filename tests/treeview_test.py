@@ -9,7 +9,7 @@ from devtools.components.observable import Observable
 from devtools.components.store import Store
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.components.widgets.treeview.TreeView import TreeView
-from devtools.constants import GeometryType, IS_DEVTOOLS_MARKER, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import GeometryType, IS_DEVTOOLS_SENTINEL, ListboxPageTemplateEnum, TreeStateKey
 
 _TEST_SETTINGS: DevtoolsWindowKwargs = {
     "show_unmapped_widgets": True,
@@ -74,7 +74,7 @@ class _FakeParent:
 
 class TreeViewTests(unittest.TestCase):
     def test_is_devtools_widget_detects_marker_in_parent_chain(self):
-        root = SimpleNamespace(devtools_marker=IS_DEVTOOLS_MARKER, master=None)
+        root = SimpleNamespace(devtools_marker=IS_DEVTOOLS_SENTINEL, master=None)
         child = SimpleNamespace(master=root)
         tree = TreeView.__new__(TreeView)
 
@@ -94,8 +94,8 @@ class TreeViewTests(unittest.TestCase):
         tree.after_idle = Mock(return_value="job-id")
         tree.rebuild_tree_from_root = Mock()
 
-        tree.schedule_tree_refresh()
-        tree.schedule_tree_refresh()
+        tree._schedule_tree_refresh()
+        tree._schedule_tree_refresh()
 
         self.assertEqual(tree._store.tree_refresh_job, "job-id")
         tree.after_idle.assert_called_once()
@@ -109,28 +109,28 @@ class TreeViewTests(unittest.TestCase):
             tree._store = SimpleNamespace(is_tree_applying_highlight=False)
             tree._is_devtools_widget = Mock(return_value=False)
             tree._is_relevant_tree_event_widget = Mock(return_value=True)
-            tree.schedule_tree_refresh = Mock()
+            tree._schedule_tree_refresh = Mock()
     
-            tree.handle_tcl_event_emit(SimpleNamespace(widget=frame))
+            tree._handle_tcl_event_emit(SimpleNamespace(widget=frame))
 
-            tree.schedule_tree_refresh.assert_called_once()
+            tree._schedule_tree_refresh.assert_called_once()
         finally:
             root.destroy()
 
     def test_handle_tcl_event_emit_ignores_non_tk_widget(self):
         tree = TreeView.__new__(TreeView)
-        tree.schedule_tree_refresh = Mock()
+        tree._schedule_tree_refresh = Mock()
 
-        tree.handle_tcl_event_emit(SimpleNamespace(widget=object()))
+        tree._handle_tcl_event_emit(SimpleNamespace(widget=object()))
 
-        tree.schedule_tree_refresh.assert_not_called()
+        tree._schedule_tree_refresh.assert_not_called()
 
     def test_tree_order_key_prefers_mapped_root_coordinates(self):
         child = _FakeWidget("a", mapped=True, rootx=40, rooty=20)
         children = [child]
         tree = TreeView.__new__(TreeView)
 
-        key = tree.tree_order_key(child=child, children=children, pack_order={})
+        key = tree._tree_order_key(child=child, children=children, pack_order={})
 
         self.assertEqual(key, (0, 20, 40, 0))
 
@@ -140,7 +140,7 @@ class TreeViewTests(unittest.TestCase):
         geo_info = SimpleNamespace(geometry_type=GeometryType.GRID)
 
         with patch("devtools.components.widgets.treeview.TreeView.Utils.build_widget_geometry_manager_info", return_value=geo_info):
-            key = tree.tree_order_key(child=child, children=[child], pack_order={})
+            key = tree._tree_order_key(child=child, children=[child], pack_order={})
 
         self.assertEqual(key, (1, 2, 3, 0))
 
@@ -150,7 +150,7 @@ class TreeViewTests(unittest.TestCase):
         geo_info = SimpleNamespace(geometry_type=GeometryType.PACK)
 
         with patch("devtools.components.widgets.treeview.TreeView.Utils.build_widget_geometry_manager_info", return_value=geo_info):
-            key = tree.tree_order_key(child=child, children=[child], pack_order={child: 7})
+            key = tree._tree_order_key(child=child, children=[child], pack_order={child: 7})
 
         self.assertEqual(key, (1, 7, 0))
 
@@ -167,9 +167,9 @@ class TreeViewTests(unittest.TestCase):
         def reverse_order_for_mapped(child, children, pack_order):
             return 1 if child is mapped_first else 0
 
-        tree.tree_order_key = reverse_order_for_mapped
+        tree._tree_order_key = reverse_order_for_mapped
 
-        ordered = tree.get_display_ordered_children(parent)
+        ordered = tree._get_display_ordered_children(parent)
 
         self.assertEqual(ordered, [mapped_last, unmapped_middle, mapped_first])
 
@@ -273,13 +273,13 @@ class TreeBuildTests(_TreeFixture):
 
     def test_devtools_marker_widget_excluded_on_rebuild(self):
         marked = tk.Frame(self.root)
-        marked.devtools_marker = IS_DEVTOOLS_MARKER
+        marked.devtools_marker = IS_DEVTOOLS_SENTINEL
         marked.pack()
         self.root.update_idletasks()
         self.tree.delete_tree()
         self.store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
         self.store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-        self.tree.build_tree(self.root)
+        self.tree._build_tree(self.root)
         mem = self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
         self.assertNotIn(id(marked), mem)
 
@@ -289,7 +289,7 @@ class TreeBuildTests(_TreeFixture):
         self.tree.delete_tree()
         self.store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
         self.store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-        self.tree.build_tree(self.root)
+        self.tree._build_tree(self.root)
         mem = self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
         self.assertNotIn(id(hidden), mem)
 
@@ -299,7 +299,7 @@ class TreeBuildTests(_TreeFixture):
         self.tree.delete_tree()
         self.store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
         self.store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-        self.tree.build_tree(self.root)
+        self.tree._build_tree(self.root)
         mem = self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
         self.assertIn(id(hidden), mem)
 
@@ -318,20 +318,20 @@ class DeleteAndRebuildTests(_TreeFixture):
         self.tree.delete_tree()
         self.store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
         self.store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-        self.tree.build_tree(self.root)
+        self.tree._build_tree(self.root)
         self.assertGreater(len(self.tree.get_children()), 0)
 
     def test_rebuild_from_master_resets_in_progress_flag(self):
-        self.tree.rebuild_tree_from_master_root()
+        self.tree._rebuild_tree_from_master_root()
         self.assertFalse(self.store.tree_rebuild_in_progress)
 
     def test_rebuild_from_master_clears_refresh_job(self):
-        self.tree.rebuild_tree_from_master_root()
+        self.tree._rebuild_tree_from_master_root()
         self.assertIsNone(self.store.tree_refresh_job)
 
     def test_rebuild_while_in_progress_sets_requested_flag(self):
         self.store.tree_rebuild_in_progress = True
-        self.tree.rebuild_tree_from_master_root()
+        self.tree._rebuild_tree_from_master_root()
         self.assertTrue(self.store.tree_rebuild_requested)
         self.store.tree_rebuild_in_progress = False
         self.store.tree_rebuild_requested = False
@@ -343,7 +343,7 @@ class DeleteAndRebuildTests(_TreeFixture):
             return
         self.tree.selection_set(entry["tree_id"])
         self.store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, self.frame_a)
-        self.tree.rebuild_tree_from_master_root()
+        self.tree._rebuild_tree_from_master_root()
         self.root.update_idletasks()
         sel = self.tree.selection()
         if sel:
@@ -361,16 +361,16 @@ class StoreLookupTests(_TreeFixture):
 
     def test_get_widget_by_tree_insert_id_returns_root(self):
         root_tid = self.tree.get_children()[0]
-        self.assertIs(self.tree.get_widget_by_tree_insert_id(root_tid), self.root)
+        self.assertIs(self.tree._get_widget_by_tree_insert_id(root_tid), self.root)
 
     def test_get_widget_by_obj_mem_id_returns_root(self):
-        self.assertIs(self.tree.get_widget_by_obj_mem_id(id(self.root)), self.root)
+        self.assertIs(self.tree._get_widget_by_obj_mem_id(id(self.root)), self.root)
 
     def test_add_tree_item_writes_correct_tree_id_and_widget(self):
         dummy = tk.Frame(self.root)
         dummy.pack()
         self.root.update_idletasks()
-        self.tree.add_tree_item_to_obj_mem_id_store(id(dummy), "I_TEST", dummy)
+        self.tree._add_tree_item_to_obj_mem_id_store(id(dummy), "I_TEST", dummy)
         mem = self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
         entry = mem.get(id(dummy))
         self.assertIsNotNone(entry)
@@ -435,7 +435,7 @@ class HighlightTests(_TreeFixture):
 
 
 # ---------------------------------------------------------------------------
-# handle_tcl_event_emit — all filtering paths
+# _handle_tcl_event_emit — all filtering paths
 # ---------------------------------------------------------------------------
 
 class TclEventEmitTests(unittest.TestCase):
@@ -450,18 +450,18 @@ class TclEventEmitTests(unittest.TestCase):
     def _tree(self):
         t = TreeView.__new__(TreeView)
         t._store = SimpleNamespace(is_tree_applying_highlight=False)
-        t.schedule_tree_refresh = Mock()
+        t._schedule_tree_refresh = Mock()
         return t
 
     def test_non_tk_widget_ignored(self):
         t = self._tree()
-        t.handle_tcl_event_emit(SimpleNamespace(widget=object()))
-        t.schedule_tree_refresh.assert_not_called()
+        t._handle_tcl_event_emit(SimpleNamespace(widget=object()))
+        t._schedule_tree_refresh.assert_not_called()
 
     def test_none_widget_ignored(self):
         t = self._tree()
-        t.handle_tcl_event_emit(SimpleNamespace(widget=None))
-        t.schedule_tree_refresh.assert_not_called()
+        t._handle_tcl_event_emit(SimpleNamespace(widget=None))
+        t._schedule_tree_refresh.assert_not_called()
 
     def test_devtools_widget_skipped(self):
         root = tk.Tk()
@@ -471,8 +471,8 @@ class TclEventEmitTests(unittest.TestCase):
             t = self._tree()
             t._is_devtools_widget = Mock(return_value=True)
             t._is_relevant_tree_event_widget = Mock(return_value=True)
-            t.handle_tcl_event_emit(SimpleNamespace(widget=frame))
-            t.schedule_tree_refresh.assert_not_called()
+            t._handle_tcl_event_emit(SimpleNamespace(widget=frame))
+            t._schedule_tree_refresh.assert_not_called()
         finally:
             root.destroy()
 
@@ -485,8 +485,8 @@ class TclEventEmitTests(unittest.TestCase):
             t._store.is_tree_applying_highlight = True
             t._is_devtools_widget = Mock(return_value=False)
             t._is_relevant_tree_event_widget = Mock(return_value=True)
-            t.handle_tcl_event_emit(SimpleNamespace(widget=frame))
-            t.schedule_tree_refresh.assert_not_called()
+            t._handle_tcl_event_emit(SimpleNamespace(widget=frame))
+            t._schedule_tree_refresh.assert_not_called()
         finally:
             root.destroy()
 
@@ -498,8 +498,8 @@ class TclEventEmitTests(unittest.TestCase):
             t = self._tree()
             t._is_devtools_widget = Mock(return_value=False)
             t._is_relevant_tree_event_widget = Mock(return_value=True)
-            t.handle_tcl_event_emit(SimpleNamespace(widget=frame))
-            t.schedule_tree_refresh.assert_called_once()
+            t._handle_tcl_event_emit(SimpleNamespace(widget=frame))
+            t._schedule_tree_refresh.assert_called_once()
         finally:
             root.destroy()
 
@@ -511,8 +511,8 @@ class TclEventEmitTests(unittest.TestCase):
             t = self._tree()
             t._is_devtools_widget = Mock(return_value=False)
             t._is_relevant_tree_event_widget = Mock(return_value=False)
-            t.handle_tcl_event_emit(SimpleNamespace(widget=frame))
-            t.schedule_tree_refresh.assert_not_called()
+            t._handle_tcl_event_emit(SimpleNamespace(widget=frame))
+            t._schedule_tree_refresh.assert_not_called()
         finally:
             root.destroy()
 
@@ -525,7 +525,7 @@ class StuffOptionsStateTests(_TreeFixture):
 
     def test_options_state_is_populated_as_dict(self):
         self.store.current_listbox_template = self.options_lb
-        self.tree.stuff_listbox_options_state_into_page_template(self.frame_a)
+        self.tree._stuff_listbox_options_state_into_page_template(self.frame_a)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.OPTIONS
         ]["current_values_state"]
@@ -534,7 +534,7 @@ class StuffOptionsStateTests(_TreeFixture):
 
     def test_options_state_contains_relief(self):
         self.store.current_listbox_template = self.options_lb
-        self.tree.stuff_listbox_options_state_into_page_template(self.frame_a)
+        self.tree._stuff_listbox_options_state_into_page_template(self.frame_a)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.OPTIONS
         ]["current_values_state"]
@@ -543,7 +543,7 @@ class StuffOptionsStateTests(_TreeFixture):
     def test_options_values_are_not_raw_tk_config_tuples(self):
         # conform_option_lisbox_config must unwrap (name, db_name, class, default, current)
         self.store.current_listbox_template = self.options_lb
-        self.tree.stuff_listbox_options_state_into_page_template(self.frame_a)
+        self.tree._stuff_listbox_options_state_into_page_template(self.frame_a)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.OPTIONS
         ]["current_values_state"]
@@ -553,7 +553,7 @@ class StuffOptionsStateTests(_TreeFixture):
 
     def test_options_keys_are_sorted_alphabetically(self):
         self.store.current_listbox_template = self.options_lb
-        self.tree.stuff_listbox_options_state_into_page_template(self.frame_a)
+        self.tree._stuff_listbox_options_state_into_page_template(self.frame_a)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.OPTIONS
         ]["current_values_state"]
@@ -569,7 +569,7 @@ class StuffGeometryStateTests(_TreeFixture):
 
     def test_geometry_state_includes_visibility(self):
         self.store.current_listbox_template = self.geometry_lb
-        self.tree.stuff_listbox_geometry_state_into_page_template(self.frame_a)
+        self.tree._stuff_listbox_geometry_state_into_page_template(self.frame_a)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.GEOMETRY
         ]["current_values_state"]
@@ -580,7 +580,7 @@ class StuffGeometryStateTests(_TreeFixture):
 
     def test_geometry_state_includes_geometry_type(self):
         self.store.current_listbox_template = self.geometry_lb
-        self.tree.stuff_listbox_geometry_state_into_page_template(self.frame_a)
+        self.tree._stuff_listbox_geometry_state_into_page_template(self.frame_a)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.GEOMETRY
         ]["current_values_state"]
@@ -592,7 +592,7 @@ class StuffGeometryStateTests(_TreeFixture):
     def test_unmapped_widget_has_no_pack_grid_specific_keys(self):
         unmapped = tk.Frame(self.root)  # not packed
         self.store.current_listbox_template = self.geometry_lb
-        self.tree.stuff_listbox_geometry_state_into_page_template(unmapped)
+        self.tree._stuff_listbox_geometry_state_into_page_template(unmapped)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.GEOMETRY
         ]["current_values_state"]
@@ -602,7 +602,7 @@ class StuffGeometryStateTests(_TreeFixture):
 
     def test_packed_widget_state_includes_fill(self):
         self.store.current_listbox_template = self.geometry_lb
-        self.tree.stuff_listbox_geometry_state_into_page_template(self.frame_a)
+        self.tree._stuff_listbox_geometry_state_into_page_template(self.frame_a)
         state = self.store.current_listbox_template_internal_state[
             ListboxPageTemplateEnum.GEOMETRY
         ]["current_values_state"]

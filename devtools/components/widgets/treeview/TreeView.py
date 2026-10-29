@@ -4,7 +4,7 @@ from tkinter import ttk
 import logging
 from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.components.observable import Action
-from devtools.constants import IS_DEVTOOLS_MARKER, ActionType, CommonGeometryOption, GeometryType, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import IS_DEVTOOLS_SENTINEL, ActionType, CommonGeometryOption, GeometryType, ListboxPageTemplateEnum, TreeStateKey
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.components.widgets.treeview.TreeViewHighlighter import TreeViewHighlighter
@@ -24,8 +24,8 @@ class TreeView(ttk.Treeview):
         self._highlighter = TreeViewHighlighter(self, observable, store)
         # "#0" is special built-in first column - width of 300
         self.column("#0", width=300)
-        self.bind("<<TreeviewSelect>>", self.handle_tree_select)
-        self.build_tree(master)
+        self.bind("<<TreeviewSelect>>", self._handle_tree_select)
+        self._build_tree(master)
         self._bind_tree_change_events()
         # select the first tree item - trigger the listbox build
         self.selection_set(self.get_children()[0])
@@ -33,9 +33,9 @@ class TreeView(ttk.Treeview):
     @class_fn_try_except_catcher
     # Bind Map, Unmap, and Destroy on master to watch for widget tree change - like when pages are changed
     def _bind_tree_change_events(self):
-        self.master.bind_all("<Map>", self.handle_tcl_event_emit, add=True)
-        self.master.bind_all("<Unmap>", self.handle_tcl_event_emit, add=True)
-        self.master.bind_all("<Destroy>", self.handle_tcl_event_emit, add=True)
+        self.master.bind_all("<Map>", self._handle_tcl_event_emit, add=True)
+        self.master.bind_all("<Unmap>", self._handle_tcl_event_emit, add=True)
+        self.master.bind_all("<Destroy>", self._handle_tcl_event_emit, add=True)
         self.master.winfo_toplevel().bind("<Configure>", self._highlighter.on_toplevel_configure, add=True)
 
     @class_fn_try_except_catcher
@@ -43,7 +43,7 @@ class TreeView(ttk.Treeview):
     def _is_devtools_widget(self, widget: tk.Widget) -> bool:
         current = widget
         while current is not None:
-            if getattr(current, "devtools_marker", None) == IS_DEVTOOLS_MARKER:
+            if getattr(current, "devtools_marker", None) == IS_DEVTOOLS_SENTINEL:
                 return True
             current = getattr(current, "master", None)
         return False
@@ -61,7 +61,7 @@ class TreeView(ttk.Treeview):
 
     # Filter widget tree events and schedule a refresh if the source is relevant - comes from tcl when these events are emitted
     @class_fn_try_except_catcher
-    def handle_tcl_event_emit(self, event):
+    def _handle_tcl_event_emit(self, event):
         event_widget = getattr(event, "widget", None)
         if event_widget is None or not isinstance(event_widget, tk.BaseWidget):
             return
@@ -71,21 +71,21 @@ class TreeView(ttk.Treeview):
             return
         if not self._is_relevant_tree_event_widget(event_widget):
             return
-        self.schedule_tree_refresh()
+        self._schedule_tree_refresh()
 
     @class_fn_try_except_catcher
     # Schedule a single deferred tree rebuild, ignoring duplicate pending requests.
-    def schedule_tree_refresh(self):
+    def _schedule_tree_refresh(self):
         if getattr(self._store, "tree_rebuild_in_progress", False):
             self._store.tree_rebuild_requested = True
             return
         if self._store.tree_refresh_job is not None:
             return
-        self._store.tree_refresh_job = self.after_idle(self.rebuild_tree_from_master_root)
+        self._store.tree_refresh_job = self.after_idle(self._rebuild_tree_from_master_root)
 
     @class_fn_try_except_catcher
     # Rebuild the full widget tree from root, restoring expanded nodes and selection - allows page changes
-    def rebuild_tree_from_master_root(self):
+    def _rebuild_tree_from_master_root(self):
         if getattr(self._store, "tree_rebuild_in_progress", False):
             self._store.tree_rebuild_requested = True
             return
@@ -102,7 +102,7 @@ class TreeView(ttk.Treeview):
             self.delete_tree()
             self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
             self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-            self.build_tree(self.master)
+            self._build_tree(self.master)
 
             mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
             for mem_id in expanded_mem_ids:
@@ -121,11 +121,11 @@ class TreeView(ttk.Treeview):
             self._store.tree_rebuild_in_progress = False
             if getattr(self._store, "tree_rebuild_requested", False):
                 self._store.tree_rebuild_requested = False
-                self.schedule_tree_refresh()
+                self._schedule_tree_refresh()
 
     # store the ID and use to retrieve with self.selection()
     @class_fn_try_except_catcher
-    def add_tree_item_to_tree_insert_id_store(self, item_id, widget):
+    def _add_tree_item_to_tree_insert_id_store(self, item_id, widget):
         """Store the widget by Treeview.insert ID."""
         current_widget_id_dict = self._store.tree_state_get(
             TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT)
@@ -136,7 +136,7 @@ class TreeView(ttk.Treeview):
 
     # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
     @class_fn_try_except_catcher
-    def add_tree_item_to_obj_mem_id_store(self, memory_id: int, tree_insert_id: str, widget: tk.Widget):
+    def _add_tree_item_to_obj_mem_id_store(self, memory_id: int, tree_insert_id: str, widget: tk.Widget):
         # """Store the widget by Treeview.insert ID."""
         current_by_mem_id = self._store.tree_store_widget_by_obj_mem_id or {}
         current_by_mem_id[memory_id] = {
@@ -162,17 +162,17 @@ class TreeView(ttk.Treeview):
     # Return the widget stored under the given Treeview insert ID.
     @class_fn_try_except_catcher
 
-    def get_widget_by_tree_insert_id(self, item_id: str):
+    def _get_widget_by_tree_insert_id(self, item_id: str):
         return self._store.tree_state_get(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT).get(item_id)
 
     # Return the widget stored under the given Python object memory ID.
     @class_fn_try_except_catcher
-    def get_widget_by_obj_mem_id(self, item_id: int):
+    def _get_widget_by_obj_mem_id(self, item_id: int):
         return self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(item_id).get("widget")
 
     # Return a sort key ordering a child widget by visual position with geometry fallbacks.
     @class_fn_try_except_catcher
-    def tree_order_key(
+    def _tree_order_key(
         self,
         child: tk.Widget,
         children: list[tk.Widget],
@@ -216,7 +216,7 @@ class TreeView(ttk.Treeview):
 
     @class_fn_try_except_catcher
     # Return children of parent_widget sorted by their visible display order.
-    def get_display_ordered_children(self, parent_widget: tk.Widget) -> list[tk.Widget]:
+    def _get_display_ordered_children(self, parent_widget: tk.Widget) -> list[tk.Widget]:
         # Raw sibling order from Tk (creation/declaration order under this parent)
         children = list(parent_widget.winfo_children())
         if not children:
@@ -225,7 +225,7 @@ class TreeView(ttk.Treeview):
 
         # Ensure widget geometry/position info is up to date before visual sorting
         parent_widget.update_idletasks()
-        # Pack sibling order is used as a fallback inside tree_order_key
+        # Pack sibling order is used as a fallback inside _tree_order_key
         pack_order = {
             child: index for index, child in enumerate(parent_widget.pack_slaves())
         }
@@ -234,7 +234,7 @@ class TreeView(ttk.Treeview):
         mapped_children = [child for child in children if child.winfo_ismapped()]
         mapped_children_sorted = sorted(
             mapped_children,
-            key=lambda child: self.tree_order_key(
+            key=lambda child: self._tree_order_key(
                 child=child,
                 children=children,
                 pack_order=pack_order,
@@ -256,7 +256,7 @@ class TreeView(ttk.Treeview):
     # on first call insert widget and get insert id - recurse
     # on next calls used vals passed in
     @class_fn_try_except_catcher
-    def build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
+    def _build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
         try:
             # if no parent node it's first call - no id to use yet
             if not parent_widget_insert_id:
@@ -264,50 +264,50 @@ class TreeView(ttk.Treeview):
                 # manual insert - get insert id
                 # set using blank str for parent - used for first node in the tree w no parent
                 # insert at end index
-                insert_parent_memory_id = self.insert_item(
+                insert_parent_memory_id = self._insert_item(
                     parent_item_id="", index=tk.END, widget=parent_widget)
                 # add using mem id {4579038880: {tree_id:'I002', widget:tk.Widget}}
-                self.add_tree_item_to_obj_mem_id_store(
+                self._add_tree_item_to_obj_mem_id_store(
                     parent_memory_id, insert_parent_memory_id, parent_widget)
-                self.add_tree_item_to_tree_insert_id_store(
+                self._add_tree_item_to_tree_insert_id_store(
                     insert_parent_memory_id, parent_widget)
 
             else:
                 # parent node - so use id passed from prev call - it's parent for this call
                 insert_parent_memory_id = parent_widget_insert_id
             # method gives all child widgets of tk obj
-            for child in self.get_display_ordered_children(parent_widget):
+            for child in self._get_display_ordered_children(parent_widget):
                 # skip the devtools window branch
-                if getattr(child, "devtools_marker", None) == IS_DEVTOOLS_MARKER:
+                if getattr(child, "devtools_marker", None) == IS_DEVTOOLS_SENTINEL:
                     continue
                 # hide unmapped widgets - optional
                 if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
                     continue
                 child_memory_id = id(child)
                 # ID of place in tree - insert returns tree insert ID
-                insert_child_memory_id = self.insert_item(
+                insert_child_memory_id = self._insert_item(
                     parent_item_id=insert_parent_memory_id, index=tk.END, widget=child)
-                self.add_tree_item_to_obj_mem_id_store(
+                self._add_tree_item_to_obj_mem_id_store(
                     child_memory_id, insert_child_memory_id, child)
                 # dict store id: widget
-                self.add_tree_item_to_tree_insert_id_store(
+                self._add_tree_item_to_tree_insert_id_store(
                     insert_child_memory_id, child)
-                self.build_tree(child, insert_child_memory_id)
+                self._build_tree(child, insert_child_memory_id)
 
         except Exception as e:
-            logging.error(f"Error build_tree: {e}")
+            logging.error(f"Error _build_tree: {e}")
             raise e
 
     @class_fn_try_except_catcher
     # Handle a Treeview selection event and update the highlight and listbox state.
-    def handle_tree_select(self, _,):
+    def _handle_tree_select(self, _,):
         try:
             # get selected tree item via tree api
             selected_tree_id = self.selection()
             if selected_tree_id:
                 # .selection gives tree insert item ID
                 item_id = selected_tree_id[0]
-                incoming_widget = self.get_widget_by_tree_insert_id(item_id)
+                incoming_widget = self._get_widget_by_tree_insert_id(item_id)
                 # skip if same widget is already selected
                 if incoming_widget is self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
                     return
@@ -318,14 +318,14 @@ class TreeView(ttk.Treeview):
                     self._highlighter.apply_highlight(selected_item_widget)
                     try:
                         # HANDLE OPTION LISTBOX TEMPLATE
-                        self.stuff_listbox_options_state_into_page_template(selected_item_widget)
+                        self._stuff_listbox_options_state_into_page_template(selected_item_widget)
                         # HANDLE GEOMETRY LISTBOX INSERT
-                        self.stuff_listbox_geometry_state_into_page_template(selected_item_widget)
+                        self._stuff_listbox_geometry_state_into_page_template(selected_item_widget)
 
                         self._store.show_geometry_button = (bool(Utils.build_widget_geometry_manager_info(selected_item_widget)))
 
                     except Exception as e:
-                        err_msg = f"error handle_tree_select: {e}"
+                        err_msg = f"error _handle_tree_select: {e}"
                         logging.error(err_msg, exc_info=True)
                         # delete all listbox
                         self._observable.notify_observers(
@@ -335,12 +335,12 @@ class TreeView(ttk.Treeview):
                             type=ActionType.INSERT_LISTBOX_ITEM, data={'index': tk.END, 'value': err_msg}))
 
         except Exception as e:
-            logging.error(f"Error handle_tree_select: {e}", exc_info=True)
+            logging.error(f"Error _handle_tree_select: {e}", exc_info=True)
 
     @class_fn_try_except_catcher
     # ---- LIST WIDGETS VALUES HERE----
     # Populate the options listbox page with the selected widget's configure values.
-    def stuff_listbox_options_state_into_page_template(self, selected_item_widget):
+    def _stuff_listbox_options_state_into_page_template(self, selected_item_widget):
         # delete prev content in listbox
         self._observable.notify_observers(
             Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
@@ -364,7 +364,7 @@ class TreeView(ttk.Treeview):
 
     @class_fn_try_except_catcher
     # Populate the geometry listbox page with the selected widget's geometry values.
-    def stuff_listbox_geometry_state_into_page_template(self, selected_item_widget):
+    def _stuff_listbox_geometry_state_into_page_template(self, selected_item_widget):
 
         current_widget_geo_manager: GeometryManagerInfo = Utils.build_widget_geometry_manager_info(selected_item_widget)
         current_geo_type = getattr(current_widget_geo_manager, 'geometry_type', None)
@@ -439,7 +439,7 @@ class TreeView(ttk.Treeview):
         
     @class_fn_try_except_catcher
     # insert item into treeview
-    def insert_item(self, parent_item_id, index: str, widget: tk.Widget):
+    def _insert_item(self, parent_item_id, index: str, widget: tk.Widget):
         tree_insert_id = self.insert(
             parent_item_id, index, text=widget.winfo_class())
         return tree_insert_id
