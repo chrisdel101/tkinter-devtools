@@ -126,21 +126,18 @@ class TreeViewUtils:
 	def build_geometry_state_for_widget(widget: tk.Widget, geometry_type: GeometryType) -> dict:
 		state = TreeViewUtils._default_geometry_state_for_type(geometry_type)
 
-		try:
-			if geometry_type == GeometryType.GRID and widget.winfo_manager() == GeometryType.GRID.value:
-				for key, value in widget.grid_info().items():
-					if key in state:
-						state[key] = value
-			elif geometry_type == GeometryType.PACK and widget.winfo_manager() == GeometryType.PACK.value:
-				for key, value in widget.pack_info().items():
-					if key in state:
-						state[key] = value
-			elif geometry_type == GeometryType.PLACE and widget.winfo_manager() == GeometryType.PLACE.value:
-				for key, value in widget.place_info().items():
-					if key in state:
-						state[key] = value
-		except Exception:
-			pass
+		if geometry_type == GeometryType.GRID and widget.winfo_manager() == GeometryType.GRID.value:
+			for key, value in widget.grid_info().items():
+				if key in state:
+					state[key] = value
+		elif geometry_type == GeometryType.PACK and widget.winfo_manager() == GeometryType.PACK.value:
+			for key, value in widget.pack_info().items():
+				if key in state:
+					state[key] = value
+		elif geometry_type == GeometryType.PLACE and widget.winfo_manager() == GeometryType.PLACE.value:
+			for key, value in widget.place_info().items():
+				if key in state:
+					state[key] = value
 
 		state[CommonGeometryOption.GEOMETRY_TYPE] = geometry_type.value
 		state[CommonGeometryOption.VISIBILITY] = widget.winfo_ismapped()

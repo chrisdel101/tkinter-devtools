@@ -30,33 +30,25 @@ class Utils:
     @staticmethod
     # split a key value str and return key/val dict
     def build_split_str_pairs_dict(new_data: str, separator: str = ":") -> ListboxItemPair:
-        try:
-            # split list into sep str
-            split_list_items: list = new_data.split(separator)
-            key = split_list_items[0] if len(split_list_items) > 0 else ""
-            value = split_list_items[1] if len(split_list_items) > 1 else ""
-            listbox_item_pairs_dict  = {
-                'key': key,
-                'value': (value or "").strip(),
-            }
-            return listbox_item_pairs_dict
-        except Exception as e:
-            logger.error(f"Error splitting string at colon: {e}", exc_info=True)
-            raise e
+        # split list into sep str
+        split_list_items: list = new_data.split(separator)
+        key = split_list_items[0] if len(split_list_items) > 0 else ""
+        value = split_list_items[1] if len(split_list_items) > 1 else ""
+        listbox_item_pairs_dict  = {
+            'key': key,
+            'value': (value or "").strip(),
+        }
+        return listbox_item_pairs_dict
     @staticmethod
     # remove any non standard unusable options like screen, use
     def filter_non_used_config_options(config):
-        try:
-            common_options = [e.value for e in ConfigOptionKeyName]
-            # value can be tuple or str/int
-            for key in list(config.keys()):
-            # delete unwanted config values from dict in place using list
-                if key not in common_options:
-                    del config[key]
-            return config
-        except Exception as e:
-            logger.error(f"Error removing junk config items: {e}", exc_info=True)
-            raise e
+        common_options = [e.value for e in ConfigOptionKeyName]
+        # value can be tuple or str/int
+        for key in list(config.keys()):
+        # delete unwanted config values from dict in place using list
+            if key not in common_options:
+                del config[key]
+        return config
     @staticmethod
     @static_fn_try_except_catcher
     # remove any non standard unusable options
@@ -97,49 +89,45 @@ class Utils:
         # filter all unwanted - uppercase only all_class_attrs - then check if each uppercase is an attr on class i.e. AFTER, IPADX
         extract_used_attrs = [getattr(className, k) for k in filter(str.isupper, all_class_attrs)]
         return extract_used_attrs
-    @static_fn_try_except_catcher
+    
     @staticmethod
     # check for each tuple length. if 5 it's last item, if 2 it's an alias
     # This is a tk inter standard for all configs objs
     def conform_option_lisbox_config(config):
-        try:
-            key_val_dict = {}
-            # use names from enum values
-            valid_names = {e.value for e in ConfigOptionKeyName}
-            for key, val in config.items():
-                # resolve alias to full name - or just return name ie borderwidth
-                canonical = Utils.listbox_option_bi_direction_alias_resolver(key)
-                # check that name is oneof valid ones - don't use if not
-                if canonical not in valid_names:
-                    continue             
-                # in 5 len tuple we want last item for value
-                config_named_lookup: tuple | str | int = config.get(canonical)
-                if isinstance(config_named_lookup, tuple):
-                    if len(config_named_lookup) == 5:
-                        # last item is always val - in 5 len tuple
-                        actual_value = config_named_lookup[-1]
-                        # if not already added and value is not empty str
-                        if key_val_dict.get(key) == None and actual_value != "":
-                            key_val_dict[canonical] = actual_value
-                    elif len(config_named_lookup) != 5:
-                        # it's not an alias but a n-tuple
-                        if key_val_dict.get(key) == None and config_named_lookup[-1] != "":
-                            key_val_dict[canonical] = config_named_lookup[-1]
-                    else: 
-                        # if not 5 len tuple break error
-                        err_msg = f"get_valid_key_value_differences: tuple is len {len(config_named_lookup)}, not len 5. Invalid len"
-                        logger.error(err_msg)
-                        raise ValueError(err_msg)
-                elif isinstance(val, (str, int, float)):
+        key_val_dict = {}
+        # use names from enum values
+        valid_names = {e.value for e in ConfigOptionKeyName}
+        for key, val in config.items():
+            # resolve alias to full name - or just return name ie borderwidth
+            canonical = Utils.listbox_option_bi_direction_alias_resolver(key)
+            # check that name is oneof valid ones - don't use if not
+            if canonical not in valid_names:
+                continue             
+            # in 5 len tuple we want last item for value
+            config_named_lookup: tuple | str | int = config.get(canonical)
+            if isinstance(config_named_lookup, tuple):
+                if len(config_named_lookup) == 5:
+                    # last item is always val - in 5 len tuple
+                    actual_value = config_named_lookup[-1]
                     # if not already added and value is not empty str
-                    if key_val_dict.get(key) == None and config_named_lookup != "":
-                        # it's just a single key value pair
-                        key_val_dict[canonical] = config_named_lookup
+                    if key_val_dict.get(key) == None and actual_value != "":
+                        key_val_dict[canonical] = actual_value
+                elif len(config_named_lookup) != 5:
+                    # it's not an alias but a n-tuple
+                    if key_val_dict.get(key) == None and config_named_lookup[-1] != "":
+                        key_val_dict[canonical] = config_named_lookup[-1]
+                else: 
+                    # if not 5 len tuple break error
+                    err_msg = f"get_valid_key_value_differences: tuple is len {len(config_named_lookup)}, not len 5. Invalid len"
+                    logger.error(err_msg)
+                    raise ValueError(err_msg)
+            elif isinstance(val, (str, int, float)):
+                # if not already added and value is not empty str
+                if key_val_dict.get(key) == None and config_named_lookup != "":
+                    # it's just a single key value pair
+                    key_val_dict[canonical] = config_named_lookup
 
-            return key_val_dict
-        except Exception as e:
-            logger.error(f"Error extracting actual config values: {e}", exc_info=True)
-            raise e 
+        return key_val_dict
         
     @staticmethod
     def resolve_image_name_to_path(widget: tk.Widget, config_dict: dict) -> dict:
@@ -155,23 +143,15 @@ class Utils:
 
     @staticmethod
     def merge_dicts(*dicts) -> dict:
-        try:
-            merged = {}
-            for d in dicts:
-                # dict union operator, like .update
-                merged |= d 
-            return merged
-        except Exception as e:
-                logger.error(f"Error merge_dicts: {e}", exc_info=True)
-                raise e
+        merged = {}
+        for d in dicts:
+            # dict union operator, like .update
+            merged |= d 
+        return merged
     @staticmethod
     def sorted_dict(unsorted_dict: dict) -> dict:
-        try:
-            d = dict(sorted(unsorted_dict.items()))
-            return d
-        except Exception as e:
-            logger.error(f"Error sorting_dict: {e}", exc_info=True)
-            raise e
+        d = dict(sorted(unsorted_dict.items()))
+        return d
 
     @staticmethod
     # Resolve bi-directional aliases (e.g. bg <-> background, bd <-> borderwidth).
@@ -198,13 +178,10 @@ class Utils:
     # check if current cursor click is the arrow area of the combobox
     @staticmethod
     def is_combobox_arrow(combobox: ttk.Combobox, x: int) -> bool:
-        try:
-           combobox_arrow_area = combobox.winfo_width() - COMBOBOX_ARROW_OFFSET
-           if x >= combobox_arrow_area:
-                return True
-           return
-        except Exception:
-            logger.error("Error determining if click was on combobox arrow.", exc_info=True)
+        combobox_arrow_area = combobox.winfo_width() - COMBOBOX_ARROW_OFFSET
+        if x >= combobox_arrow_area:
+            return True
+        return
             
     @staticmethod
     @static_fn_try_except_catcher
