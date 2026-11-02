@@ -191,7 +191,7 @@ class TreeView(ttk.Treeview):
             except tk.TclError:
                 # if runtime position cannot be read, fall through to geometry-based ordering
                 pass
-
+        # on tcl failure - get widget coords using the geometry managaer
         geo_manager_info = Utils.build_widget_geometry_manager_info(child)
 
         # Fallback for grid-managed widgets: row/column order

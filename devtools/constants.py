@@ -28,9 +28,9 @@ class GeometryType(Enum):
     PANED_WINDOW = "paned_window"
 
 class TreeStateKey(Enum):
-    SELECTED_ITEM_WIDGET =  1
-    WIDGETS_BY_TREE_INSERT_ID_DICT = 2
-    MEM_WIDGET_STORE_BY_PY_MEM_ID= 3
+    SELECTED_ITEM_WIDGET = "selected_widget_item"
+    WIDGETS_BY_TREE_INSERT_ID_DICT = "widgets_by_tree_insert_id"
+    MEM_WIDGET_STORE_BY_PY_MEM_ID = "mem_widget_store_by_py_mem_id"
 
 class ListboxTemplateNotifyStateKey(Enum):
     SELECTED_INDEX = "selected_index"
@@ -167,9 +167,9 @@ class TreeState(TypedDict):
     # widgets tracked using tree ids 'I001'
     selected_widget_item: tk.Widget | None
     # use Treeview.insert id like 'I001'
-    widgets_by_tree_insert_id: dict[str, tk.Widget] = {}
+    widgets_by_tree_insert_id: dict[str, tk.Widget]
     # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
-    mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore] = {}
+    mem_widget_store_by_py_mem_id: dict[int, MemIdWidgetStore]
 
 class ListboxManagerState(TypedDict):
     listbox_page_template_enum: ListboxPageTemplateEnum

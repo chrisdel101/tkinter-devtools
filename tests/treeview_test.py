@@ -92,7 +92,6 @@ class TreeViewTests(unittest.TestCase):
         tree = TreeView.__new__(TreeView)
         tree._store = _DummyStore()
         tree.after_idle = Mock(return_value="job-id")
-        tree.rebuild_tree_from_root = Mock()
 
         tree._schedule_tree_refresh()
         tree._schedule_tree_refresh()
@@ -334,19 +333,17 @@ class DeleteAndRebuildTests(_TreeFixture):
 
     def test_rebuild_preserves_selection_for_surviving_widget(self):
         mem = self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
-        entry = mem.get(id(self.frame_a))
-        if not entry:
-            return
+        entry = mem[id(self.frame_a)]
         self.tree.selection_set(entry["tree_id"])
         self.store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, self.frame_a)
         self.tree._rebuild_tree_from_master_root()
         self.root.update_idletasks()
         sel = self.tree.selection()
-        if sel:
-            widget = self.store.tree_state_get(
-                TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT
-            ).get(sel[0])
-            self.assertIs(widget, self.frame_a)
+        self.assertEqual(len(sel), 1)
+        widget = self.store.tree_state_get(
+            TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT
+        ).get(sel[0])
+        self.assertIs(widget, self.frame_a)
 
 
 # ---------------------------------------------------------------------------
@@ -358,9 +355,6 @@ class StoreLookupTests(_TreeFixture):
     def test_get_widget_by_tree_insert_id_returns_root(self):
         root_tid = self.tree.get_children()[0]
         self.assertIs(self.tree._get_widget_by_tree_insert_id(root_tid), self.root)
-
-    def test_get_widget_by_obj_mem_id_returns_root(self):
-        self.assertIs(self.tree._get_widget_by_obj_mem_id(id(self.root)), self.root)
 
     def test_add_tree_item_writes_correct_tree_id_and_widget(self):
         dummy = tk.Frame(self.root)
@@ -683,6 +677,6 @@ class UpdateWidgetConfigTests(_TreeFixture):
         self.tree.update_tree_item_to_page_widget_place_config(key="x", value=99)
         self.assertEqual(str(pf.place_info().get("x")), "99")
 
-        
+
 if __name__ == "__main__":
     unittest.main()

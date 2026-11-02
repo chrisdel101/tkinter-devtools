@@ -11,10 +11,6 @@ PACK_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
     },
-    PackGeometryOptionName.PADX: {
-        'values': None,
-        'type': ConfigOptionValueTypeEnum.INTEGER.value,
-    },
     PackGeometryOptionName.PADY: {
         'values': None,
         'type': ConfigOptionValueTypeEnum.INTEGER.value,
@@ -37,7 +33,7 @@ PACK_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     },
     PackGeometryOptionName.ANCHOR: {
         'values': ["n","ne","e","se","s","sw","w","nw","center"],
-        'type': ConfigOptionValueTypeEnum.BOOLEAN.value,
+        'type': ConfigOptionValueTypeEnum.STRING.value,
     },
     PackGeometryOptionName.SIDE: {
         'values': ['top', 'bottom', 'left', 'right'],
@@ -210,7 +206,6 @@ CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
 }
 
 BI_DIRECTIONAL_ALIASES = {
-    ConfigOptionKeyName.BD.value: ConfigOptionKeyName.BORDERWIDTH.value,
     ConfigOptionKeyName.BD.value: ConfigOptionKeyName.BORDERWIDTH.value,
     ConfigOptionKeyName.BG.value: ConfigOptionKeyName.BACKGROUND.value,
     ConfigOptionKeyName.FG.value: ConfigOptionKeyName.FOREGROUND.value,

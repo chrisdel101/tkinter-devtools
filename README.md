@@ -77,7 +77,7 @@ app.pack(side=tk.TOP, fill="both", expand=True)
 
 DevtoolsWindow(
     root,
-    title="Devtools",
+    devtools_title="Devtools",
     show_unmapped_widgets=False,
 )
 
