@@ -16,6 +16,9 @@ class TreeViewUtils:
 
 	@staticmethod
 	def check_sibling_geometry_type(widget) -> GeometryType | None:
+		# root has no master so no siblings to match
+		if widget.master is None:
+			return None
 		siblings = widget.master.winfo_children()
 
 		for sibling in siblings:
