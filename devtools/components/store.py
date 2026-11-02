@@ -21,7 +21,7 @@ class Store:
         self.block_active_adding: bool = False # block add button during adding prevent multiple
         self.existing_combobox_wrappers: list[tk.Widget] | list = [] # store wrappers around all comboboxes to allow remove all
         self.devtools_window_in_focus: bool = True # tracking to trigger destroy state on devtools window focus out 
-        self.tree_refresh_job = None # blocks tree rebuild while one is active
+        self.tree_refresh_job: str | None = None # blocks tree rebuild while one is active
         self.tree_rebuild_in_progress: bool = False # guard to block re-entrant tree rebuild
         self.tree_rebuild_requested: bool = False # queue one extra rebuild when requested mid-rebuild
         self.key_combobox_popdown_open: bool = False # track when open to apply focus out destroy logic

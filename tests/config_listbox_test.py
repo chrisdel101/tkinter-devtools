@@ -53,6 +53,8 @@ class ConfigListboxManagerTests(unittest.TestCase):
         self.observable.register_observer(self.recording_observer)
 
     def tearDown(self):
+        # Run already-queued callbacks while the widgets still exist
+        self.root.update_idletasks()
         self.root.destroy()
         self.low_trace_patcher.stop()
         self.trace_patcher.stop()

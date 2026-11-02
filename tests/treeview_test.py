@@ -174,10 +174,6 @@ class TreeViewTests(unittest.TestCase):
         self.assertEqual(ordered, [mapped_last, unmapped_middle, mapped_first])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 # ---------------------------------------------------------------------------
 # Shared fixture: real Tk root + TreeView wired to a real Store + listboxes
 # ---------------------------------------------------------------------------
@@ -218,7 +214,10 @@ class _TreeFixture(unittest.TestCase):
         }
         self.store.current_listbox_template = self.options_lb
 
-        parent_frame = tk.Frame(self.root)
+        # own toplevel, as in DevtoolsWindow - the app window never receives the tree's events
+        tree_window = tk.Toplevel(self.root)
+        tree_window.withdraw()
+        parent_frame = tk.Frame(tree_window)
         self.tree = TreeView(
             master=self.root,
             parent=parent_frame,
@@ -683,3 +682,7 @@ class UpdateWidgetConfigTests(_TreeFixture):
         self.store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, pf)
         self.tree.update_tree_item_to_page_widget_place_config(key="x", value=99)
         self.assertEqual(str(pf.place_info().get("x")), "99")
+
+        
+if __name__ == "__main__":
+    unittest.main()

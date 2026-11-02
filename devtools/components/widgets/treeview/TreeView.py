@@ -28,8 +28,8 @@ class TreeView(ttk.Treeview):
         self.bind("<<TreeviewSelect>>", self._handle_tree_select)
         self._build_tree(master)
         self._bind_tree_change_events()
-        # devtools window closed - remove this tree's bindings and border from the app
-        self.bind("<Destroy>", self._on_destroy, add=True)
+        # tree destroyed - cancel its queued rebuild and remove its bindings and border from the app
+        self.bind("<Destroy>", self._cleanup_on_tree_destroy, add=True)
         # select the first tree item - trigger the listbox build
         self.selection_set(self.get_children()[0])
 
@@ -44,8 +44,12 @@ class TreeView(ttk.Treeview):
         }
 
     @class_fn_try_except_catcher
-    # Devtools window closed - remove this tree's bindings and border from the app
-    def _on_destroy(self, _):
+    # Tree destroyed - cancel its queued rebuild and remove its bindings and border from the app
+    def _cleanup_on_tree_destroy(self, _):
+        # queued rebuild would run on the dead tree
+        if self._store.tree_refresh_job is not None:
+            self.after_cancel(self._store.tree_refresh_job)
+            self._store.tree_refresh_job = None
         for sequence, funcid in self._app_bind_ids.items():
             self._app_window.unbind(sequence, funcid)
         self._highlighter.destroy_highlight_overlay()
