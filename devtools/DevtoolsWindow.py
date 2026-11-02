@@ -30,7 +30,7 @@ class DevtoolsWindow(tk.Toplevel):
         master.update_idletasks()
         
         # run runtime checks of tcl bridge
-        TclRunTimeUtility.runtime_checks(master)
+        not kwargs.get('skip_runtime_checks') and TclRunTimeUtility.runtime_checks(master)
         # add styles for window size
         window_geometry = Style.devtools_window["geometry"]
         # set logging level
