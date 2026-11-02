@@ -169,15 +169,8 @@ class TreeView(ttk.Treeview):
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, new_dict)
 
     # Return the widget stored under the given Treeview insert ID.
-    @class_fn_try_except_catcher
-
     def _get_widget_by_tree_insert_id(self, item_id: str):
         return self._store.tree_state_get(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT).get(item_id)
-
-    # Return the widget stored under the given Python object memory ID.
-    @class_fn_try_except_catcher
-    def _get_widget_by_obj_mem_id(self, item_id: int):
-        return self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID).get(item_id).get("widget")
 
     # Return a sort key ordering a child widget by visual position with geometry fallbacks.
     @class_fn_try_except_catcher
@@ -310,42 +303,39 @@ class TreeView(ttk.Treeview):
     @class_fn_try_except_catcher
     # Handle a Treeview selection event and update the highlight and listbox state.
     def _handle_tree_select(self, _,):
-        try:
-            # get selected tree item via tree api
-            selected_tree_id = self.selection()
-            if selected_tree_id:
-                # .selection gives tree insert item ID
-                item_id = selected_tree_id[0]
-                incoming_widget = self._get_widget_by_tree_insert_id(item_id)
-                # skip if same widget is already selected
-                if incoming_widget is self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
-                    return
-                # set tree state selected item
-                self._store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, incoming_widget)
+        # get selected tree item via tree api
+        selected_tree_id = self.selection()
+        if selected_tree_id:
+            # .selection gives tree insert item ID
+            item_id = selected_tree_id[0]
+            incoming_widget = self._get_widget_by_tree_insert_id(item_id)
+            # skip if same widget is already selected
+            if incoming_widget is self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
+                return
+            # set tree state selected item
+            self._store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, incoming_widget)
 
-                if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
-                    try:
-                        # HANDLE OPTION LISTBOX TEMPLATE
-                        self._stuff_listbox_options_state_into_page_template(selected_item_widget)
-                        # HANDLE GEOMETRY LISTBOX INSERT
-                        self._stuff_listbox_geometry_state_into_page_template(selected_item_widget)
+            if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
+            # inner try except handles fatal-type select/build errors
+                try:
+                    # HANDLE OPTION LISTBOX TEMPLATE
+                    self._stuff_listbox_options_state_into_page_template(selected_item_widget)
+                    # HANDLE GEOMETRY LISTBOX INSERT
+                    self._stuff_listbox_geometry_state_into_page_template(selected_item_widget)
 
-                        self._store.show_geometry_button = (bool(Utils.build_widget_geometry_manager_info(selected_item_widget)))
-                       
-
-                    except Exception as e:
-                        err_msg = f"error _handle_tree_select: {e}"
-                        logger.error(err_msg, exc_info=True)
-                        # delete all listbox
-                        self._observable.notify_observers(
-                            Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
-                        # post the error to the screen
-                        self._observable.notify_observers(Action(
-                            type=ActionType.INSERT_LISTBOX_ITEM, data={'index': tk.END, 'value': err_msg}))
-                    # highlight after listing options - else the list shows the highlight border
-                    self._highlighter.apply_highlight(selected_item_widget)
-        except Exception as e:
-            logger.error(f"Error _handle_tree_select: {e}", exc_info=True)
+                    self._store.show_geometry_button = (bool(Utils.build_widget_geometry_manager_info(selected_item_widget)))
+                
+                except Exception as e:
+                    err_msg = f"error _handle_tree_select: {e}"
+                    logger.error(err_msg, exc_info=True)
+                    # delete all listbox
+                    self._observable.notify_observers(
+                        Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
+                    # post the error to the screen
+                    self._observable.notify_observers(Action(
+                        type=ActionType.INSERT_LISTBOX_ITEM, data={'index': tk.END, 'value': err_msg}))
+                # highlight after listing options - else the list shows the highlight border
+                self._highlighter.apply_highlight(selected_item_widget)
 
     # ---- LIST WIDGETS VALUES HERE----
     # Populate the options listbox page with the selected widget's configure values.
