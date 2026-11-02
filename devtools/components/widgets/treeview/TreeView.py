@@ -17,7 +17,7 @@ class TreeView(ttk.Treeview):
     # Initialize the TreeView widget, build the tree, and set the initial selection.
     def __init__(self, master, parent, observable, store):
         super().__init__(parent, show="tree", style="My.Treeview")
-        self.master = master
+        self._app = master
         self._observable = observable
         self._store = store
         self._observable.register_observer(self)
@@ -35,7 +35,7 @@ class TreeView(ttk.Treeview):
     @class_fn_try_except_catcher
     # Bind Map, Unmap, and Destroy on the app window to watch for widget tree change - like when pages are changed
     def _bind_tree_change_events(self):
-        self._app_window = self.master.winfo_toplevel()
+        self._app_window = self._app.winfo_toplevel()
         # keep each bind id - unbind(sequence, funcid) removes only ours and keeps the app's own handlers
         self._app_bind_ids = {
             sequence: self._app_window.bind(sequence, self._handle_tcl_event_emit, add=True)
@@ -113,7 +113,7 @@ class TreeView(ttk.Treeview):
             self.delete_tree()
             self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
             self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
-            self._build_tree(self.master)
+            self._build_tree(self._app)
 
             mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
             for mem_id in expanded_mem_ids:
