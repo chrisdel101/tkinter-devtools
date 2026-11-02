@@ -149,13 +149,6 @@ class TreeView(ttk.Treeview):
     # store mem id() like {4579038880: {tree_id:'I002', widget:tk.Widget}}
     @class_fn_try_except_catcher
     def _add_tree_item_to_obj_mem_id_store(self, memory_id: int, tree_insert_id: str, widget: tk.Widget):
-        # """Store the widget by Treeview.insert ID."""
-        current_by_mem_id = self._store.tree_store_widget_by_obj_mem_id or {}
-        current_by_mem_id[memory_id] = {
-            "tree_id": tree_insert_id,
-             "widget": widget
-            }
-        self._store.tree_store_widget_by_obj_mem_id = current_by_mem_id
         # get current id(widget) state
         current_mem_id_widget_state = self._store.tree_state_get(
             TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
