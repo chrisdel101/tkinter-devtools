@@ -333,8 +333,7 @@ class TreeView(ttk.Treeview):
                         self._stuff_listbox_geometry_state_into_page_template(selected_item_widget)
 
                         self._store.show_geometry_button = (bool(Utils.build_widget_geometry_manager_info(selected_item_widget)))
-                        # highlight after listing options - else the list shows the highlight border
-                        self._highlighter.apply_highlight(selected_item_widget)
+                       
 
                     except Exception as e:
                         err_msg = f"error _handle_tree_select: {e}"
@@ -345,11 +344,11 @@ class TreeView(ttk.Treeview):
                         # post the error to the screen
                         self._observable.notify_observers(Action(
                             type=ActionType.INSERT_LISTBOX_ITEM, data={'index': tk.END, 'value': err_msg}))
-
+                    # highlight after listing options - else the list shows the highlight border
+                    self._highlighter.apply_highlight(selected_item_widget)
         except Exception as e:
             logging.error(f"Error _handle_tree_select: {e}", exc_info=True)
 
-    @class_fn_try_except_catcher
     # ---- LIST WIDGETS VALUES HERE----
     # Populate the options listbox page with the selected widget's configure values.
     def _stuff_listbox_options_state_into_page_template(self, selected_item_widget):
@@ -374,7 +373,6 @@ class TreeView(ttk.Treeview):
         self._store.listbox_manager_template_values_state_set(
             state_to_set=key_value_config_sorted_dict,  page_insert_override=ListboxPageTemplateEnum.OPTIONS)
 
-    @class_fn_try_except_catcher
     # Populate the geometry listbox page with the selected widget's geometry values.
     def _stuff_listbox_geometry_state_into_page_template(self, selected_item_widget):
 
