@@ -6,6 +6,7 @@ from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.components.observable import Action
 from devtools.constants import IS_DEVTOOLS_SENTINEL, ActionType, CommonGeometryOption, GeometryType, ListboxPageTemplateEnum, TreeStateKey
 from devtools.geometry_info import GeometryManagerInfo
+from devtools.maps import CONFIG_OPTION_SETTINGS
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.components.widgets.treeview.TreeViewHighlighter import TreeViewHighlighter
 from devtools.utils import Utils
@@ -439,8 +440,15 @@ class TreeView(ttk.Treeview):
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
         # for invalid entry error proporates to top and stops execution
-        current_tree_item.config(
-            **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
+        key, value = listbox_item_pairs_dict['key'], listbox_item_pairs_dict['value']
+        # listbox gives text - convert number options, some widgets only take numbers
+        value_type = CONFIG_OPTION_SETTINGS.get(key, {}).get('type')
+        if value_type in (int, float) and isinstance(value, str):
+            try:
+                value = value_type(value)
+            except ValueError:
+                pass
+        current_tree_item.config(**{key: value})
 
     @class_fn_try_except_catcher
     # delete tree and all branches
