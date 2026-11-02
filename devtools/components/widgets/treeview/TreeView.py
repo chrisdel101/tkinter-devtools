@@ -326,7 +326,6 @@ class TreeView(ttk.Treeview):
                 self._store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, incoming_widget)
 
                 if selected_item_widget := self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET):
-                    self._highlighter.apply_highlight(selected_item_widget)
                     try:
                         # HANDLE OPTION LISTBOX TEMPLATE
                         self._stuff_listbox_options_state_into_page_template(selected_item_widget)
@@ -334,6 +333,8 @@ class TreeView(ttk.Treeview):
                         self._stuff_listbox_geometry_state_into_page_template(selected_item_widget)
 
                         self._store.show_geometry_button = (bool(Utils.build_widget_geometry_manager_info(selected_item_widget)))
+                        # highlight after listing options - else the list shows the highlight border
+                        self._highlighter.apply_highlight(selected_item_widget)
 
                     except Exception as e:
                         err_msg = f"error _handle_tree_select: {e}"
