@@ -27,6 +27,11 @@ class ConfigListboxUtilsMixin:
             return ["true", "false"]
         return option_values
 
+    # check if the combobox dropdown is open - key focus out uses it so the key box isn't closed when the dropdown takes focus
+    def _is_combobox_popdown_open(self, combobox) -> bool:
+        popdown = self.tk.call("ttk::combobox::PopdownWindow", combobox)
+        return bool(self.tk.call("winfo", "ismapped", popdown))
+
     @staticmethod
     def _get_index_from_event_coords(index, event) -> int:
         # use event x and y w tk index - get listbox item index

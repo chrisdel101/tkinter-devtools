@@ -262,8 +262,9 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         except Exception as e:
             logging.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
 
-    def listbox_key_focus_out(self,e, *args):
-        if self._store.key_combobox_popdown_open: 
+    def listbox_key_focus_out(self, event, *args):
+        # dropdown open - don't close the key box, the flag is only set on an arrow click so ask Tk too
+        if self._store.key_combobox_popdown_open or (event is not None and self._is_combobox_popdown_open(event.widget)):
             logging.trace(f"key LISTBOX_ON_FOCUS guard1 open")
             return
         if not self._store.allow_input_focus_out_logic:
