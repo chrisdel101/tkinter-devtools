@@ -10,10 +10,10 @@ class Style:
             **self.treeview
         )
         tree_style.map(
-        "Treeview",
-        background=[("selected", "grey")],
-        foreground=[("selected", "black")]
-    ),
+            "My.Treeview",
+            background=[("selected", "grey")],
+            foreground=[("selected", "black")]
+        )
     treeview = {
         "selectbackground": "yellow",
         'font': ("Helvetica New", 13),
