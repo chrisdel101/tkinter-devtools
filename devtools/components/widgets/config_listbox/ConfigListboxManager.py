@@ -1,5 +1,5 @@
 from __future__ import annotations
-import logging
+from devtools.logging_utils import logger
 import tkinter as tk
 from tkinter import ttk
 from typing import Any
@@ -134,7 +134,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                 option_setting_map = self.map_geometry_key_to_config_setting_value(
                     resolved_item_key)
         if option_setting_map is None:
-            logging.debug(
+            logger.debug(
                 f"No option setting map found for {listbox_item_pairs_dict.get('key')}", exc_info=True)
             return "break"
         self.handle_entry_input_update(
@@ -397,10 +397,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                         Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)),
                     self.cancel_update_listbox(
                         *self._store.existing_combobox_wrappers),
-                    logging.trace("--escape entry create--"),
+                    logger.trace("--escape entry create--"),
                     setattr(self._store, 'block_active_adding', False)))
                 value_entry.bind("<FocusOut>", lambda e: (
-                    logging.trace("--focusout entry create--"),
+                    logger.trace("--focusout entry create--"),
                     self._observable.notify_observers(
                         Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)),
                     self.cancel_update_listbox(
@@ -410,13 +410,13 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                 value_entry.bind("<Escape>", lambda e: (
                     self.cancel_update_listbox(
                         *self._store.existing_combobox_wrappers),
-                    logging.trace("--escape entry update--"),
+                    logger.trace("--escape entry update--"),
                     setattr(self._store, 'block_active_adding', False)))
                 value_entry.bind("<FocusOut>", lambda e: (
                     self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers),
                     self.cancel_update_listbox(
                         *self._store.existing_combobox_wrappers),
-                    logging.trace("--focusout callee entry update--"),
+                    logger.trace("--focusout callee entry update--"),
                     setattr(self._store, 'block_active_adding', False)))
     
     # run funcs for entering row update - called from double click on row

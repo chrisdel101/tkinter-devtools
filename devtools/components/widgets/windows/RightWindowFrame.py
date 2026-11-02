@@ -1,5 +1,5 @@
 from __future__ import annotations
-import logging
+from devtools.logging_utils import logger
 from tkinter import ttk
 from devtools.components.observable import Action
 from devtools.constants import ActionType, ListboxPageTemplateEnum, TreeStateKey
@@ -160,14 +160,14 @@ class RightWindowFrame(tk.Frame):
                     self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
                     self._store.row_shift = False
             case _:
-                logging.error(f"Error pack_listbox_page_insert: No listbox packed", exc_info=True)
+                logger.error(f"Error pack_listbox_page_insert: No listbox packed", exc_info=True)
     
     
     # add new item to listbox
     @class_fn_try_except_catcher
     def handle_add(self, index=None):
         if self._store.block_active_adding:
-            logging.debug("handle_add state true. Cannot add.")
+            logger.debug("handle_add state true. Cannot add.")
             return
         # setter for state store
         self._store.block_active_adding = True
@@ -184,7 +184,7 @@ class RightWindowFrame(tk.Frame):
             # insert after selected_item
             current_selection_index = current_listbox_selection[0]
             insert_at_index = current_selection_index + 1
-        logging.trace(f"Inserting at index: {insert_at_index}")
+        logger.trace(f"Inserting at index: {insert_at_index}")
         # insert into listbox
         current_listbox_insert_widget.insert_listbox_item(index=insert_at_index, value="")
         # init entry input process
@@ -196,7 +196,7 @@ class RightWindowFrame(tk.Frame):
     @class_fn_try_except_catcher
     def handle_subtract_selection(self, _=None):
         if self._store.block_active_adding:
-            logging.debug("addning state is blocked/in session. Cannot subtract.")
+            logger.debug("addning state is blocked/in session. Cannot subtract.")
             return
         current_listbox = self._store.current_listbox_template
         # this is tuple format (3,)
@@ -204,7 +204,7 @@ class RightWindowFrame(tk.Frame):
         # current_treeview_item = self._store.tree_state_get('selected_item')
 
         if len(curselection) == 0:
-            logging.debug("No item selected to remove.")
+            logger.debug("No item selected to remove.")
             return
         else:
             current_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
@@ -237,7 +237,7 @@ class RightWindowFrame(tk.Frame):
         try:
             self._options_config_listbox_mngr.delete(index)
         except Exception as e:
-            logging.error(f"Error in handle_subtract_in_session: {e}", exc_info=True)
+            logger.error(f"Error in handle_subtract_in_session: {e}", exc_info=True)
 
     @class_fn_try_except_catcher
     def show_right_window_error(self, message: str):

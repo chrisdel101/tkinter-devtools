@@ -1,6 +1,14 @@
 import logging
+from functools import partial
 
 from devtools.constants import CustomLogLevel
+
+# named logger - its level and handler don't change the app's logging
+logger = logging.getLogger("devtools")
+# custom trace levels - logger.log skips the message when the level is off
+logger.trace = partial(logger.log, CustomLogLevel.TRACE.value)
+logger.base_trace = partial(logger.log, CustomLogLevel.BASE_TRACE.value)
+logger.low_trace = partial(logger.log, CustomLogLevel.LOW_TRACE.value)
 
 class LoggingUtils:
     # define the new levels
@@ -9,32 +17,11 @@ class LoggingUtils:
     logging.addLevelName(CustomLogLevel.LOW_TRACE.value, "low_trace")
 
     @staticmethod
-    def _low_trace(message, *args, **kwargs):
-        if logging.getLogger().isEnabledFor(CustomLogLevel.LOW_TRACE.value):
-            logging.log(CustomLogLevel.LOW_TRACE.value, message, *args, **kwargs)
-    @staticmethod
-    def _base_trace(message, *args, **kwargs):
-        if logging.getLogger().isEnabledFor(CustomLogLevel.BASE_TRACE.value):
-            logging.log(CustomLogLevel.BASE_TRACE.value, message, *args, **kwargs)
-    @staticmethod
-    def _trace(message, *args, **kwargs):
-        if logging.getLogger().isEnabledFor(CustomLogLevel.TRACE.value):
-            logging.log(CustomLogLevel.TRACE.value, message, *args, **kwargs)
-    @staticmethod
-    def append_to_logging():
-        # add to logging module
-        logging.low_trace = LoggingUtils._low_trace
-        logging.base_trace = LoggingUtils._base_trace
-        logging.trace = LoggingUtils._trace
-
-        # Set up handler
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter("%(levelname)s: %(message)s")
-        handler.setFormatter(formatter)
-        logging.getLogger().addHandler(handler)
-
-    @staticmethod
     def set_logging_level(log_level=logging.INFO):
-        LoggingUtils.append_to_logging()
-        logging.getLogger().setLevel(log_level) 
-        logging.basicConfig(level=log_level)
+        logger.setLevel(log_level)
+        # no propagate - else the app's handlers print devtools lines too
+        if not logger.handlers:
+            handler = logging.StreamHandler()
+            handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+            logger.addHandler(handler)
+        logger.propagate = False

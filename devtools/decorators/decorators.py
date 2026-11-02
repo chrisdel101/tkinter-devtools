@@ -1,6 +1,6 @@
 
 from functools import wraps
-import logging
+from devtools.logging_utils import logger
 import tkinter as tk
 from devtools.components.observable import Action
 from devtools.constants import ActionType
@@ -25,7 +25,7 @@ def block_allow_input_focus_out_logic(func):
                     
         return wrapper
     except Exception as e:
-        logging.error("Error in block_allow_input_focus_out_logic decorator.", exc_info=True)
+        logger.error("Error in block_allow_input_focus_out_logic decorator.", exc_info=True)
 
 # wraps static funcs and has different args[0]
 def static_fn_try_except_catcher(func):
@@ -34,9 +34,9 @@ def static_fn_try_except_catcher(func):
         try:
             return func(*args, **kwargs)
         except tk.TclError as e:
-            logging.error(f"--tcl error in {func.__name__}: {e}---", exc_info=True)
+            logger.error(f"--tcl error in {func.__name__}: {e}---", exc_info=True)
         except Exception as e:
-            logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
+            logger.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
     return wrapper
 # wraps class instance funcs and has self as caller_instance 
 def class_fn_try_except_catcher(func):
@@ -47,9 +47,9 @@ def class_fn_try_except_catcher(func):
         try:
             return func(*args, **kwargs)
         except tk.TclError as e:
-            logging.error(f"--tcl error in {func.__name__}: {e}---", exc_info=True)
+            logger.error(f"--tcl error in {func.__name__}: {e}---", exc_info=True)
             if caller_instance:
                 _display_error_alert(caller_instance, str(e))
         except Exception as e:
-            logging.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
+            logger.error(f"---ERROR in {func.__name__}: {e}---", exc_info=True)
     return wrapper

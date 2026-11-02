@@ -1,7 +1,7 @@
 from __future__ import annotations
 from ast import Store
 from copy import copy
-import logging
+from devtools.logging_utils import logger
 import tkinter as tk
 from tkinter import ttk
 
@@ -41,7 +41,7 @@ class Utils:
             }
             return listbox_item_pairs_dict
         except Exception as e:
-            logging.error(f"Error splitting string at colon: {e}", exc_info=True)
+            logger.error(f"Error splitting string at colon: {e}", exc_info=True)
             raise e
     @staticmethod
     # remove any non standard unusable options like screen, use
@@ -55,7 +55,7 @@ class Utils:
                     del config[key]
             return config
         except Exception as e:
-            logging.error(f"Error removing junk config items: {e}", exc_info=True)
+            logger.error(f"Error removing junk config items: {e}", exc_info=True)
             raise e
     @staticmethod
     @static_fn_try_except_catcher
@@ -70,7 +70,7 @@ class Utils:
             case GeometryType.PLACE:
                 standard_geo_options = Utils.extract_class_attributes(PlaceGeometryOption)
             case _:
-                logging.warning(f"build_geometry_standard_options_dict: Unknown geometry type {geo_manager.geometry_type}. No standard options extracted. Returning")
+                logger.warning(f"build_geometry_standard_options_dict: Unknown geometry type {geo_manager.geometry_type}. No standard options extracted. Returning")
                 return {}
         # geo_manager.geometry_options ex - {'in': <tkinter.Tk object .>, 'anchor': 'center', 'expand': 0,...} 
         return Utils.filter_non_used_geometry_options(geo_manager, standard_geo_options)
@@ -128,7 +128,7 @@ class Utils:
                     else: 
                         # if not 5 len tuple break error
                         err_msg = f"get_valid_key_value_differences: tuple is len {len(config_named_lookup)}, not len 5. Invalid len"
-                        logging.error(err_msg)
+                        logger.error(err_msg)
                         raise ValueError(err_msg)
                 elif isinstance(val, (str, int, float)):
                     # if not already added and value is not empty str
@@ -138,7 +138,7 @@ class Utils:
 
             return key_val_dict
         except Exception as e:
-            logging.error(f"Error extracting actual config values: {e}", exc_info=True)
+            logger.error(f"Error extracting actual config values: {e}", exc_info=True)
             raise e 
         
     @staticmethod
@@ -162,7 +162,7 @@ class Utils:
                 merged |= d 
             return merged
         except Exception as e:
-                logging.error(f"Error merge_dicts: {e}", exc_info=True)
+                logger.error(f"Error merge_dicts: {e}", exc_info=True)
                 raise e
     @staticmethod
     def sorted_dict(unsorted_dict: dict) -> dict:
@@ -170,7 +170,7 @@ class Utils:
             d = dict(sorted(unsorted_dict.items()))
             return d
         except Exception as e:
-            logging.error(f"Error sorting_dict: {e}", exc_info=True)
+            logger.error(f"Error sorting_dict: {e}", exc_info=True)
             raise e
 
     @staticmethod
@@ -204,7 +204,7 @@ class Utils:
                 return True
            return
         except Exception:
-            logging.error("Error determining if click was on combobox arrow.", exc_info=True)
+            logger.error("Error determining if click was on combobox arrow.", exc_info=True)
             
     @staticmethod
     @static_fn_try_except_catcher
@@ -235,7 +235,7 @@ class Utils:
             # if target is None, every observer with a matching handler runs — so handlers must
             # guard themselves (e.g. check their own enum) to avoid duplicate side-effects.
             if action.target is not None and action.target is not self:
-                logging.low_trace(f"Target set to {action.target.name}. Ignoring mismatch to {self}.")
+                logger.low_trace(f"Target set to {action.target.name}. Ignoring mismatch to {self}.")
                 return
             # look up the method name for this action type in the registry and call it
             fn = getattr(self, ACTION_REGISTRY.get(action.type.name), None)
@@ -260,13 +260,13 @@ class Utils:
             case GeometryType.PLACE.value:       
                 return GeometryManagerInfo(GeometryType.PLACE, widget.place_info(), name=widget.winfo_name())
             case GeometryType.UNMAPPED.value:
-                logging.trace(f"build_widget_geometry_manager_info: Widget {widget} is empty str. It is unmapped.")
+                logger.trace(f"build_widget_geometry_manager_info: Widget {widget} is empty str. It is unmapped.")
                 return GeometryManagerInfo(GeometryType.UNMAPPED, {} , name=widget.winfo_name())
             case GeometryType.WM.value:
-                logging.trace(f"build_widget_geometry_manager_info: Widget {widget} uses wm - rejected.")
+                logger.trace(f"build_widget_geometry_manager_info: Widget {widget} uses wm - rejected.")
                 return None
             case _:
-                logging.warning(f"build_widget_geometry_manager_info: Widget {widget} has no geometry manager.")
+                logger.warning(f"build_widget_geometry_manager_info: Widget {widget} has no geometry manager.")
                 return None
             
     @staticmethod
@@ -326,7 +326,7 @@ class Utils:
             # Stored options belong to a different manager; infer defaults for requested one.
             geometry_options = {}
         if not geo_type:
-            logging.trace(f"show_widget: Widget {widget} has no stored hidden state.")
+            logger.trace(f"show_widget: Widget {widget} has no stored hidden state.")
             return
         if not geometry_options and geo_type in (GeometryType.GRID, GeometryType.PACK, GeometryType.PLACE):
             from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
@@ -339,7 +339,7 @@ class Utils:
             case GeometryType.PLACE:
                 widget.place(**geometry_options)
             case _:
-                logging.warning(f"show_widget: Widget {widget} has unknown geometry type {geo_type}.")
+                logger.warning(f"show_widget: Widget {widget} has unknown geometry type {geo_type}.")
                 return
         # make shallow copy 
         hidden_widgets_copy = copy(store.hidden_widgets)

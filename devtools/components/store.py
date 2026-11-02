@@ -1,5 +1,5 @@
 from __future__ import annotations
-import logging
+from devtools.logging_utils import logger
 import tkinter as tk
 from typing import Any
 
@@ -166,7 +166,7 @@ class Store:
 
     @allow_input_focus_out_logic.setter
     def allow_input_focus_out_logic(self, value):
-        logging.trace(f'store setter - set allow_input_focus_out_logic - {value}')
+        logger.trace(f'store setter - set allow_input_focus_out_logic - {value}')
         self._allow_input_focus_out_logic = value
 
     # hidden widgets are tracked with their state to allow for re-showing 
@@ -272,7 +272,7 @@ class Store:
 
     @block_active_adding.setter
     def block_active_adding(self, value):
-        # logging.debug(f'SETTING block_active_adding TO {value}')
+        # logger.debug(f'SETTING block_active_adding TO {value}')
         self._block_active_adding = value
 
     @property

@@ -1,4 +1,4 @@
-import logging
+from devtools.logging_utils import logger
 import tkinter as tk
 from tkinter import ttk
 
@@ -92,11 +92,11 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
             setattr(self._store, 'listbox_entry_input_action', None),
              # reset spinbox var
             setattr(self, 'spinbox_var', None),
-            logging.trace("spinbox escape")
+            logger.trace("spinbox escape")
             )
         )
         spinbox.bind("<FocusOut>", lambda e: (
-                    logging.trace("----spinbox focus out----"),
+                    logger.trace("----spinbox focus out----"),
                     self.cancel_update_listbox(*self._store.existing_combobox_wrappers),
                      self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers),
                     setattr(self._store, 'block_active_adding', False)))
@@ -135,7 +135,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
       
         value_combobox.bind("<Escape>", lambda e: (
             self.cancel_update_listbox(self.key_box_wrapper, self.value_box_wrapper), 
-            logging.trace('combobox value escape'),
+            logger.trace('combobox value escape'),
             self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0)) if self._store.listbox_entry_input_action == ListBoxEntryInputAction.CREATE else None,
             setattr(self._store, 'block_active_adding', False),
             setattr(self._store, 'allow_input_focus_out_logic', True),
@@ -154,7 +154,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
             self.register(self.handle_value_combobox_closed)
         )
         value_combobox.bind("<FocusOut>", lambda e: 
-                (self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers), logging.trace("combobox value focus out callee")))
+                (self.listbox_value_focus_out(e, *self._store.existing_combobox_wrappers), logger.trace("combobox value focus out callee")))
 
         return value_combobox
         
@@ -202,7 +202,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
             key_combo_box.bind("<Escape>", lambda _: 
                     (self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=index)), 
                 self.cancel_update_listbox(self.key_box_wrapper),
-                logging.trace("---keybox escape----"),
+                logger.trace("---keybox escape----"),
                 setattr(self._store, 'block_active_adding', False))) 
             # use native tcl to detect when open
             key_combo_box.bind("<Button-1>", self.handle_key_combobox_open)
@@ -216,59 +216,59 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
                 self.register(self.handle_key_combobox_closed)
             )
             key_combo_box.bind("<FocusOut>", lambda e: 
-                (self.listbox_key_focus_out(e, self.key_box_wrapper), logging.trace("key focus out")))
+                (self.listbox_key_focus_out(e, self.key_box_wrapper), logger.trace("key focus out")))
          
             return key_combo_box
         except Exception as e:
-            logging.error("Error building key option box.", exc_info=True)
+            logger.error("Error building key option box.", exc_info=True)
     # if open flip state to closed - called on tcl unmap
     def handle_key_combobox_closed(self):
         try:
             if self._store.key_combobox_popdown_open:
                 self._store.key_combobox_popdown_open = False
-                logging.trace(f"Combobox popdown closed state: {self._store.key_combobox_popdown_open}")
+                logger.trace(f"Combobox popdown closed state: {self._store.key_combobox_popdown_open}")
         except Exception as e:
-            logging.error(f"Error handle_key_combobox_closed: {e}", exc_info=True)
+            logger.error(f"Error handle_key_combobox_closed: {e}", exc_info=True)
     # when arrow clicked flip to open
     def handle_key_combobox_open(self, e):
         try:
-            logging.low_trace(f"handle_key_combobox_open called")
+            logger.low_trace(f"handle_key_combobox_open called")
             check = Utils.is_combobox_arrow(e.widget, e.x)
             if check:
                 if not self._store.key_combobox_popdown_open:
                     self._store.key_combobox_popdown_open = True
-                logging.trace(f"handle_key_combobox_open open state: {self._store.key_combobox_popdown_open}")
+                logger.trace(f"handle_key_combobox_open open state: {self._store.key_combobox_popdown_open}")
         except Exception as e:
-            logging.error(f"Error handle_key_combobox_open: {e}", exc_info=True)
+            logger.error(f"Error handle_key_combobox_open: {e}", exc_info=True)
 
     # if open flip state to closed - called on tcl unmap
     def handle_value_combobox_closed(self):
         try:
-            logging.low_trace   (f"handle_value_combobox_closed called")
+            logger.low_trace   (f"handle_value_combobox_closed called")
             if self._store.value_combobox_popdown_open:
                 self._store.value_combobox_popdown_open = False
-                logging.trace(f"Combobox popdown closed state: {self._store.value_combobox_popdown_open}")
+                logger.trace(f"Combobox popdown closed state: {self._store.value_combobox_popdown_open}")
         except Exception as e:
-            logging.error(f"Error handle_value_combobox_closed: {e}",   exc_info=True)
+            logger.error(f"Error handle_value_combobox_closed: {e}",   exc_info=True)
     # when arrow clicked flip to open
     def handle_value_combobox_open(self, e):
         try:
-            logging.low_trace   (f"handle_value_combobox_open called")
+            logger.low_trace   (f"handle_value_combobox_open called")
             check = Utils.is_combobox_arrow(e.widget, e.x)
             if check:
                 if not self._store.value_combobox_popdown_open:
                     self._store.value_combobox_popdown_open = True
-                logging.trace   (f"handle_value_combobox_open setting open state: {self._store.value_combobox_popdown_open}")
+                logger.trace   (f"handle_value_combobox_open setting open state: {self._store.value_combobox_popdown_open}")
         except Exception as e:
-            logging.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
+            logger.error(f"Error handle_value_combobox_open: {e}", exc_info=True)
 
     def listbox_key_focus_out(self, event, *args):
         # dropdown open - don't close the key box, the flag is only set on an arrow click so ask Tk too
         if self._store.key_combobox_popdown_open or (event is not None and self._is_combobox_popdown_open(event.widget)):
-            logging.trace(f"key LISTBOX_ON_FOCUS guard1 open")
+            logger.trace(f"key LISTBOX_ON_FOCUS guard1 open")
             return
         if not self._store.allow_input_focus_out_logic:
-            logging.trace(f"key LISTBOX_ON_FOCUS guard2 off {self._store.allow_input_focus_out_logic}")
+            logger.trace(f"key LISTBOX_ON_FOCUS guard2 off {self._store.allow_input_focus_out_logic}")
             return  # internal focus change → ignore
 
         # In CREATE flow, selecting a key opens a value editor and naturally shifts focus.
@@ -279,22 +279,22 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
                 for wrapper in (self.value_box_wrapper, self.spin_box_wrapper)
             )
             if has_active_value_editor:
-                logging.trace("key LISTBOX_ON_FOCUS guard3 create handoff")
+                logger.trace("key LISTBOX_ON_FOCUS guard3 create handoff")
                 return
 
         self._store.block_active_adding =  False
         self._observable.notify_observers(Action(type=ActionType.HANDLE_SUBTRACT_INDEX, data=0))
         setattr(self._store, 'listbox_entry_input_action', None)
-        logging.trace("listbox_key_focus_out block_active_adding setting to false")
+        logger.trace("listbox_key_focus_out block_active_adding setting to false")
 
         self.cancel_update_listbox(*args)
 
     def listbox_value_focus_out(self,e, *args):
         # returns highest no null value
         name  = e.widget._name if e and e.widget and e.widget._name is not None else (e.widget if e else None)
-        logging.trace(f"LISTBOX_VALUE_FOCUS_OUT inner: {name}")
+        logger.trace(f"LISTBOX_VALUE_FOCUS_OUT inner: {name}")
         if self._store.value_combobox_popdown_open: 
-            logging.trace("value LISTBOX_ON_FOCUS guard2 block")
+            logger.trace("value LISTBOX_ON_FOCUS guard2 block")
             return
         self._store.block_active_adding =  False
         self._store.allow_input_focus_out_logic = True
@@ -311,9 +311,9 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         # check for options in map
         options_map_setting: ConfigOptionMapSetting|None = GRID_GEOMETRY_CONFIG_SETTING_VALUES.get(option_name)
         if options_map_setting is None:
-            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+            logger.debug(f"No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:
-            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+            logger.debug(f"No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
     
     # map geometry options to any possible setting vals
@@ -325,9 +325,9 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         # check for options in map
         options_map_setting: ConfigOptionMapSetting|None = PACK_GEOMETRY_CONFIG_SETTING_VALUES.get(option_name)
         if options_map_setting is None:
-            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+            logger.debug(f"No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:
-            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+            logger.debug(f"No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
     
     @staticmethod
@@ -347,9 +347,9 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
             },
         }.get(option_name)
         if options_map_setting is None:
-            logging.debug(f"map_geometry_key_to_config_setting_value: No mapping at all for {option_name}", exc_info=True)
+            logger.debug(f"map_geometry_key_to_config_setting_value: No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:
-            logging.debug(f"map_geometry_key_to_config_setting_value: No relevant mapping for{option_name}", exc_info=True)
+            logger.debug(f"map_geometry_key_to_config_setting_value: No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
     
     @staticmethod
@@ -360,9 +360,9 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         # check for options in map
         options_map_setting: ConfigOptionMapSetting|None = PLACE_GEOMETRY_CONFIG_SETTING_VALUES.get(option_name)
         if options_map_setting is None:
-            logging.debug(f"No mapping at all for {option_name}", exc_info=True)
+            logger.debug(f"No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:
-            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+            logger.debug(f"No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
     
     # map widget config option to any possible setting vals - colors, positions, etc. WIll be single dict
@@ -374,9 +374,9 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         # check for options in map
         options_map_setting: ConfigOptionMapSetting|None = CONFIG_OPTION_SETTINGS.get(option_name)
         if options_map_setting is None:
-            logging.debug(f"map_option_key_to_config_setting_value: No mapping at all for {option_name}", exc_info=True)
+            logger.debug(f"map_option_key_to_config_setting_value: No mapping at all for {option_name}", exc_info=True)
         elif options_map_setting.get('values') is None:
-            logging.debug(f"No relevant mapping for{option_name}", exc_info=True)
+            logger.debug(f"No relevant mapping for{option_name}", exc_info=True)
         return options_map_setting or {}
     
     @staticmethod
@@ -402,7 +402,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
                 self.insert_listbox_item(index=tk.END, key=key, value=display)
                 
         except Exception as e:
-            logging.error(f"Error insert_listbox_items: {e}", exc_info=True)
+            logger.error(f"Error insert_listbox_items: {e}", exc_info=True)
     # kwargs is index, value
     @class_fn_try_except_catcher
     def insert_listbox_item(self, **kwargs):
@@ -442,4 +442,4 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
             lisbox_in_parent_coord = self.winfo_y()
             return  lisbox_in_parent_coord
         except Exception as e:
-            logging.error(f"Error listbox_in_parent_y_coord: {e}", exc_info=True)
+            logger.error(f"Error listbox_in_parent_y_coord: {e}", exc_info=True)

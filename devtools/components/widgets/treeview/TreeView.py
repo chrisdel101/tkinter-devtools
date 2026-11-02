@@ -1,7 +1,7 @@
 from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
-import logging
+from devtools.logging_utils import logger
 from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.components.observable import Action
 from devtools.constants import IS_DEVTOOLS_SENTINEL, ActionType, CommonGeometryOption, GeometryType, ListboxPageTemplateEnum, TreeStateKey
@@ -232,7 +232,7 @@ class TreeView(ttk.Treeview):
         # Raw sibling order from Tk (creation/declaration order under this parent)
         children = list(parent_widget.winfo_children())
         if not children:
-            logging.debug(f"No children for widget: {parent_widget} with id {id(parent_widget)}")
+            logger.debug(f"No children for widget: {parent_widget} with id {id(parent_widget)}")
             return children
 
         # Ensure widget geometry/position info is up to date before visual sorting
@@ -307,7 +307,7 @@ class TreeView(ttk.Treeview):
                 self._build_tree(child, insert_child_memory_id)
 
         except Exception as e:
-            logging.error(f"Error _build_tree: {e}")
+            logger.error(f"Error _build_tree: {e}")
             raise e
 
     @class_fn_try_except_catcher
@@ -338,7 +338,7 @@ class TreeView(ttk.Treeview):
 
                     except Exception as e:
                         err_msg = f"error _handle_tree_select: {e}"
-                        logging.error(err_msg, exc_info=True)
+                        logger.error(err_msg, exc_info=True)
                         # delete all listbox
                         self._observable.notify_observers(
                             Action(type=ActionType.DELETE_ALL_LISTBOX_ITEMS))
@@ -348,7 +348,7 @@ class TreeView(ttk.Treeview):
                     # highlight after listing options - else the list shows the highlight border
                     self._highlighter.apply_highlight(selected_item_widget)
         except Exception as e:
-            logging.error(f"Error _handle_tree_select: {e}", exc_info=True)
+            logger.error(f"Error _handle_tree_select: {e}", exc_info=True)
 
     # ---- LIST WIDGETS VALUES HERE----
     # Populate the options listbox page with the selected widget's configure values.
@@ -439,7 +439,6 @@ class TreeView(ttk.Treeview):
         # self is the page widget - updates the config
         current_tree_item = self._store.tree_state_get(
             TreeStateKey.SELECTED_ITEM_WIDGET)
-        # for invalid entry error proporates to top and stops execution
         key, value = listbox_item_pairs_dict['key'], listbox_item_pairs_dict['value']
         # listbox gives text - convert number options, some widgets only take numbers
         value_type = CONFIG_OPTION_SETTINGS.get(key, {}).get('type')
@@ -448,6 +447,7 @@ class TreeView(ttk.Treeview):
                 value = value_type(value)
             except ValueError:
                 pass
+        # for invalid entry error proporates to top and stops execution
         current_tree_item.config(**{key: value})
 
     @class_fn_try_except_catcher

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+from devtools.logging_utils import logger
 import tkinter as tk
 from typing import TypedDict, Unpack
 from devtools.components.observable import Observable, Action
@@ -83,6 +84,6 @@ class DevtoolsWindow(tk.Toplevel):
         if not self._store.devtools_window_in_focus:
             # if focus on window
             if self.focus_displayof():
-                logging.trace("focus back")
+                logger.trace("focus back")
                 # set state to true
                 self._store.devtools_window_in_focus = True

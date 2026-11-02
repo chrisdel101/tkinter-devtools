@@ -11,10 +11,7 @@ class CustomLogLevel(Enum):
     TRACE = 8
     BASE_TRACE = 3
     LOW_TRACE = 5
-# namespaces are logged when enabled
-class LogNameSpace(Enum):
-    # namespaces
-    COMBOBOX_KEY = auto()
+    OFF = 0
 
 class GeometryType(Enum):
     PACK = "pack"
