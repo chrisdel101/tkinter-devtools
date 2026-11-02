@@ -27,16 +27,27 @@ class TreeView(ttk.Treeview):
         self.bind("<<TreeviewSelect>>", self._handle_tree_select)
         self._build_tree(master)
         self._bind_tree_change_events()
+        # devtools window closed - remove this tree's bindings and border from the app
+        self.bind("<Destroy>", self._on_destroy, add=True)
         # select the first tree item - trigger the listbox build
         self.selection_set(self.get_children()[0])
 
     @class_fn_try_except_catcher
-    # Bind Map, Unmap, and Destroy on master to watch for widget tree change - like when pages are changed
+    # Bind Map, Unmap, and Destroy on the app window to watch for widget tree change - like when pages are changed
     def _bind_tree_change_events(self):
-        self.master.bind_all("<Map>", self._handle_tcl_event_emit, add=True)
-        self.master.bind_all("<Unmap>", self._handle_tcl_event_emit, add=True)
-        self.master.bind_all("<Destroy>", self._handle_tcl_event_emit, add=True)
-        self.master.winfo_toplevel().bind("<Configure>", self._highlighter.on_toplevel_configure, add=True)
+        self._app_window = self.master.winfo_toplevel()
+        # keep each bind id - unbind(sequence, funcid) removes only ours and keeps the app's own handlers
+        self._app_bind_ids = {
+            sequence: self._app_window.bind(sequence, self._handle_tcl_event_emit, add=True)
+            for sequence in ("<Map>", "<Unmap>", "<Destroy>")
+        }
+
+    @class_fn_try_except_catcher
+    # Devtools window closed - remove this tree's bindings and border from the app
+    def _on_destroy(self, _):
+        for sequence, funcid in self._app_bind_ids.items():
+            self._app_window.unbind(sequence, funcid)
+        self._highlighter.destroy_highlight_overlay()
 
     @class_fn_try_except_catcher
     # Return True if the widget or any ancestor belongs to the devtools window vs appS

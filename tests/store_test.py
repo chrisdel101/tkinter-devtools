@@ -147,7 +147,9 @@ class StorePropertyNotificationsTests(unittest.TestCase):
 class StoreListboxStateTests(unittest.TestCase):
     def setUp(self):
         self.trace_patcher = patch.object(logging, "trace", create=True)
+        self.low_trace_patcher = patch.object(logging, "low_trace", create=True)
         self.trace_patcher.start()
+        self.low_trace_patcher.start()
         import tkinter as tk
         from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
         self.root = tk.Tk()
@@ -177,6 +179,7 @@ class StoreListboxStateTests(unittest.TestCase):
     def tearDown(self):
         self.root.destroy()
         self.trace_patcher.stop()
+        self.low_trace_patcher.stop()
 
     def test_listbox_value_state_set_and_get_roundtrip(self):
         self.store.listbox_manager_template_value_state_set(

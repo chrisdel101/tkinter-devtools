@@ -228,9 +228,6 @@ class _TreeFixture(unittest.TestCase):
         self.root.update_idletasks()
 
     def tearDown(self):
-        # Remove the tree's bind_all handlers so destroying the window doesn't queue a tree rebuild
-        for event in ("<Map>", "<Unmap>", "<Destroy>"):
-            self.root.unbind_all(event)
         # Run already-queued callbacks while the tree still exists
         self.root.update_idletasks()
         self.root.destroy()
@@ -432,6 +429,48 @@ class HighlightTests(_TreeFixture):
         self.tree._highlighter._hide_highlight_overlay()
         for edge in edges:
             edge.place_forget.assert_called_once()
+
+    def test_edges_are_placed_in_the_widget(self):
+        with patch.object(self.frame_a, "winfo_width", return_value=80), \
+             patch.object(self.frame_a, "winfo_height", return_value=40):
+            self.assertTrue(self.tree._highlighter._show_highlight_overlay(self.frame_a))
+        for edge in self.store.tree_highlight_overlay_edges:
+            self.assertIs(edge.place_info().get("in"), self.frame_a)
+
+
+# ---------------------------------------------------------------------------
+# Tree destroyed (devtools window closed) - app is left clean
+# ---------------------------------------------------------------------------
+
+class TreeDestroyTests(_TreeFixture):
+
+    def _app_window_script(self, sequence):
+        return self.root.tk.call("bind", str(self.root.winfo_toplevel()), sequence)
+
+    def test_destroy_removes_tree_bindings_from_app_window(self):
+        self.assertIn("_handle_tcl_event_emit", self._app_window_script("<Map>"))
+        self.tree.destroy()
+        for sequence in ("<Map>", "<Unmap>", "<Destroy>"):
+            self.assertNotIn("_handle_tcl_event_emit", self._app_window_script(sequence))
+
+    def test_destroy_keeps_app_own_bindings(self):
+        app_funcid = self.root.bind("<Map>", lambda e: None, add=True)
+        self.tree.destroy()
+        self.assertIn(app_funcid, self._app_window_script("<Map>"))
+
+    def test_destroy_removes_highlight_edges(self):
+        edges = [tk.Frame(self.root) for _ in range(4)]
+        self.store.tree_highlight_overlay_edges = edges
+        self.tree.destroy()
+        self.assertFalse(any(edge.winfo_exists() for edge in edges))
+        self.assertEqual(self.store.tree_highlight_overlay_edges, [])
+
+    def test_destroy_restores_config_highlight(self):
+        original = self.frame_a.cget("highlightthickness")
+        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
+            self.tree._highlighter.apply_highlight(self.frame_a)
+        self.tree.destroy()
+        self.assertEqual(self.frame_a.cget("highlightthickness"), original)
 
 
 # ---------------------------------------------------------------------------

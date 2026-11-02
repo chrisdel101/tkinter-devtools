@@ -358,11 +358,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         if config_setting_map and config_setting_map.get("type") in (int, float):
             self.spin_box_wrapper = tk.Frame(self)
             spinbox = self.build_value_spin_box(
-                key_entry_widget=key_entry_widget,
                 key_entry_value=key_entry_value,
-                current_option_value=current_option_val,
-                index=index
-            )
+                current_option_value=current_option_val)
             spinbox.pack(fill='x')
             self.spin_box_wrapper.place(
                 relx=0.5, y=y_coord, relwidth=0.5, width=-1)

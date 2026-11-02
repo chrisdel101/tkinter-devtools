@@ -14,7 +14,7 @@ class Action:
     # when None, every observer that has a matching handler will run.
     target: Any | None = None
 
-# this is the Subject
+# this is used in place of having to pass callbacks up and down everywhere
 class Observable:
     def __init__(self) -> None:
         self._observers = []

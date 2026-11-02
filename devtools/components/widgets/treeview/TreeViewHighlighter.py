@@ -14,13 +14,6 @@ class TreeViewHighlighter:
         self._store = store
 
     @class_fn_try_except_catcher
-    # Reposition the overlay to track window moves/resizes - done in place keeps the border visible.
-    def on_toplevel_configure(self, _):
-        widget = self._store.tree_highlighted_widget
-        if widget is not None and widget.winfo_exists():
-            self._show_highlight_overlay(widget)
-
-    @class_fn_try_except_catcher
     # Highlight the selected widget using an overlay frame or a direct config fallback.
     def apply_highlight(self, widget: tk.Widget):
         self._store.is_tree_applying_highlight = True
@@ -72,14 +65,7 @@ class TreeViewHighlighter:
             return False
 
         widget.update_idletasks()
-        # Convert widget position to toplevel-relative coordinates so the border
-        # is correct regardless of nesting depth.
-        x = widget.winfo_rootx() - overlay_parent.winfo_rootx()
-        y = widget.winfo_rooty() - overlay_parent.winfo_rooty()
-        width = widget.winfo_width()
-        height = widget.winfo_height()
-
-        if width <= 1 or height <= 1:
+        if widget.winfo_width() <= 1 or widget.winfo_height() <= 1:
             return False
 
         if (
@@ -97,10 +83,11 @@ class TreeViewHighlighter:
         border_size = Style.treeview['highlightthickness']
         top_edge, right_edge, bottom_edge, left_edge = self._store.tree_highlight_overlay_edges
 
-        top_edge.place(x=x, y=y, width=width, height=border_size)
-        right_edge.place(x=x + width - border_size, y=y, width=border_size, height=height)
-        bottom_edge.place(x=x, y=y + height - border_size, width=width, height=border_size)
-        left_edge.place(x=x, y=y, width=border_size, height=height)
+        # in_=widget - Tk keeps the edges on the widget when it moves or resizes, and hides them when it unmaps
+        top_edge.place(in_=widget, bordermode="outside", x=0, y=0, relwidth=1, height=border_size)
+        right_edge.place(in_=widget, bordermode="outside", relx=1, x=-border_size, y=0, width=border_size, relheight=1)
+        bottom_edge.place(in_=widget, bordermode="outside", x=0, rely=1, y=-border_size, relwidth=1, height=border_size)
+        left_edge.place(in_=widget, bordermode="outside", x=0, y=0, width=border_size, relheight=1)
 
         # Raise edges to the top of the toplevel's stacking order so nothing covers them.
         for edge in self._store.tree_highlight_overlay_edges:
@@ -122,6 +109,16 @@ class TreeViewHighlighter:
         for edge in self._store.tree_highlight_overlay_edges:
             if edge.winfo_exists():
                 edge.place_forget()
+
+    @class_fn_try_except_catcher
+    # Restore the highlighted widget and destroy the edges - they live in the app toplevel so closing devtools leaves them
+    def destroy_highlight_overlay(self):
+        self._remove_highlight()
+        for edge in self._store.tree_highlight_overlay_edges:
+            if edge.winfo_exists():
+                edge.destroy()
+        self._store.tree_highlight_overlay_edges = []
+        self._store.tree_highlight_overlay_parent = None
 
     @class_fn_try_except_catcher
     # Clear the applying-highlight guard flag after queued Tk events have been processed.

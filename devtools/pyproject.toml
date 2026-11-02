@@ -2,7 +2,7 @@
 name = "devtools"
 version = "0.1.0"
 description = "Tkinter development tools"
-requires-python = ">=3.7"
+requires-python = ">=3.11.8,!=3.12.0,!=3.12.1"
 authors = [
   { name="Chris", email="chrisdel.tech9@email.com" }
 ]
