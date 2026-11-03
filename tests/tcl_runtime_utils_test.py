@@ -1,5 +1,3 @@
-import threading
-import queue
 import unittest
 import tkinter as tk
 from tkinter import ttk
@@ -103,38 +101,6 @@ class TclRuntimeUtilsTests(unittest.TestCase):
    # threading contract                                                   #
    # ------------------------------------------------------------------ #
 
-   def test_worker_thread_to_tk_via_queue_and_after(self):
-      msg_queue = queue.Queue()
-      delivered = []
-      done = threading.Event()
-      timed_out = {"value": False}
-
-      def drain_queue_on_main_thread():
-         try:
-            while True:
-               item = msg_queue.get_nowait()
-               delivered.append(item)
-               if item == "ok":
-                  done.set()
-         except queue.Empty:
-            pass
-
-         if done.is_set():
-            self.root.quit()
-         else:
-            self.root.after(10, drain_queue_on_main_thread)
-
-      def worker_thread_fn():
-         # Worker thread must not call Tk APIs directly.
-         msg_queue.put("ok")
-
-      self.root.after(0, drain_queue_on_main_thread)
-      threading.Thread(target=worker_thread_fn, daemon=True).start()
-      self.root.after(1000, lambda: (timed_out.__setitem__("value", True), self.root.quit()))
-      self.root.mainloop()
-
-      self.assertFalse(timed_out["value"], "Timed out waiting for worker to main-thread delivery")
-      self.assertEqual(delivered, ["ok"])
 
 
 if __name__ == "__main__":

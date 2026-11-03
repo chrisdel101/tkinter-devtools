@@ -1,9 +1,7 @@
 """
 Tests for Store — state management, property setters, observer notifications.
 """
-import logging
 import unittest
-from unittest.mock import patch
 
 from devtools.DevtoolsWindow import DevtoolsWindowKwargs
 from devtools.components.observable import Action, Observable
@@ -35,13 +33,8 @@ class _RecordingObserver:
 
 class StoreInitTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
         self.observable = Observable()
         self.store = Store(observable=self.observable, **TEST_SETTINGS)
-
-    def tearDown(self):
-        self.trace_patcher.stop()
 
     def test_block_active_adding_defaults_false(self):
         self.assertFalse(self.store.block_active_adding)
@@ -83,13 +76,8 @@ class StoreInitTests(unittest.TestCase):
 
 class StoreTreeStateTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
         self.observable = Observable()
         self.store = Store(observable=self.observable, **TEST_SETTINGS)
-
-    def tearDown(self):
-        self.trace_patcher.stop()
 
     def test_tree_state_set_and_get_roundtrip(self):
         sentinel = object()
@@ -113,15 +101,10 @@ class StoreTreeStateTests(unittest.TestCase):
 
 class StorePropertyNotificationsTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
         self.observable = Observable()
         self.store = Store(observable=self.observable, **TEST_SETTINGS)
         self.observer = _RecordingObserver()
         self.observable.register_observer(self.observer)
-
-    def tearDown(self):
-        self.trace_patcher.stop()
 
     def test_show_geometry_button_true_notifies_toggle(self):
         self.store.show_geometry_button = True
@@ -146,10 +129,6 @@ class StorePropertyNotificationsTests(unittest.TestCase):
 
 class StoreListboxStateTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.low_trace_patcher = patch.object(logging, "low_trace", create=True)
-        self.trace_patcher.start()
-        self.low_trace_patcher.start()
         import tkinter as tk
         from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
         self.root = tk.Tk()
@@ -178,8 +157,6 @@ class StoreListboxStateTests(unittest.TestCase):
 
     def tearDown(self):
         self.root.destroy()
-        self.trace_patcher.stop()
-        self.low_trace_patcher.stop()
 
     def test_listbox_value_state_set_and_get_roundtrip(self):
         self.store.listbox_manager_template_value_state_set(
@@ -232,13 +209,8 @@ class StoreListboxStateTests(unittest.TestCase):
 
 class StoreHiddenWidgetTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
         self.observable = Observable()
         self.store = Store(observable=self.observable, **TEST_SETTINGS)
-
-    def tearDown(self):
-        self.trace_patcher.stop()
 
     def test_hidden_widgets_initialises_empty(self):
         self.assertEqual(self.store.hidden_widgets, {})

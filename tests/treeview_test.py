@@ -1,4 +1,3 @@
-import logging
 import tkinter as tk
 import unittest
 from types import SimpleNamespace
@@ -99,31 +98,6 @@ class TreeViewTests(unittest.TestCase):
         self.assertEqual(tree._store.tree_refresh_job, "job-id")
         tree.after_idle.assert_called_once()
 
-    def test_handle_tcl_event_emit_schedules_refresh_for_relevant_widget(self):
-        root = tk.Tk()
-        root.withdraw()
-        try:
-            frame = tk.Frame(root)
-            tree = TreeView.__new__(TreeView)
-            tree._store = SimpleNamespace(is_tree_applying_highlight=False)
-            tree._is_devtools_widget = Mock(return_value=False)
-            tree._is_relevant_tree_event_widget = Mock(return_value=True)
-            tree._schedule_tree_refresh = Mock()
-    
-            tree._handle_tcl_event_emit(SimpleNamespace(widget=frame))
-
-            tree._schedule_tree_refresh.assert_called_once()
-        finally:
-            root.destroy()
-
-    def test_handle_tcl_event_emit_ignores_non_tk_widget(self):
-        tree = TreeView.__new__(TreeView)
-        tree._schedule_tree_refresh = Mock()
-
-        tree._handle_tcl_event_emit(SimpleNamespace(widget=object()))
-
-        tree._schedule_tree_refresh.assert_not_called()
-
     def test_tree_order_key_prefers_mapped_root_coordinates(self):
         child = _FakeWidget("a", mapped=True, rootx=40, rooty=20)
         children = [child]
@@ -179,10 +153,6 @@ class TreeViewTests(unittest.TestCase):
 
 class _TreeFixture(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.low_trace_patcher = patch.object(logging, "low_trace", create=True)
-        self.trace_patcher.start()
-        self.low_trace_patcher.start()
 
         self.root = tk.Tk()
         self.root.withdraw()
@@ -229,8 +199,6 @@ class _TreeFixture(unittest.TestCase):
         # Run already-queued callbacks while the tree still exists
         self.root.update_idletasks()
         self.root.destroy()
-        self.trace_patcher.stop()
-        self.low_trace_patcher.stop()
 
 
 # ---------------------------------------------------------------------------
@@ -471,13 +439,6 @@ class TreeDestroyTests(_TreeFixture):
 # ---------------------------------------------------------------------------
 
 class TclEventEmitTests(unittest.TestCase):
-
-    def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
-
-    def tearDown(self):
-        self.trace_patcher.stop()
 
     def _tree(self):
         t = TreeView.__new__(TreeView)

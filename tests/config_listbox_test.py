@@ -1,4 +1,3 @@
-import logging
 import tkinter as tk
 import unittest
 from types import SimpleNamespace
@@ -30,10 +29,6 @@ TEST_RUNTIME_SETTINGS: DevtoolsWindowKwargs = {
 
 class ConfigListboxManagerTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.low_trace_patcher = patch.object(logging, "low_trace", create=True)
-        self.trace_patcher.start()
-        self.low_trace_patcher.start()
 
         self.root = tk.Tk()
         self.root.withdraw()
@@ -56,8 +51,6 @@ class ConfigListboxManagerTests(unittest.TestCase):
         # Run already-queued callbacks while the widgets still exist
         self.root.update_idletasks()
         self.root.destroy()
-        self.low_trace_patcher.stop()
-        self.trace_patcher.stop()
 
     def test_insert_listbox_items_normalizes_bool_display_values(self):
         self.listbox.insert_listbox_items(
@@ -258,13 +251,6 @@ class ConfigListboxManagerTests(unittest.TestCase):
 
 
 class RightWindowAddFlowTests(unittest.TestCase):
-    def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
-
-    def tearDown(self):
-        self.trace_patcher.stop()
-
     class _FakeListboxTemplate:
         def __init__(self, selection=()):
             self._selection = selection
@@ -327,8 +313,6 @@ if __name__ == "__main__":
 
 class RightWindowTabTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
         self.root = tk.Tk()
         self.root.withdraw()
         self.observable = Observable()
@@ -344,7 +328,6 @@ class RightWindowTabTests(unittest.TestCase):
 
     def tearDown(self):
         self.root.destroy()
-        self.trace_patcher.stop()
 
     def test_options_tab_active_by_default(self):
         from devtools.constants import ListboxPageTemplateEnum
@@ -401,8 +384,6 @@ class RightWindowTabTests(unittest.TestCase):
 
 class RightWindowSubtractTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
         self.root = tk.Tk()
         self.root.withdraw()
         self.observable = Observable()
@@ -437,7 +418,6 @@ class RightWindowSubtractTests(unittest.TestCase):
 
     def tearDown(self):
         self.root.destroy()
-        self.trace_patcher.stop()
 
     def test_subtract_selection_removes_listbox_row(self):
         lb = self.store.current_listbox_template
@@ -476,8 +456,6 @@ class RightWindowSubtractTests(unittest.TestCase):
 
 class RightWindowErrorTests(unittest.TestCase):
     def setUp(self):
-        self.trace_patcher = patch.object(logging, "trace", create=True)
-        self.trace_patcher.start()
         self.root = tk.Tk()
         self.root.withdraw()
         self.observable = Observable()
@@ -493,7 +471,6 @@ class RightWindowErrorTests(unittest.TestCase):
 
     def tearDown(self):
         self.root.destroy()
-        self.trace_patcher.stop()
 
     def test_show_right_window_error_displays_message(self):
         self.rw.show_right_window_error("something broke")
