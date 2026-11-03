@@ -171,7 +171,11 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             value_entry_widget, 'get', None) else updated_option_value
         resolved_key = None
         current_geometry_state = {}
-        # stays True for rows that don't notify the tree i.e visibility, geometry type
+        # block negatives - raise shows the page error
+        number_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
+        if self.config_map_merge.get(number_key, {}).get('type') in (int, float) and str(value_entry_value).startswith('-'):
+            raise tk.TclError(f"{key_entry_value} cannot be negative")
+        # stays True for rows that don't notify the tree
         tree_updated = True
         # UPDATE THE PAGE WIDGETS HERE - calls tree
         # --- OPTION UPDATE HANDLING
@@ -283,7 +287,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                         if resolved_key == CommonGeometryOption.GEOMETRY_TYPE:
                             current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = value_entry_value
                             value_entry_value = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE, value_entry_value)
-        # tree rejected the value and the page error is showing - don't save it, keep the box open to try again
+        # tree rejected value - don't save, keep box open
         if not tree_updated:
             return
         # delete data at current index and insert new data there

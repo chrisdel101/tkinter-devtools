@@ -65,11 +65,16 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         key_entry_value: str, 
         current_option_value: str):        
         spinbox = tk.Spinbox(self.spin_box_wrapper, 
-            from_=current_option_value or 0,
-            to=9999, 
+        # hack to allow any values in spin                   
+            from_=float('-inf'),
+            to=float('inf'),
             increment=1,
             textvariable=self.spinbox_var,
             **Style.config_listbox_manager['entry'])
+        # remove fake -inf added above
+        spinbox.delete(0, 'end')
+        # insert valid value into listbox
+        spinbox.insert(0, current_option_value or 0)
         spinbox.bind('<Return>', lambda e: (self.insert_value_output_and_apply_to_page
                 (value_entry_widget=spinbox, 
                 key_entry_value=key_entry_value,
