@@ -219,11 +219,11 @@ class Utils:
             if fn:
                 # unpack data as positional args, keyword args, or a single value
                 if isinstance(action.data, (list, tuple)):
-                    fn(*action.data)
+                    return fn(*action.data)
                 elif isinstance(action.data, (dict)):
-                    fn(**action.data)
+                    return fn(**action.data)
                 else:
-                    fn(action.data) if action.data is not None else fn()
+                    return fn(action.data) if action.data is not None else fn()
     @staticmethod
     @static_fn_try_except_catcher
     # takes widget and returns the geo info manager for the widget

@@ -22,6 +22,6 @@ class Observable:
     def register_observer(self, observer) -> None:
         self._observers.append(observer)
 
-    def notify_observers(self, action: Action) -> None:
-        for observer in self._observers:
-            observer.notify(action)
+    # returns each observer's result so the caller can tell if the update worked
+    def notify_observers(self, action: Action) -> list:
+        return [observer.notify(action) for observer in self._observers]

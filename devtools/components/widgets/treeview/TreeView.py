@@ -400,6 +400,7 @@ class TreeView(ttk.Treeview):
         current_tree_item.grid_configure(
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
         current_tree_item.update_idletasks()
+        return True
 
     @class_fn_try_except_catcher
     # listbox calls to make updates to place geomtetry
@@ -409,6 +410,7 @@ class TreeView(ttk.Treeview):
             TreeStateKey.SELECTED_ITEM_WIDGET)
         current_tree_item.place_configure(
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
+        return True
 
     @class_fn_try_except_catcher
     # listbox calls to make updates to pack geomtetry
@@ -418,6 +420,7 @@ class TreeView(ttk.Treeview):
             TreeStateKey.SELECTED_ITEM_WIDGET)
         current_tree_item.pack_configure(
             **{listbox_item_pairs_dict['key']: listbox_item_pairs_dict['value']})
+        return True
 
     @class_fn_try_except_catcher
     # listbox calls to make updates to widget options
@@ -436,6 +439,7 @@ class TreeView(ttk.Treeview):
                 pass
         # for invalid entry error proporates to top and stops execution
         current_tree_item.config(**{key: value})
+        return True
 
     @class_fn_try_except_catcher
     # delete tree and all branches
@@ -452,4 +456,4 @@ class TreeView(ttk.Treeview):
     @class_fn_try_except_catcher
     # Dispatch incoming observable actions to the matching handler on this widget.
     def notify(self, action: Action):
-        Utils.dispatch_action(self, action)
+        return Utils.dispatch_action(self, action)

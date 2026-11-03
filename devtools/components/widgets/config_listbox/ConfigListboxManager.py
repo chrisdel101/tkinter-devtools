@@ -171,16 +171,18 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             value_entry_widget, 'get', None) else updated_option_value
         resolved_key = None
         current_geometry_state = {}
+        # stays True for rows that don't notify the tree i.e visibility, geometry type
+        tree_updated = True
         # UPDATE THE PAGE WIDGETS HERE - calls tree
         # --- OPTION UPDATE HANDLING
         if self._listbox_page_template_insert_enum == ListboxPageTemplateEnum.OPTIONS:
             value_entry_value = self._resolve_image_option_value(key_entry_value, value_entry_value)
-            self._observable.notify_observers(Action(
+            tree_updated = any(self._observable.notify_observers(Action(
                 type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG,
                 data={
                     'key': key_entry_value,
                     'value': value_entry_value
-                }))
+                })))
         else:
             # GEOMETRY UPDATE HANDLING
             selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
@@ -263,25 +265,28 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             if resolved_key not in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
                 match geo_manager:
                     case GeometryType.PACK.value:
-                        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
+                        tree_updated = any(self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
                             'key': resolved_key,
                             'value': value_entry_value
-                        }))
+                        })))
                     case GeometryType.GRID.value:
-                        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG, data={
+                        tree_updated = any(self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG, data={
                             'key': resolved_key,
                             'value': value_entry_value
-                        }))
+                        })))
                     case GeometryType.PLACE.value:
-                        self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG, data={
+                        tree_updated = any(self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG, data={
                             'key': resolved_key,
                             'value': value_entry_value
-                        }))
+                        })))
                     case GeometryType.UNMAPPED.value:
                         if resolved_key == CommonGeometryOption.GEOMETRY_TYPE:
                             current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = value_entry_value
                             value_entry_value = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE, value_entry_value)
-         # delete data at current index and insert new data there
+        # tree rejected the value and the page error is showing - don't save it, keep the box open to try again
+        if not tree_updated:
+            return
+        # delete data at current index and insert new data there
         self.delete_all_listbox_items()
         
         prev_listbox_store_dict = self._store.listbox_manager_template_value_state_get(
@@ -307,7 +312,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         # submit succeeded; avoid CREATE focus-out cleanup removing a row
         self._store.listbox_entry_input_action = None
         self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
-        self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)        
+        self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)
 
     @block_allow_input_focus_out_logic
     @class_fn_try_except_catcher
