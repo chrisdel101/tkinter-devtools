@@ -436,7 +436,12 @@ class TreeView(ttk.Treeview):
             try:
                 value = value_type(value)
             except ValueError:
+                # swallow value errors - handled in decorator
                 pass
+        # if textvariable is set  update the variable instead of tex
+        if key == 'text' and 'textvariable' in current_tree_item.keys() and current_tree_item.cget('textvariable'):
+            current_tree_item.setvar(str(current_tree_item.cget('textvariable')), value)
+            return True
         # for invalid entry error proporates to top and stops execution
         current_tree_item.config(**{key: value})
         return True
