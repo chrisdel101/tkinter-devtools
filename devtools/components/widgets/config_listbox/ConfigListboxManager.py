@@ -289,6 +289,9 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                             value_entry_value = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE, value_entry_value)
         # tree rejected value - don't save, keep box open
         if not tree_updated:
+            # if we're adding remove added rows aparatus on tcl error 
+            if self._store.block_active_adding:
+                self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)
             return
         # delete data at current index and insert new data there
         self.delete_all_listbox_items()
