@@ -15,9 +15,13 @@ class UtilsTests(unittest.TestCase):
       self.assertFalse(Utils.non_zero_falsey(1))
 
    def test_build_split_str_pairs_dict(self):
-      result = Utils.build_split_str_pairs_dict("geometry type: pack")
-      self.assertEqual(result["key"], "geometry type")
-      self.assertEqual(result["value"], "pack")
+      result1 = Utils.build_split_str_pairs_dict("geometry type: pack")
+      self.assertEqual(result1["key"], "geometry type")
+      self.assertEqual(result1["value"], "pack")
+
+      result2 = Utils.build_split_str_pairs_dict("text: http://localost3030/333?11")
+      self.assertEqual(result2["key"], "text")
+      self.assertEqual(result2["value"], "http://localost3030/333?11")
 
    def test_alias_resolvers_roundtrip_geometry_type(self):
       ui_key = Utils.listbox_option_to_type_alias_direction_alias_resolver("geometry_type")

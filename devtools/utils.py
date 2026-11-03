@@ -28,10 +28,12 @@ class Utils:
 
 
     @staticmethod
-    # split a key value str and return key/val dict
-    def build_split_str_pairs_dict(new_data: str, separator: str = ":") -> ListboxItemPair:
-        # split list into sep str
-        split_list_items: list = new_data.split(separator)
+    # input is colon sep string 
+    # split key value by first colon only
+    # return key/val dict - sep
+    def build_split_str_pairs_dict(new_data_str: str, separator: str = ":") -> ListboxItemPair:
+        # split list into sep str, like 'text: http://localost3030/333?11' - split on first colon
+        split_list_items: list = new_data_str.split(separator,1)
         key = split_list_items[0] if len(split_list_items) > 0 else ""
         value = split_list_items[1] if len(split_list_items) > 1 else ""
         listbox_item_pairs_dict  = {
