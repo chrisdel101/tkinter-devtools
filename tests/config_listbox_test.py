@@ -363,13 +363,13 @@ class RightWindowTabTests(unittest.TestCase):
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.OPTIONS)
         self.assertTrue(self.store.row_shift)
-
+    # test that clicking the tab already open does not pack it again    
     def test_handle_pack_click_same_tab_is_noop(self):
         from devtools.constants import ListboxPageTemplateEnum
-        # Already on OPTIONS; clicking it again must not re-pack
-        original_template = self.store.current_listbox_template
-        self.rw.handle_pack_listbox_page_insert_click(ListboxPageTemplateEnum.OPTIONS)
-        self.assertIs(self.store.current_listbox_template, original_template)
+        # records calls to the pack function - a re-pack sets the same template, so only the call shows it ran
+        with patch.object(self.rw, "pack_listbox_page_insert") as pack_insert:
+            self.rw.handle_pack_listbox_page_insert_click(ListboxPageTemplateEnum.OPTIONS)
+        pack_insert.assert_not_called()
 
     def test_toggle_row_shift_enables_add_subtract_buttons(self):
         self.rw.toggle_row_shift(True)

@@ -289,7 +289,10 @@ class DeleteAndRebuildTests(_TreeFixture):
         self.assertFalse(self.store.tree_rebuild_in_progress)
 
     def test_rebuild_from_master_clears_refresh_job(self):
-        self.tree._rebuild_tree_from_master_root()
+        # job must be pending first - it starts as None so the assert alone proves nothing
+        self.tree._schedule_tree_refresh()
+        self.assertIsNotNone(self.store.tree_refresh_job)
+        self.root.update_idletasks()
         self.assertIsNone(self.store.tree_refresh_job)
 
     def test_rebuild_while_in_progress_sets_requested_flag(self):
@@ -444,6 +447,9 @@ class TclEventEmitTests(unittest.TestCase):
         t = TreeView.__new__(TreeView)
         t._store = SimpleNamespace(is_tree_applying_highlight=False)
         t._schedule_tree_refresh = Mock()
+        # later filters pass by default - a bad widget is only stopped by the guard under test
+        t._is_devtools_widget = Mock(return_value=False)
+        t._is_relevant_tree_event_widget = Mock(return_value=True)
         return t
 
     def test_non_tk_widget_ignored(self):
