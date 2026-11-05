@@ -219,6 +219,11 @@ class RightWindowFrame(tk.Frame):
             if active_item_value:
                 listbox_item_pairs_dict = Utils.build_split_str_pairs_dict(current_listbox.get(tk.ACTIVE))
                 original_config_value = lookup_by_id_frozen_config.get(listbox_item_pairs_dict['key'])
+                # compare vals are text
+                if original_config_value is not None and str(original_config_value) == listbox_item_pairs_dict['value']:
+                    logger.debug('value is same as he original. No change.')
+                    return
+
                 # updates the page widget - notify tree - sets config to zero
                 self._observable.notify_observers(
                     Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, 
