@@ -167,8 +167,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         # store the current y position in listbox
         y0, _ = self.yview()
         # check for .get method  - use .get for new entry else val correct option box
-        value_entry_value = value_entry_widget.get() if getattr(
-            value_entry_widget, 'get', None) else updated_option_value
+        value_entry_value = value_entry_widget.get() if hasattr(value_entry_widget, 'get') else updated_option_value
+        # strip spaces in display
+        if value_entry_value:
+            value_entry_value = value_entry_value.strip()  
         resolved_key = None
         current_geometry_state = {}
         # block negatives - raise shows the page error
