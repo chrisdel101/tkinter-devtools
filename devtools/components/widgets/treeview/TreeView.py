@@ -26,6 +26,8 @@ class TreeView(ttk.Treeview):
         # "#0" is special built-in first column - width of 300
         self.column("#0", width=300)
         self.bind("<<TreeviewSelect>>", self._handle_tree_select)
+        # originals kept across rebuilds
+        self._carried_frozen_config_by_mem_id: dict[int, dict] = {}
         self._build_tree(master)
         self._bind_tree_change_events()
         # tree destroyed - cancel its queued rebuild and remove its bindings and border from the app
@@ -115,6 +117,11 @@ class TreeView(ttk.Treeview):
                 if (tree_id := entry.get("tree_id")) and self.exists(tree_id) and self.item(tree_id, "open")
             }
             selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+            # rebuild re-reads the live config, so carry the originals
+            self._carried_frozen_config_by_mem_id = {
+                mem_id: entry["widget_config_init_frozen"] for mem_id, entry in mem_store.items()
+                if entry.get("widget") is not None and entry["widget"].winfo_exists()
+            }
             self.delete_tree()
             self._store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
             self._store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
@@ -134,6 +141,7 @@ class TreeView(ttk.Treeview):
             elif self.get_children():
                 self.selection_set(self.get_children()[0])
         finally:
+            self._carried_frozen_config_by_mem_id = {}
             self._store.tree_rebuild_in_progress = False
             if getattr(self._store, "tree_rebuild_requested", False):
                 self._store.tree_rebuild_requested = False
@@ -162,7 +170,8 @@ class TreeView(ttk.Treeview):
             {memory_id: {
                 "tree_id": tree_insert_id,
                 "widget": widget,
-                "widget_config_init_frozen": Utils.conform_option_lisbox_config(Utils.filter_non_used_config_options(widget.configure()))
+                "widget_config_init_frozen": self._carried_frozen_config_by_mem_id.get(memory_id)
+                    or Utils.conform_option_lisbox_config(Utils.filter_non_used_config_options(widget.configure()))
             }})
         # overwrite existing state with new
         self._store.tree_state_set(

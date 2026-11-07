@@ -2,7 +2,7 @@ from __future__ import annotations
 from devtools.logging_utils import logger
 from tkinter import ttk
 from devtools.components.observable import Action
-from devtools.constants import ActionType, ListboxPageTemplateEnum, TreeStateKey
+from devtools.constants import ActionType, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, TreeStateKey
 from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.style import Style
 from devtools.utils import Utils
@@ -218,19 +218,40 @@ class RightWindowFrame(tk.Frame):
             # if active send blank value to undo _options_config_listbox_mngr on widget
             if active_item_value:
                 listbox_item_pairs_dict = Utils.build_split_str_pairs_dict(current_listbox.get(tk.ACTIVE))
-                original_config_value = lookup_by_id_frozen_config.get(listbox_item_pairs_dict['key'])
+                key = listbox_item_pairs_dict['key']
+                # bg is stored as background in the original config
+                original_key = Utils.listbox_option_bi_direction_alias_resolver(key)
+                is_added_row = original_key not in lookup_by_id_frozen_config
+                # added rows had no value before
+                original_config_value = lookup_by_id_frozen_config.get(original_key, "")
                 # compare vals are text
-                if original_config_value is not None and str(original_config_value) == listbox_item_pairs_dict['value']:
+                if not is_added_row and str(original_config_value) == listbox_item_pairs_dict['value']:
                     logger.debug('value is same as he original. No change.')
                     return
 
-                # updates the page widget - notify tree - sets config to zero
-                self._observable.notify_observers(
-                    Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG, 
+                # updates the page widget - notify tree - sets back the original value
+                tree_updated = any(self._observable.notify_observers(
+                    Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG,
                     data={
-                        "key": listbox_item_pairs_dict['key'],
+                        "key": original_key,
                         "value": original_config_value
-                }))   
+                })))
+                if not tree_updated:
+                    return
+                # added rows are removed, original rows stay with their original value
+                saved_values = dict(self._store.listbox_manager_template_value_state_get(
+                    ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE) or {})
+                saved_values.pop(key, None)
+                if not is_added_row:
+                    saved_values[original_key] = original_config_value
+                saved_values = Utils.sorted_dict(saved_values)
+                self._store.listbox_manager_template_value_state_set(
+                    enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=saved_values)
+                scroll_position, _ = current_listbox.yview()
+                current_listbox.delete_all_listbox_items()
+                current_listbox.insert_listbox_items(**saved_values)
+                current_listbox.after_idle(lambda: current_listbox.yview_moveto(scroll_position))
+                return
             # unpack first item from tuple
             current_selection_index, = curselection
             # remove from listbox
