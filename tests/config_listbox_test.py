@@ -10,6 +10,7 @@ from devtools.components.store import Store
 from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
 from devtools.constants import ActionType, CommonGeometryOption, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, PackGeometryOptionName, TreeStateKey
+from tests import treeview_test
 
 
 class RecordingObserver:
@@ -396,55 +397,11 @@ class RightWindowSubtractTests(unittest.TestCase):
             observable=self.observable,
             store=self.store,
         )
-        # wire a page widget with a frozen config so subtract can look it up
-        self.page_widget = tk.Frame(self.root)
-        self.page_widget.pack()
-        self.root.update_idletasks()
-        from devtools.utils import Utils
-        frozen = Utils.conform_option_lisbox_config(
-            Utils.filter_non_used_config_options(self.page_widget.configure())
-        )
-        self.store.tree_state_set(
-            TreeStateKey.SELECTED_ITEM_WIDGET, self.page_widget
-        )
-        self.store.tree_state_set(
-            TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID,
-            {id(self.page_widget): {
-                "tree_id": "I_FAKE",
-                "widget": self.page_widget,
-                "widget_config_init_frozen": frozen,
-            }}
-        )
 
     def tearDown(self):
         self.root.destroy()
 
-    def test_subtract_selection_removes_listbox_row(self):
-        lb = self.store.current_listbox_template
-        lb.insert(tk.END, "relief: flat")
-        lb.selection_set(0)
-        lb.activate(0)
-        before = lb.size()
-        self.rw.handle_subtract_selection()
-        self.assertEqual(lb.size(), before - 1)
-
-    def test_subtract_selection_noop_when_nothing_selected(self):
-        lb = self.store.current_listbox_template
-        lb.insert(tk.END, "relief: flat")
-        # no selection
-        before = lb.size()
-        self.rw.handle_subtract_selection()
-        self.assertEqual(lb.size(), before)
-
-    def test_subtract_selection_blocked_when_add_in_progress(self):
-        lb = self.store.current_listbox_template
-        lb.insert(tk.END, "relief: flat")
-        lb.selection_set(0)
-        self.store.block_active_adding = True
-        before = lb.size()
-        self.rw.handle_subtract_selection()
-        self.assertEqual(lb.size(), before)
-
+    # handle_subtract_index
     def test_handle_subtract_index_removes_row_at_index(self):
         lb = self.store.current_listbox_template
         lb.insert(tk.END, "alpha: 1")
@@ -452,6 +409,112 @@ class RightWindowSubtractTests(unittest.TestCase):
         self.rw.handle_subtract_index(0)
         self.assertEqual(lb.size(), 1)
         self.assertEqual(lb.get(0), "beta: 2")
+
+
+# handle_subtract_selection - import treeview_test fixture
+class RightWindowSubtractSelectionTests(treeview_test._TreeFixture):
+    def setUp(self):
+        super().setUp()
+        self.rw = RightWindowFrame(
+            parent=tk.Frame(self.root),
+            observable=self.observable,
+            store=self.store,
+        )
+        # subtract resets the page widget through the tree, so the page widget's row is selected
+        self.page_widget = self.frame_a
+        mem_widget_store = self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
+        self.tree.selection_set(mem_widget_store[id(self.page_widget)]["tree_id"])
+        self.root.update()
+        # selecting the page widget fills this listbox with its own options
+        self.lb = self.store.current_listbox_template
+        # records what subtract sends to the tree
+        self.recorder = RecordingObserver()
+        self.observable.register_observer(self.recorder)
+
+    # listbox rows as text - tp compare before and after a subtract
+    def _rows(self):
+        return list(self.lb.get(0, tk.END))
+
+    # the widget's own options fill the listbox, so rows are found by option name
+    def _row_index(self, key):
+        return next(i for i, text in enumerate(self._rows()) if text.startswith(f"{key}:"))
+
+    # widget updates that subtract asked the tree to make
+    def _tree_updates(self):
+        return [a for a in self.recorder.actions if a.type == ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG]
+
+    def _add_cursor_row(self):
+        # an option the widget really has, so a wrong subtract is visible
+        self.page_widget.config(cursor="arrow")
+        self.lb.insert(tk.END, "cursor: arrow")
+        row = self.lb.size() - 1
+        self.lb.activate(row)
+        return row
+
+    # an added row is removed and the widget loses the option again
+    def test_subtract_selection_removes_listbox_row(self):
+        rows_before = self._rows()
+        self.lb.selection_set(self._add_cursor_row())
+        self.rw.handle_subtract_selection()
+        self.assertEqual(self._rows(), rows_before)
+        self.assertEqual(self.page_widget.cget("cursor"), "")
+
+    # a changed original row is kept, but goes back to its original value
+    def test_subtract_selection_restores_original_value_of_changed_row(self):
+        rows_before = self._rows()
+        row = self._row_index("borderwidth")
+        original_width = self.page_widget.cget("borderwidth")
+        self.page_widget.config(borderwidth=3)
+        self.lb.delete(row)
+        self.lb.insert(row, "borderwidth: 3")
+        self.lb.selection_set(row)
+        self.lb.activate(row)
+        self.rw.handle_subtract_selection()
+        # an original row stays, with the value it had before the change
+        self.assertEqual(self._rows(), rows_before)
+        self.assertEqual(self.page_widget.cget("borderwidth"), original_width)
+
+    # a row that still holds its original value has nothing to undo
+    def test_subtract_selection_noop_when_value_equals_original(self):
+        rows_before = self._rows()
+        row = self._row_index("relief")
+        self.lb.selection_set(row)
+        self.lb.activate(row)
+        self.rw.handle_subtract_selection()
+        self.assertEqual(self._rows(), rows_before)
+        # nothing to undo, so nothing is sent to the tree
+        self.assertEqual(self._tree_updates(), [])
+
+    def test_subtract_selection_noop_when_nothing_selected(self):
+        self._add_cursor_row()
+        # the row is active but not selected, so subtract must leave it alone
+        rows_before = self._rows()
+        self.rw.handle_subtract_selection()
+        self.assertEqual(self._rows(), rows_before)
+        self.assertEqual(self.page_widget.cget("cursor"), "arrow")
+        self.assertEqual(self._tree_updates(), [])
+
+    # no subtract while a new row is being added
+    def test_subtract_selection_blocked_when_add_in_progress(self):
+        self.lb.selection_set(self._add_cursor_row())
+        self.store.block_active_adding = True
+        rows_before = self._rows()
+        self.rw.handle_subtract_selection()
+        self.assertEqual(self._rows(), rows_before)
+        self.assertEqual(self.page_widget.cget("cursor"), "arrow")
+        self.assertEqual(self._tree_updates(), [])
+
+    # if the widget could not be reset, the row has to stay so the two do not drift apart
+    def test_subtract_selection_keeps_row_when_tree_rejects_update(self):
+        # the page widget has no such option, so the tree answers with a Tcl error
+        self.lb.insert(tk.END, "bogus: 1")
+        row = self.lb.size() - 1
+        self.lb.selection_set(row)
+        self.lb.activate(row)
+        rows_before = self._rows()
+        with self.assertLogs("devtools", level="ERROR"):
+            self.rw.handle_subtract_selection()
+        self.assertEqual(self._rows(), rows_before)
 
 
 class RightWindowErrorTests(unittest.TestCase):
