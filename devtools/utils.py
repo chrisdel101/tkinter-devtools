@@ -293,7 +293,6 @@ class Utils:
                 widget.place_forget()
         
     @staticmethod
-    @static_fn_try_except_catcher
     # show an unmapped widget
     def show_widget(widget: tk.Widget, store: Store, geometry_type: GeometryType | None = None):
         # if no state store will be no options set

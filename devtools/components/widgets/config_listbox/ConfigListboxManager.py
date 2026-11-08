@@ -202,22 +202,28 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             ) or {})
 
             if resolved_key == CommonGeometryOption.GEOMETRY_TYPE:
+                # check input matches geo type
                 chosen_geo_type = GeometryType(value_entry_value) if value_entry_value in (
                     GeometryType.PACK.value,
                     GeometryType.GRID.value,
                     GeometryType.PLACE.value,
                 ) else None
+                # noop if identical to current input recieved 
                 if chosen_geo_type and chosen_geo_type.value == current_geo_manager:
                      # no change - kill event
-                    self._store.listbox_entry_input_action = None
-                    self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
+                    logger.debug("Identical geometry selected. Noop")
                     self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)
                     return
+                # if None then not a geo type - raise as guaranteed invalid
+                if chosen_geo_type == None:
+                    raise tk.TclError(
+                        f'invalid command name '
+                        f'"{value_entry_value}"'
+                    )
+                
                 if chosen_geo_type and chosen_geo_type.value != current_geo_manager:
                     sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
-                    if sibling_geo_type and sibling_geo_type != chosen_geo_type:
-                        chosen_geo_type = sibling_geo_type
-                   
+
                     current_geo_type = GeometryType(current_geo_manager) if current_geo_manager in (
                         GeometryType.PACK.value,
                         GeometryType.GRID.value,
@@ -231,7 +237,15 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                         if selected_widget.winfo_ismapped():
                             Utils.hide_widget(selected_widget, self._store)
                         if desired_visible:
-                            Utils.show_widget(selected_widget, self._store, geometry_type=chosen_geo_type)
+                            try:
+                                Utils.show_widget(selected_widget, self._store, geometry_type=chosen_geo_type)
+                            except tk.TclError:
+                                Utils.show_widget(selected_widget, self._store)
+                                # lift siblings in order on fail - to maintain widget order properly
+                                selected_widget.after(300, lambda: [w.lift() for w in selected_widget.master.winfo_children()])
+                                self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
+                                self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)
+                                raise
 
                     current_geometry_state = TreeViewUtils.build_geometry_state_for_widget(
                         widget=selected_widget,
