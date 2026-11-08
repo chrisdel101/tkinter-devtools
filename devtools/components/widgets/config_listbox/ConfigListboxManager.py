@@ -169,6 +169,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         # check for .get method  - use .get for new entry else val correct option box
         value_entry_value = value_entry_widget.get() if hasattr(value_entry_widget, 'get') else updated_option_value
         # strip spaces in display
+
         if value_entry_value:
             value_entry_value = value_entry_value.strip()  
         resolved_key = None
@@ -192,6 +193,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         else:
             # GEOMETRY UPDATE HANDLING
             selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
+            current_geo_manager: str = selected_widget.winfo_manager()
             resolved_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
             # current geometry listbox state snapshot (used for UI refresh)
             current_geometry_state = Utils.resolve_geometry_aliases(self._store.listbox_manager_template_value_state_get(
@@ -205,12 +207,18 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                     GeometryType.GRID.value,
                     GeometryType.PLACE.value,
                 ) else None
-                if chosen_geo_type:
+                if chosen_geo_type and chosen_geo_type.value == current_geo_manager:
+                     # no change - kill event
+                    self._store.listbox_entry_input_action = None
+                    self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
+                    self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)
+                    return
+                if chosen_geo_type and chosen_geo_type.value != current_geo_manager:
                     sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
                     if sibling_geo_type and sibling_geo_type != chosen_geo_type:
                         chosen_geo_type = sibling_geo_type
-                    current_manager = selected_widget.winfo_manager()
-                    current_geo_type = GeometryType(current_manager) if current_manager in (
+                   
+                    current_geo_type = GeometryType(current_geo_manager) if current_geo_manager in (
                         GeometryType.PACK.value,
                         GeometryType.GRID.value,
                         GeometryType.PLACE.value,
@@ -235,7 +243,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
 
             if resolved_key == CommonGeometryOption.VISIBILITY:
                 # track transition so we can rebuild manager-specific geometry keys
-                was_unmapped = selected_widget.winfo_manager() == GeometryType.UNMAPPED.value
+                was_unmapped = current_geo_manager == GeometryType.UNMAPPED.value
                 desired_visible = self._to_bool(value_entry_value)
                 if desired_visible:
                     preferred_type = (
@@ -245,8 +253,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                         )
                     )
                     sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
-                    current_manager = selected_widget.winfo_manager()
-                    chosen_type = preferred_type or (sibling_geo_type.value if sibling_geo_type else current_manager)
+                   
+                    chosen_type = preferred_type or (sibling_geo_type.value if sibling_geo_type else current_geo_manager)
                     geo_type = GeometryType(chosen_type) if chosen_type in (
                         GeometryType.PACK.value,
                         GeometryType.GRID.value,
@@ -267,9 +275,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                 current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
                 value_entry_value = desired_visible
 
-            geo_manager = selected_widget.winfo_manager()
             if resolved_key not in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
-                match geo_manager:
+                match current_geo_manager:
                     case GeometryType.PACK.value:
                         tree_updated = any(self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
                             'key': resolved_key,
