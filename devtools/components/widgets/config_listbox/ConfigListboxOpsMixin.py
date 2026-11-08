@@ -294,7 +294,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
 
         self.cancel_update_listbox(*args)
 
-    def listbox_value_focus_out(self,e, *args):
+    def listbox_value_focus_out(self, e, *args):
         # returns highest no null value
         name  = e.widget._name if e and e.widget and e.widget._name is not None else (e.widget if e else None)
         logger.trace(f"LISTBOX_VALUE_FOCUS_OUT inner: {name}")

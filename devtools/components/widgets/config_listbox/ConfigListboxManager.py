@@ -162,48 +162,48 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         value_entry_widget: tk.Entry | tk.OptionMenu,
         key_entry_value: str,
         updated_option_value: str | int | float,
-        event: tk.Event | None = None # used for logging only - remove later
+        event: tk.Event | None = None
     ):
-        # store the current y position in listbox
+        # current y position
         y0, _ = self.yview()
-        # check for .get method  - use .get for new entry else val correct option box
-        value_entry_value = value_entry_widget.get() if hasattr(value_entry_widget, 'get') else updated_option_value
+        # entry widget check for .get for new else option box
+        upsert_value_entry = value_entry_widget.get() if hasattr(value_entry_widget, 'get') else updated_option_value
         # strip spaces in display
-
-        if value_entry_value:
-            value_entry_value = value_entry_value.strip()  
-        resolved_key = None
+        if upsert_value_entry:
+            upsert_value_entry = upsert_value_entry.strip()  
+        common_geo_options_key = None
         current_geometry_state = {}
         # block negatives - raise shows the page error
         number_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
-        if self.config_map_merge.get(number_key, {}).get('type') in (int, float) and str(value_entry_value).startswith('-'):
+        if self.config_map_merge.get(number_key, {}).get('type') in (int, float) and str(upsert_value_entry).startswith('-'):
             raise tk.TclError(f"{key_entry_value} cannot be negative")
         # stays True for rows that don't notify the tree
         tree_updated = True
         # UPDATE THE PAGE WIDGETS HERE - calls tree
         # --- OPTION UPDATE HANDLING
         if self._listbox_page_template_insert_enum == ListboxPageTemplateEnum.OPTIONS:
-            value_entry_value = self._resolve_image_option_value(key_entry_value, value_entry_value)
+            upsert_value_entry = self._resolve_image_option_value(key_entry_value, upsert_value_entry)
             tree_updated = any(self._observable.notify_observers(Action(
                 type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_OPTION_CONFIG,
                 data={
                     'key': key_entry_value,
-                    'value': value_entry_value
+                    'value': upsert_value_entry
                 })))
         else:
             # GEOMETRY UPDATE HANDLING
             selected_widget = self._store.tree_state_get(TreeStateKey.SELECTED_ITEM_WIDGET)
             current_geo_manager: str = selected_widget.winfo_manager()
-            resolved_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
+            # CommonGeometryOption value
+            common_geo_options_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(key_entry_value)
             # current geometry listbox state snapshot (used for UI refresh)
-            current_geometry_state = Utils.resolve_geometry_aliases(self._store.listbox_manager_template_value_state_get(
+            current_geometry_state: dict = Utils.resolve_geometry_aliases(self._store.listbox_manager_template_value_state_get(
                 ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE,
                 page_insert_override=ListboxPageTemplateEnum.GEOMETRY,
             ) or {})
 
-            if resolved_key == CommonGeometryOption.GEOMETRY_TYPE:
+            if common_geo_options_key == CommonGeometryOption.GEOMETRY_TYPE:
                 # check input matches geo type
-                chosen_geo_type = GeometryType(value_entry_value) if value_entry_value in (
+                chosen_geo_type = GeometryType(upsert_value_entry) if upsert_value_entry in (
                     GeometryType.PACK.value,
                     GeometryType.GRID.value,
                     GeometryType.PLACE.value,
@@ -218,7 +218,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                 if chosen_geo_type == None:
                     raise tk.TclError(
                         f'invalid command name '
-                        f'"{value_entry_value}"'
+                        f'"{upsert_value_entry}"'
                     )
                 
                 if chosen_geo_type and chosen_geo_type.value != current_geo_manager:
@@ -241,7 +241,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                                 Utils.show_widget(selected_widget, self._store, geometry_type=chosen_geo_type)
                             except tk.TclError:
                                 Utils.show_widget(selected_widget, self._store)
-                                # lift siblings in order on fail - to maintain widget order properly
+                                # lift siblings in order - to maintain widget order properly
                                 selected_widget.after(300, lambda: [w.lift() for w in selected_widget.master.winfo_children()])
                                 self.cancel_update_listbox(*self._store.existing_combobox_wrappers)
                                 self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)
@@ -253,12 +253,12 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                     )
                     current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = chosen_geo_type.value
                     current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
-                    value_entry_value = chosen_geo_type.value
+                    upsert_value_entry = chosen_geo_type.value
 
-            if resolved_key == CommonGeometryOption.VISIBILITY:
+            if common_geo_options_key == CommonGeometryOption.VISIBILITY:
                 # track transition so we can rebuild manager-specific geometry keys
                 was_unmapped = current_geo_manager == GeometryType.UNMAPPED.value
-                desired_visible = self._to_bool(value_entry_value)
+                desired_visible = self._to_bool(upsert_value_entry)
                 if desired_visible:
                     preferred_type = (
                         current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE)
@@ -287,29 +287,29 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                     current_geometry_state[CommonGeometryOption.VISIBILITY] = False
 
                 current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
-                value_entry_value = desired_visible
+                upsert_value_entry = desired_visible
 
-            if resolved_key not in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
+            if common_geo_options_key not in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
                 match current_geo_manager:
                     case GeometryType.PACK.value:
                         tree_updated = any(self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG, data={
-                            'key': resolved_key,
-                            'value': value_entry_value
+                            'key': common_geo_options_key,
+                            'value': upsert_value_entry
                         })))
                     case GeometryType.GRID.value:
                         tree_updated = any(self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_GRID_CONFIG, data={
-                            'key': resolved_key,
-                            'value': value_entry_value
+                            'key': common_geo_options_key,
+                            'value': upsert_value_entry
                         })))
                     case GeometryType.PLACE.value:
                         tree_updated = any(self._observable.notify_observers(Action(type=ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PLACE_CONFIG, data={
-                            'key': resolved_key,
-                            'value': value_entry_value
+                            'key': common_geo_options_key,
+                            'value': upsert_value_entry
                         })))
                     case GeometryType.UNMAPPED.value:
-                        if resolved_key == CommonGeometryOption.GEOMETRY_TYPE:
-                            current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = value_entry_value
-                            value_entry_value = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE, value_entry_value)
+                        if common_geo_options_key == CommonGeometryOption.GEOMETRY_TYPE:
+                            current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = upsert_value_entry
+                            upsert_value_entry = current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE, upsert_value_entry)
         # tree rejected value - don't save, keep box open
         if not tree_updated:
             # if we're adding remove added rows aparatus on tcl error 
@@ -323,15 +323,15 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE) or {}
         if self._listbox_page_template_insert_enum == ListboxPageTemplateEnum.GEOMETRY:
             prev_listbox_store_dict = Utils.resolve_geometry_aliases(prev_listbox_store_dict)
-            if resolved_key in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
+            if common_geo_options_key in (CommonGeometryOption.VISIBILITY, CommonGeometryOption.GEOMETRY_TYPE):
                 # rebuilt geometry states should replace stale geometry rows, not merge with them
                 prev_listbox_store_dict = Utils.resolve_geometry_aliases(current_geometry_state)
         # merge prev current - stops duplicates from adding to listbox - sorted
-        listbox_key = resolved_key or key_entry_value
+        listbox_key = common_geo_options_key or key_entry_value
         if self._listbox_page_template_insert_enum == ListboxPageTemplateEnum.GEOMETRY:
             listbox_key = Utils.listbox_option_to_type_alias_direction_alias_resolver(listbox_key)
         updated_listbox_store_dict = Utils.sorted_dict(Utils.merge_dicts(
-            prev_listbox_store_dict, {listbox_key: value_entry_value}))
+            prev_listbox_store_dict, {listbox_key: upsert_value_entry}))
         self._store.listbox_manager_template_value_state_set(
             enum_key=ListboxTemplateNotifyStateKey.CURRENT_VALUES_STATE, state_to_set=updated_listbox_store_dict)
         self.load_template_value_state(
