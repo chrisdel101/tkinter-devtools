@@ -100,8 +100,3 @@ class TclRuntimeUtilsTests(unittest.TestCase):
    # ------------------------------------------------------------------ #
    # threading contract                                                   #
    # ------------------------------------------------------------------ #
-
-
-
-if __name__ == "__main__":
-   unittest.main()

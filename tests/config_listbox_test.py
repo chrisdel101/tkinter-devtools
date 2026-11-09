@@ -303,11 +303,6 @@ class RightWindowAddFlowTests(unittest.TestCase):
         self.assertEqual(fake_listbox.insert_calls, [])
         self.assertEqual(fake_listbox.create_calls, [])
 
-
-if __name__ == "__main__":
-    unittest.main()
-
-
 # ---------------------------------------------------------------------------
 # RightWindowFrame — tab switching, row shift, geo button visibility
 # ---------------------------------------------------------------------------

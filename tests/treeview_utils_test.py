@@ -1,15 +1,9 @@
-"""
-Tests for TreeViewUtils — geometry inference, sibling detection,
-safe int conversion, and default geometry state building.
-"""
 import tkinter as tk
 import unittest
 from unittest.mock import patch
 
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
 from devtools.constants import GeometryType
-from devtools.geometry_info import GeometryManagerInfo
-from devtools.utils import Utils
 
 
 class SafeIntTests(unittest.TestCase):
@@ -72,10 +66,9 @@ class CheckSiblingGeometryTypeTests(unittest.TestCase):
         parent.pack()
         target = tk.Frame(parent)
         target.pack()
-        # only sibling is itself — should not count self
-        other = tk.Frame(parent)
-        geo = TreeViewUtils.check_sibling_geometry_type(other)
-        self.assertEqual(geo, GeometryType.PACK)
+        # target is the only packed child - it must not count as its own sibling
+        geo = TreeViewUtils.check_sibling_geometry_type(target)
+        self.assertIsNone(geo)
 
 
 class InferGeometryOptionsTests(unittest.TestCase):
@@ -90,15 +83,14 @@ class InferGeometryOptionsTests(unittest.TestCase):
     def test_pack_inference_returns_before_next_sibling(self):
         parent = tk.Frame(self.root)
         parent.pack()
+        # target is created first, so the packed sibling comes after it
+        target = tk.Frame(parent)
         next_sib = tk.Frame(parent)
         next_sib.pack()
-        target = tk.Frame(parent)
-        # target not packed; next_sib comes after in children list but is mapped
-        # re-order so target is index 0 and next_sib is index 1
-        self.root.update_idletasks()
-        result = TreeViewUtils.infer_geometry_options(target, GeometryType.PACK)
-        # result may be {} or {"before": next_sib} depending on position
-        self.assertIsInstance(result, dict)
+        # the hidden test root reports every widget as unmapped - report them as shown
+        with patch.object(tk.Frame, "winfo_ismapped", return_value=1):
+            result = TreeViewUtils.infer_geometry_options(target, GeometryType.PACK)
+        self.assertEqual(result, {"before": next_sib})
 
     def test_grid_inference_with_no_neighbours_returns_row0_col0(self):
         parent = tk.Frame(self.root)
@@ -124,19 +116,16 @@ class InferGeometryOptionsTests(unittest.TestCase):
         self.assertEqual(result.get("row"), 0)
         self.assertEqual(result.get("column"), 3)
 
-    def test_unknown_geometry_type_returns_empty_dict(self):
+    # re-shown placed widget gets no guessed x/y - only pack and grid guess
+    def test_place_inference_returns_empty_dict(self):
         parent = tk.Frame(self.root)
         parent.pack()
         target = tk.Frame(parent)
         result = TreeViewUtils.infer_geometry_options(target, GeometryType.PLACE)
-        self.assertIsInstance(result, dict)
+        self.assertEqual(result, {})
 
     def test_no_parent_returns_empty_dict(self):
         target = tk.Frame.__new__(tk.Frame)
         target.master = None
         result = TreeViewUtils.infer_geometry_options(target, GeometryType.GRID)
         self.assertEqual(result, {})
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -382,10 +382,9 @@ class HighlightTests(_TreeFixture):
     def test_remove_with_nothing_highlighted_does_not_raise(self):
         self.store.tree_highlighted_widget = None
         self.store.tree_highlight_saved_config = None
-        try:
+        # the decorator catches errors and logs them, so a logged error is the failure
+        with self.assertNoLogs("devtools", level="ERROR"):
             self.tree._highlighter._remove_highlight()
-        except Exception as exc:
-            self.fail(f"_remove_highlight raised unexpectedly: {exc}")
 
     def test_hide_overlay_calls_place_forget_on_all_edges(self):
         edges = [Mock(winfo_exists=Mock(return_value=True)) for _ in range(4)]
@@ -643,7 +642,3 @@ class UpdateWidgetConfigTests(_TreeFixture):
         self.store.tree_state_set(TreeStateKey.SELECTED_ITEM_WIDGET, pf)
         self.tree.update_tree_item_to_page_widget_place_config(key="x", value=99)
         self.assertEqual(str(pf.place_info().get("x")), "99")
-
-
-if __name__ == "__main__":
-    unittest.main()

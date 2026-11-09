@@ -219,7 +219,3 @@ class StoreHiddenWidgetTests(unittest.TestCase):
         sentinel = {1: "x"}
         self.store.hidden_widgets = sentinel
         self.assertEqual(self.store.hidden_widgets, sentinel)
-
-
-if __name__ == "__main__":
-    unittest.main()
