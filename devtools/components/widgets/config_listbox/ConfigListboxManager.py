@@ -255,16 +255,14 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                     upsert_value_entry = chosen_geo_type.value
 
             if common_geo_options_key == CommonGeometryOption.VISIBILITY:
-                # track transition so we can rebuild manager-specific geometry keys
-                was_unmapped = current_geo_manager == GeometryType.UNMAPPED.value
                 desired_visible = self._to_bool(upsert_value_entry)
-                if desired_visible:
-                    preferred_type = (
-                        current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE)
-                        or current_geometry_state.get(
-                            Utils.listbox_option_to_type_alias_direction_alias_resolver(CommonGeometryOption.GEOMETRY_TYPE)
-                        )
+                preferred_type = (
+                    current_geometry_state.get(CommonGeometryOption.GEOMETRY_TYPE)
+                    or current_geometry_state.get(
+                        Utils.listbox_option_to_type_alias_direction_alias_resolver(CommonGeometryOption.GEOMETRY_TYPE)
                     )
+                )
+                if desired_visible:
                     sibling_geo_type = TreeViewUtils.check_sibling_geometry_type(selected_widget)
                    
                     chosen_type = preferred_type or (sibling_geo_type.value if sibling_geo_type else current_geo_manager)
@@ -275,16 +273,13 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                     ) else None
                     # map widget back onto page using resolved geometry manager
                     Utils.show_widget(selected_widget, self._store, geometry_type=geo_type)
-                    if was_unmapped and geo_type:
-                        # refresh listbox state from the widget's live values
-                        current_geometry_state = Utils.combine_additional_geometry_options(
-                            geo_manager=Utils.build_widget_geometry_manager_info(selected_widget),
-                            **{CommonGeometryOption.GEOMETRY_TYPE: geo_type.value},
-                        )
                 else:
                     Utils.hide_widget(selected_widget, self._store)
-                    current_geometry_state[CommonGeometryOption.VISIBILITY] = False
-
+                # refresh listbox state from the widget's live values
+                current_geometry_state = Utils.combine_additional_geometry_options(
+                    geo_manager=Utils.build_widget_geometry_manager_info(selected_widget),
+                    **{CommonGeometryOption.GEOMETRY_TYPE: preferred_type},
+                )
                 current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
                 upsert_value_entry = desired_visible
 
