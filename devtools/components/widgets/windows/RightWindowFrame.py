@@ -150,15 +150,15 @@ class RightWindowFrame(tk.Frame):
     def pack_listbox_page_insert(self, insert_type_enum: ListboxPageTemplateEnum):
         match insert_type_enum:
             case ListboxPageTemplateEnum.OPTIONS:
-                    # set current_listbox_template
-                    self._store.current_listbox_template = self._options_config_listbox_mngr
-                    self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
-                    self._store.row_shift = True
+                # set current_listbox_template
+                self._store.current_listbox_template = self._options_config_listbox_mngr
+                self._options_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+                self._store.row_shift = True
             case ListboxPageTemplateEnum.GEOMETRY:
-                    # set current_listbox_template
-                    self._store.current_listbox_template = self._geometry_config_listbox_mngr
-                    self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
-                    self._store.row_shift = False
+                # set current_listbox_template
+                self._store.current_listbox_template = self._geometry_config_listbox_mngr
+                self._geometry_config_listbox_mngr.pack(side="bottom", fill="both", expand=True)
+                self._store.row_shift = False
             case _:
                 logger.error(f"Error pack_listbox_page_insert: No listbox packed", exc_info=True)
     

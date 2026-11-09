@@ -13,6 +13,7 @@ from devtools.maps import (
     ACTION_REGISTRY,
     BI_DIRECTIONAL_ALIASES,
     OPTION_TO_TYPE_ALIASES,
+    PIXEL_SIZED_WIDGET_CLASSES,
     TYPE_TO_OPTIONS_ALIASES,
 )
 
@@ -142,6 +143,16 @@ class Utils:
         else:
             del config_dict[ConfigOptionKeyName.IMAGE.value]
         return config_dict
+
+    @staticmethod
+    # takes widget and options and returns them with drawn width and height - so the list matches the screen
+    def resolve_drawn_size(widget: tk.Widget, config_dict: dict) -> dict:
+        is_drawn_in_pixels = widget.winfo_ismapped() and widget.winfo_class() in PIXEL_SIZED_WIDGET_CLASSES
+        drawn_size = {
+            ConfigOptionKeyName.WIDTH.value: widget.winfo_width(),
+            ConfigOptionKeyName.HEIGHT.value: widget.winfo_height(),
+        } if is_drawn_in_pixels else {}
+        return {key: drawn_size.get(key, value) for key, value in config_dict.items()}
 
     @staticmethod
     def merge_dicts(*dicts) -> dict:

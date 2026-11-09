@@ -247,9 +247,8 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                                 self.listbox_value_focus_out(event, *self._store.existing_combobox_wrappers)
                                 raise
 
-                    current_geometry_state = TreeViewUtils.build_geometry_state_for_widget(
-                        widget=selected_widget,
-                        geometry_type=chosen_geo_type,
+                    current_geometry_state = Utils.combine_additional_geometry_options(
+                        geo_manager=Utils.build_widget_geometry_manager_info(selected_widget),
                     )
                     current_geometry_state[CommonGeometryOption.GEOMETRY_TYPE] = chosen_geo_type.value
                     current_geometry_state[CommonGeometryOption.VISIBILITY] = desired_visible
@@ -277,10 +276,10 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
                     # map widget back onto page using resolved geometry manager
                     Utils.show_widget(selected_widget, self._store, geometry_type=geo_type)
                     if was_unmapped and geo_type:
-                        # refresh listbox state to manager constants + defaults/live values
-                        current_geometry_state = TreeViewUtils.build_geometry_state_for_widget(
-                            widget=selected_widget,
-                            geometry_type=geo_type,
+                        # refresh listbox state from the widget's live values
+                        current_geometry_state = Utils.combine_additional_geometry_options(
+                            geo_manager=Utils.build_widget_geometry_manager_info(selected_widget),
+                            **{CommonGeometryOption.GEOMETRY_TYPE: geo_type.value},
                         )
                 else:
                     Utils.hide_widget(selected_widget, self._store)

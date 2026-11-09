@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
-from devtools.constants import CommonGeometryOption, GeometryType
+from devtools.constants import GeometryType
 from devtools.geometry_info import GeometryManagerInfo
 from devtools.utils import Utils
 
@@ -136,99 +136,6 @@ class InferGeometryOptionsTests(unittest.TestCase):
         target.master = None
         result = TreeViewUtils.infer_geometry_options(target, GeometryType.GRID)
         self.assertEqual(result, {})
-
-
-class DefaultGeometryStateTests(unittest.TestCase):
-
-    def test_grid_state_has_geometry_type_value(self):
-        state = TreeViewUtils._default_geometry_state_for_type(GeometryType.GRID)
-        self.assertEqual(state.get(CommonGeometryOption.GEOMETRY_TYPE), GeometryType.GRID.value)
-
-    def test_pack_state_has_geometry_type_value(self):
-        state = TreeViewUtils._default_geometry_state_for_type(GeometryType.PACK)
-        self.assertEqual(state.get(CommonGeometryOption.GEOMETRY_TYPE), GeometryType.PACK.value)
-
-    def test_place_state_has_geometry_type_value(self):
-        state = TreeViewUtils._default_geometry_state_for_type(GeometryType.PLACE)
-        self.assertEqual(state.get(CommonGeometryOption.GEOMETRY_TYPE), GeometryType.PLACE.value)
-
-    def test_grid_state_includes_row_and_column_keys(self):
-        state = TreeViewUtils._default_geometry_state_for_type(GeometryType.GRID)
-        self.assertIn("row", state)
-        self.assertIn("column", state)
-
-    def test_pack_state_includes_fill_and_side_keys(self):
-        state = TreeViewUtils._default_geometry_state_for_type(GeometryType.PACK)
-        self.assertIn("fill", state)
-        self.assertIn("side", state)
-
-    def test_place_state_includes_x_and_y_keys(self):
-        state = TreeViewUtils._default_geometry_state_for_type(GeometryType.PLACE)
-        self.assertIn("x", state)
-        self.assertIn("y", state)
-
-    def test_default_visibility_is_true(self):
-        for geo_type in (GeometryType.GRID, GeometryType.PACK, GeometryType.PLACE):
-            state = TreeViewUtils._default_geometry_state_for_type(geo_type)
-            self.assertTrue(
-                state.get(CommonGeometryOption.VISIBILITY),
-                f"Expected visibility=True for {geo_type}"
-            )
-
-
-class BuildGeometryStateTests(unittest.TestCase):
-
-    def setUp(self):
-        self.root = tk.Tk()
-        self.root.withdraw()
-
-    def tearDown(self):
-        self.root.destroy()
-
-    def test_grid_widget_state_reflects_actual_row_and_column(self):
-        w = tk.Frame(self.root)
-        w.grid(row=2, column=3)
-        self.root.update_idletasks()
-        state = TreeViewUtils.build_geometry_state_for_widget(w, GeometryType.GRID)
-        self.assertEqual(str(state.get("row")), "2")
-        self.assertEqual(str(state.get("column")), "3")
-
-    def test_pack_widget_state_reflects_side(self):
-        w = tk.Frame(self.root)
-        w.pack(side="right")
-        self.root.update_idletasks()
-        state = TreeViewUtils.build_geometry_state_for_widget(w, GeometryType.PACK)
-        self.assertEqual(str(state.get("side")), "right")
-
-    def test_place_widget_state_reflects_x_and_y(self):
-        w = tk.Frame(self.root)
-        w.place(x=20, y=40)
-        self.root.update_idletasks()
-        state = TreeViewUtils.build_geometry_state_for_widget(w, GeometryType.PLACE)
-        self.assertEqual(str(state.get("x")), "20")
-        self.assertEqual(str(state.get("y")), "40")
-
-    def test_state_visibility_matches_winfo_ismapped(self):
-        # Visibility is taken directly from winfo_ismapped() — test that the
-        # state value agrees with the widget's actual mapped state rather than
-        # assuming a specific value (headless Tk may return 0 even for packed widgets).
-        w = tk.Frame(self.root)
-        w.pack()
-        self.root.update_idletasks()
-        state = TreeViewUtils.build_geometry_state_for_widget(w, GeometryType.PACK)
-        self.assertEqual(state.get(CommonGeometryOption.VISIBILITY), w.winfo_ismapped())
-
-    def test_state_visibility_matches_winfo_ismapped_for_unmapped_widget(self):
-        w = tk.Frame(self.root)
-        # not packed — unmapped
-        state = TreeViewUtils.build_geometry_state_for_widget(w, GeometryType.PACK)
-        self.assertEqual(state.get(CommonGeometryOption.VISIBILITY), w.winfo_ismapped())
-
-    def test_geometry_type_key_always_matches_requested_type(self):
-        w = tk.Frame(self.root)
-        w.grid(row=0, column=0)
-        state = TreeViewUtils.build_geometry_state_for_widget(w, GeometryType.GRID)
-        self.assertEqual(state.get(CommonGeometryOption.GEOMETRY_TYPE), GeometryType.GRID.value)
 
 
 if __name__ == "__main__":

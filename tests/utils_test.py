@@ -76,3 +76,26 @@ class UtilsTests(unittest.TestCase):
       self.assertEqual(saved.geometry_type, GeometryType.PACK)
       self.assertEqual(saved.geometry_options.get("before"), next_sibling)
       widget.pack_forget.assert_called_once()
+
+   def _widget_stub(self, widget_class, is_mapped):
+      widget = MagicMock()
+      widget.winfo_class.return_value = widget_class
+      widget.winfo_ismapped.return_value = is_mapped
+      widget.winfo_width.return_value = 200
+      widget.winfo_height.return_value = 100
+      return widget
+
+   def test_resolve_drawn_size_replaces_the_request_with_the_drawn_size(self):
+      frame = self._widget_stub("Frame", True)
+      result = Utils.resolve_drawn_size(frame, {"height": "30", "width": "40", "bg": "red"})
+      self.assertEqual(result, {"height": 100, "width": 200, "bg": "red"})
+
+   def test_resolve_drawn_size_keeps_text_unit_sizes(self):
+      button = self._widget_stub("Button", True)
+      result = Utils.resolve_drawn_size(button, {"height": 2, "width": 2})
+      self.assertEqual(result, {"height": 2, "width": 2})
+
+   def test_resolve_drawn_size_keeps_the_option_of_an_unmapped_widget(self):
+      frame = self._widget_stub("Frame", False)
+      result = Utils.resolve_drawn_size(frame, {"height": "30", "width": "40"})
+      self.assertEqual(result, {"height": "30", "width": "40"})

@@ -231,7 +231,7 @@ class TreeView(ttk.Treeview):
         # Raw sibling order from Tk (creation/declaration order under this parent)
         children = list(parent_widget.winfo_children())
         if not children:
-            logger.debug(f"No children for widget: {parent_widget} with id {id(parent_widget)}")
+            logger.trace(f"No children for widget: {parent_widget} with id {id(parent_widget)}")
             return children
 
         # Ensure widget geometry/position info is up to date before visual sorting
@@ -268,46 +268,42 @@ class TreeView(ttk.Treeview):
     # on next calls used vals passed in
     @class_fn_try_except_catcher
     def _build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
-        try:
-            # if no parent node it's first call - no id to use yet
-            if not parent_widget_insert_id:
-                parent_memory_id = id(parent_widget)
-                # manual insert - get insert id
-                # set using blank str for parent - used for first node in the tree w no parent
-                # insert at end index
-                insert_parent_memory_id = self._insert_item(
-                    parent_item_id="", index=tk.END, widget=parent_widget)
-                # add using mem id {4579038880: {tree_id:'I002', widget:tk.Widget}}
-                self._add_tree_item_to_obj_mem_id_store(
-                    parent_memory_id, insert_parent_memory_id, parent_widget)
-                self._add_tree_item_to_tree_insert_id_store(
-                    insert_parent_memory_id, parent_widget)
+        # if no parent node it's first call - no id to use yet
+        if not parent_widget_insert_id:
+            parent_memory_id = id(parent_widget)
+            # manual insert - get insert id
+            # set using blank str for parent - used for first node in the tree w no parent
+            # insert at end index
+            insert_parent_memory_id = self._insert_item(
+                parent_item_id="", index=tk.END, widget=parent_widget)
+            # add using mem id {4579038880: {tree_id:'I002', widget:tk.Widget}}
+            self._add_tree_item_to_obj_mem_id_store(
+                parent_memory_id, insert_parent_memory_id, parent_widget)
+            self._add_tree_item_to_tree_insert_id_store(
+                insert_parent_memory_id, parent_widget)
 
-            else:
-                # parent node - so use id passed from prev call - it's parent for this call
-                insert_parent_memory_id = parent_widget_insert_id
-            # method gives all child widgets of tk obj
-            for child in self._get_display_ordered_children(parent_widget):
-                # skip the devtools window branch
-                if getattr(child, "devtools_marker", None) == IS_DEVTOOLS_SENTINEL:
-                    continue
-                # hide unmapped widgets - optional
-                if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
-                    continue
-                child_memory_id = id(child)
-                # ID of place in tree - insert returns tree insert ID
-                insert_child_memory_id = self._insert_item(
-                    parent_item_id=insert_parent_memory_id, index=tk.END, widget=child)
-                self._add_tree_item_to_obj_mem_id_store(
-                    child_memory_id, insert_child_memory_id, child)
-                # dict store id: widget
-                self._add_tree_item_to_tree_insert_id_store(
-                    insert_child_memory_id, child)
-                self._build_tree(child, insert_child_memory_id)
+        else:
+            # parent node - so use id passed from prev call - it's parent for this call
+            insert_parent_memory_id = parent_widget_insert_id
+        # method gives all child widgets of tk obj
+        for child in self._get_display_ordered_children(parent_widget):
+            # skip the devtools window branch
+            if getattr(child, "devtools_marker", None) == IS_DEVTOOLS_SENTINEL:
+                continue
+            # hide unmapped widgets - optional
+            if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
+                continue
+            child_memory_id = id(child)
+            # ID of place in tree - insert returns tree insert ID
+            insert_child_memory_id = self._insert_item(
+                parent_item_id=insert_parent_memory_id, index=tk.END, widget=child)
+            self._add_tree_item_to_obj_mem_id_store(
+                child_memory_id, insert_child_memory_id, child)
+            # dict store id: widget
+            self._add_tree_item_to_tree_insert_id_store(
+                insert_child_memory_id, child)
+            self._build_tree(child, insert_child_memory_id)
 
-        except Exception as e:
-            logger.error(f"Error _build_tree: {e}")
-            raise e
 
     @class_fn_try_except_catcher
     # Handle a Treeview selection event and update the highlight and listbox state.
@@ -363,6 +359,8 @@ class TreeView(ttk.Treeview):
             filtered_config_dict)
         # resolve image internal name (e.g. pyimage8) to the file path it was loaded from
         key_value_config_dict = Utils.resolve_image_name_to_path(selected_item_widget, key_value_config_dict)
+        # redraw width and height with the redrawn size - if page is stale
+        key_value_config_dict = Utils.resolve_drawn_size(selected_item_widget, key_value_config_dict)
         # sort by alpha order
         key_value_config_sorted_dict = Utils.sorted_dict(
             key_value_config_dict)

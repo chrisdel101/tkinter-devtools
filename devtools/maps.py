@@ -133,6 +133,12 @@ PLACE_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
 
 }
 
+# widgets whose width and height options are pixels - on other widgets they are lines or chars
+PIXEL_SIZED_WIDGET_CLASSES = {
+    "Frame", "Toplevel", "Labelframe", "Canvas", "Panedwindow",
+    "TFrame", "TLabelframe", "TNotebook", "TPanedwindow",
+}
+
 CONFIG_OPTION_SETTINGS: dict[str, ConfigOptionMapSetting] = {
     # relief
     ConfigOptionKeyName.RELIEF.value: {
