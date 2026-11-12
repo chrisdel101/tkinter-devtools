@@ -610,7 +610,7 @@ class GeometryUpdateTests(treeview_test._TreeFixture):
         return list(self.geometry_lb.get(0, tk.END))
 
     # enter a value in a row, as pressing return in the value box does
-    def _submit(self, key, value):
+    def _simulate_return_submit(self, key, value):
         self.geometry_lb.insert_value_output_and_apply_to_page(
             value_entry_widget=SimpleNamespace(get=lambda: value),
             key_entry_value=key,
@@ -618,30 +618,30 @@ class GeometryUpdateTests(treeview_test._TreeFixture):
         )
 
     # actions of one type the edit sent - to check what reached the tree and alert
-    def _actions(self, action_type):
+    def _sent_actions_of_type(self, action_type):
         return [a for a in self.recorder.actions if a.type == action_type]
 
     # check that re-picking the current type is a noop so the list is not rebuilt for no change
     def test_same_geometry_type_is_noop(self):
         rows_before = self._rows()
-        self._submit("geometry type", "pack")
+        self._simulate_return_submit("geometry type", "pack")
         self.assertEqual(self.page_widget.winfo_manager(), "pack")
         self.assertEqual(self._rows(), rows_before)
         self.assertEqual(self.store.hidden_widgets, {})
-        self.assertEqual(self._actions(ActionType.INSERT_LISTBOX_ITEMS), [])
+        self.assertEqual(self._sent_actions_of_type(ActionType.INSERT_LISTBOX_ITEMS), [])
 
     # check that an invalid type shows the alert instead of changing the widget or rows
     def test_invalid_geometry_type_shows_error_and_keeps_rows(self):
         rows_before = self._rows()
         with self.assertLogs("devtools", level="ERROR"):
-            self._submit("geometry type", "gird")
+            self._simulate_return_submit("geometry type", "gird")
         self.assertEqual(self.page_widget.winfo_manager(), "pack")
         self.assertEqual(self._rows(), rows_before)
-        self.assertEqual(len(self._actions(ActionType.SHOW_RIGHT_WINDOW_ERROR)), 1)
+        self.assertEqual(len(self._sent_actions_of_type(ActionType.SHOW_RIGHT_WINDOW_ERROR)), 1)
 
     # check that pack to grid swaps in grid's rows so the list matches the new manager
     def test_pack_to_grid_rebuilds_rows_for_grid(self):
-        self._submit("geometry type", "grid")
+        self._simulate_return_submit("geometry type", "grid")
         self.assertEqual(self.page_widget.winfo_manager(), "grid")
         rows = self._rows()
         for row in ("geometry type: grid", "visibility: true", "row: 0", "column: 0"):
@@ -653,23 +653,25 @@ class GeometryUpdateTests(treeview_test._TreeFixture):
         sibling = tk.Frame(self.container)
         sibling.pack()
         rows_before = self._rows()
+        # Tk refuses grid beside the packed sibling - show_widget must pass that error up
         with self.assertLogs("devtools", level="ERROR"):
-            self._submit("geometry type", "grid")
+            self._simulate_return_submit("geometry type", "grid")
+        # unmapped here means show_widget swallowed the error - utils_test names show_widget directly
         self.assertEqual(self.page_widget.winfo_manager(), "pack")
         self.assertEqual(self.container.pack_slaves(), [self.page_widget, sibling])
         self.assertEqual(self._rows(), rows_before)
 
     # check that a pack row still updates pack options so the type checks don't swallow it
     def test_pack_row_sends_pack_update_to_tree(self):
-        self._submit("expand", "1")
-        actions = self._actions(ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG)
+        self._simulate_return_submit("expand", "1")
+        actions = self._sent_actions_of_type(ActionType.UPDATE_TREE_ITEM_TO_PAGE_WIDGET_PACK_CONFIG)
         self.assertEqual([a.data for a in actions], [{"key": "expand", "value": "1"}])
         self.assertEqual(str(self.page_widget.pack_info()["expand"]), "1")
 
     # check that hiding keeps only type and visibility so old pack rows don't stay listed
     def test_visibility_false_drops_pack_rows(self):
         with self.assertLogs("devtools", level="WARNING") as logs:
-            self._submit("visibility", "false")
+            self._simulate_return_submit("visibility", "false")
         self.assertEqual(self.page_widget.winfo_manager(), "")
         self.assertEqual(self._rows(), ["geometry type: pack", "visibility: false"])
         self.assertEqual(len(logs.records), 1)
@@ -678,7 +680,7 @@ class GeometryUpdateTests(treeview_test._TreeFixture):
     def test_visibility_true_after_false_restores_pack_rows(self):
         rows_before = self._rows()
         with self.assertLogs("devtools", level="WARNING"):
-            self._submit("visibility", "false")
-        self._submit("visibility", "true")
+            self._simulate_return_submit("visibility", "false")
+        self._simulate_return_submit("visibility", "true")
         self.assertEqual(self.page_widget.winfo_manager(), "pack")
         self.assertEqual(self._rows(), rows_before)

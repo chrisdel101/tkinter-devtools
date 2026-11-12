@@ -180,14 +180,6 @@ class Utils:
     # Map UI display/type aliases back to internal option keys.
     def listbox_type_to_option_alias_direction_alias_resolver(option):
         return TYPE_TO_OPTIONS_ALIASES.get(option, option)
-    # using focus_displayof causes combobox KeyError: 'popdown'
-    @staticmethod
-    def _safe_focus_displayof(widget):
-        try:
-            return widget.focus_displayof()
-        except KeyError:
-            # ttk Combobox popdown (not in widget tree)
-            return widget
     # check if current cursor click is the arrow area of the combobox
     @staticmethod
     def is_combobox_arrow(combobox: ttk.Combobox, x: int) -> bool:
@@ -196,26 +188,6 @@ class Utils:
             return True
         return
             
-    @staticmethod
-    @static_fn_try_except_catcher
-    def patch_base_dict(base_dict: dict, **overrides) -> dict:
-        """
-        if kwargs in dict and true overwrite main dict, else add new key val to dict
-        """
-        # 1. Start with a copy of the original state
-        new_state = (base_dict or {}).copy()
-        
-        for key, value in overrides.items():
-            # Check if key exists in the original dict
-            if key in new_state:
-                # Only update if the new value has content/is truthy
-                if value:
-                    new_state[key] = value
-            else:
-                # If it's a brand new key, we usually want to add it regardless
-                new_state[key] = value
-                
-        return new_state
     @staticmethod
     @static_fn_try_except_catcher
     # universal fn called in class notify methods

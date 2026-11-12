@@ -71,12 +71,6 @@ class Store:
         # store
         self.tree_state[enum_key.value] = state_to_set
 
-    # get all values from one of the listboxs 
-    @class_fn_try_except_catcher
-    def listbox_manager_template_values_state_get(self, 
-            template_enum_key: ListboxPageTemplateEnum) -> ListboxManagerState:
-        return self.current_listbox_template_internal_state.get(template_enum_key)
-    
     # get single value from listbox manager state
     @class_fn_try_except_catcher
     def listbox_manager_template_value_state_get(self, 

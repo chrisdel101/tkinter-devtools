@@ -1,3 +1,4 @@
+import tkinter as tk
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -30,20 +31,6 @@ class UtilsTests(unittest.TestCase):
       internal_key = Utils.listbox_type_to_option_alias_direction_alias_resolver(ui_key)
       self.assertEqual(internal_key, "geometry_type")
 
-   def test_patch_base_dict_overwrite(self):
-      base = {'a': 1, 'b': 2}
-      result = Utils.patch_base_dict(base, a=10)
-      self.assertEqual(result, {'a': 10, 'b': 2})
-
-   def test_patch_base_dict_add_new_key(self):
-      base = {'a': 1}
-      result = Utils.patch_base_dict(base, b=2)
-      self.assertEqual(result, {'a': 1, 'b': 2})
-
-   def test_patch_base_dict_no_overwrite_with_falsey(self):
-      base = {'a': 1}
-      result = Utils.patch_base_dict(base, a=None)
-      self.assertEqual(result, {'a': 1})
    def test_hide_widget_pack_stores_after_anchor_when_middle_child(self):
       store = SimpleNamespace(hidden_widgets={})
       widget = MagicMock()
@@ -99,3 +86,14 @@ class UtilsTests(unittest.TestCase):
       frame = self._widget_stub("Frame", False)
       result = Utils.resolve_drawn_size(frame, {"height": "30", "width": "40"})
       self.assertEqual(result, {"height": "30", "width": "40"})
+
+   # check that show_widget passes on Tk's grid refusal - names show_widget when the geometry list tests fail
+   def test_show_widget_raises_when_grid_meets_packed_siblings(self):
+      root = tk.Tk()
+      root.withdraw()
+      self.addCleanup(root.destroy)
+      tk.Frame(root).pack()
+      widget = tk.Frame(root)
+      store = SimpleNamespace(hidden_widgets={})
+      with self.assertRaises(tk.TclError):
+         Utils.show_widget(widget, store, geometry_type=GeometryType.GRID)
