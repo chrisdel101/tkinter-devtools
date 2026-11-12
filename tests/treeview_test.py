@@ -289,6 +289,15 @@ class TreeBuildTests(_TreeFixture):
         self.assertIn(id(self.frame_a), mem)
         self.assertNotIn(id(self.label_b), mem)
 
+    # check that a build error is logged once with its cause so the log names what broke
+    def test_build_error_is_logged_once_with_its_cause(self):
+        # fail while ordering the root's children
+        with patch.object(self.root, "pack_slaves", side_effect=RuntimeError("boom")):
+            with self.assertLogs("devtools", level="ERROR") as logs:
+                self.tree._build_tree(self.root)
+        self.assertEqual(len(logs.records), 1)
+        self.assertIn("boom", logs.records[0].getMessage())
+
 
 # ---------------------------------------------------------------------------
 # delete_tree and rebuild
@@ -580,6 +589,21 @@ class StuffOptionsStateTests(_TreeFixture):
         ]["current_values_state"]
         keys = list(state.keys())
         self.assertEqual(keys, sorted(keys))
+
+    # check that a stretched frame shows the width Tk drew so the list matches the screen, not the width option
+    def test_options_state_shows_drawn_width(self):
+        tk.Frame(self.root, width=300, height=10).pack()
+        frame = tk.Frame(self.root, width=50, height=10)
+        frame.pack(fill="x")
+        self.root.update_idletasks()
+        # the hidden test root reports every widget as unmapped - report this one as shown
+        with patch.object(frame, "winfo_ismapped", return_value=True):
+            self.store.current_listbox_template = self.options_lb
+            self.tree._stuff_listbox_options_state_into_page_template(frame)
+        state = self.store.current_listbox_template_internal_state[
+            ListboxPageTemplateEnum.OPTIONS
+        ]["current_values_state"]
+        self.assertEqual(state["width"], 300)
 
 
 # ---------------------------------------------------------------------------
