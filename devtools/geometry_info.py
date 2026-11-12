@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import tkinter as tk
 
 from devtools.constants import GeometryType
 

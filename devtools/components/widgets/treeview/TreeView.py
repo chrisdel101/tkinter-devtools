@@ -66,7 +66,6 @@ class TreeView(ttk.Treeview):
             current = getattr(current, "master", None)
         return False
     
-    @class_fn_try_except_catcher
     def _is_relevant_tree_event_widget(self, widget: tk.Widget) -> bool:
         # Only refresh when event is from current tree nodes or descendants of them.
         mem_store = self._store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID) or {}
@@ -91,7 +90,6 @@ class TreeView(ttk.Treeview):
             return
         self._schedule_tree_refresh()
 
-    @class_fn_try_except_catcher
     # Schedule a single deferred tree rebuild, ignoring duplicate pending requests.
     def _schedule_tree_refresh(self):
         if getattr(self._store, "tree_rebuild_in_progress", False):
@@ -225,7 +223,6 @@ class TreeView(ttk.Treeview):
         # Final fallback: keep original sibling declaration order
         return (2, original_index)
 
-    @class_fn_try_except_catcher
     # Return children of parent_widget sorted by their visible display order.
     def _get_display_ordered_children(self, parent_widget: tk.Widget) -> list[tk.Widget]:
         # Raw sibling order from Tk (creation/declaration order under this parent)
@@ -234,8 +231,6 @@ class TreeView(ttk.Treeview):
             logger.trace(f"No children for widget: {parent_widget} with id {id(parent_widget)}")
             return children
 
-        # Ensure widget geometry/position info is up to date before visual sorting
-        parent_widget.update_idletasks()
         # Pack sibling order is used as a fallback inside _tree_order_key
         pack_order = {
             child: index for index, child in enumerate(parent_widget.pack_slaves())
@@ -270,6 +265,8 @@ class TreeView(ttk.Treeview):
     def _build_tree(self, parent_widget: tk.Widget, parent_widget_insert_id: str = ""):
         # if no parent node it's first call - no id to use yet
         if not parent_widget_insert_id:
+            # run the app's pending idle work now so it can't destroy widgets mid-build
+            parent_widget.update_idletasks()
             parent_memory_id = id(parent_widget)
             # manual insert - get insert id
             # set using blank str for parent - used for first node in the tree w no parent

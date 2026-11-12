@@ -1,6 +1,5 @@
 import unittest
 import tkinter as tk
-from tkinter import ttk
 from unittest.mock import patch
 
 from devtools.tcl_runtime_utils import TclRunTimeUtility

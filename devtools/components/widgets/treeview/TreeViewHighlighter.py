@@ -1,6 +1,7 @@
 from __future__ import annotations
 import tkinter as tk
 from devtools.decorators.decorators import class_fn_try_except_catcher
+from devtools.logging_utils import logger
 from devtools.style import Style
 
 
@@ -36,7 +37,9 @@ class TreeViewHighlighter:
                     highlightthickness=Style.treeview['highlightthickness'],
                 )
                 self._store.tree_highlighted_widget = widget
+        # caught here, not by the decorator: a highlight error must not reach the user, and must not skip the flag clear below or the tree stops refreshing
         except tk.TclError:
+            logger.error("Highlight failed - widget left unhighlighted.", exc_info=True)
             self._store.tree_highlight_saved_config = None
         # Clear flag after_idle so queued Tk events from configure fire while flag is still True
         self._tree.after_idle(self._clear_applying_highlight)
@@ -45,12 +48,10 @@ class TreeViewHighlighter:
     # Remove the highlight from the previously highlighted widget.
     def _remove_highlight(self):
         if self._store.tree_highlighted_widget and self._store.tree_highlight_saved_config:
-            try:
-                strategy = self._store.tree_highlight_saved_config.get('strategy')
-                if strategy == 'config':
-                    self._store.tree_highlighted_widget.configure(**self._store.tree_highlight_saved_config.get('config', {}))
-            except tk.TclError:
-                pass
+            strategy = self._store.tree_highlight_saved_config.get('strategy')
+            # skip the restore when the app already destroyed the widget (e.g. window close) - nothing left to restore
+            if strategy == 'config' and self._store.tree_highlighted_widget.winfo_exists():
+                self._store.tree_highlighted_widget.configure(**self._store.tree_highlight_saved_config.get('config', {}))
         self._hide_highlight_overlay()
         self._store.tree_highlighted_widget = None
         self._store.tree_highlight_saved_config = None

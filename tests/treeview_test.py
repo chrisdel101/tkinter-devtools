@@ -266,6 +266,29 @@ class TreeBuildTests(_TreeFixture):
         mem = self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
         self.assertIn(id(hidden), mem)
 
+    # rebuild with no errors logged and return the mem store so idle-destroy tests can check what was built
+    def _rebuild_without_errors(self):
+        self.tree.delete_tree()
+        self.store.tree_state_set(TreeStateKey.WIDGETS_BY_TREE_INSERT_ID_DICT, {})
+        self.store.tree_state_set(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID, {})
+        with self.assertNoLogs("devtools", level="ERROR"):
+            self.tree._build_tree(self.root)
+        return self.store.tree_state_get(TreeStateKey.MEM_WIDGET_STORE_BY_PY_MEM_ID)
+
+    # test badly written app - check that an app idle callback destroying a widget can't break the build so a badly written app still gets a tree
+    def test_idle_destroy_skips_widget_and_keeps_siblings(self):
+        self.root.after_idle(self.label_b.destroy)
+        mem = self._rebuild_without_errors()
+        self.assertIn(id(self.frame_a), mem)
+        self.assertNotIn(id(self.label_b), mem)
+
+    # check that an idle callback queued by another idle callback also runs before the build so it can't destroy widgets mid-build
+    def test_requeued_idle_destroy_skips_widget_and_keeps_siblings(self):
+        self.root.after_idle(lambda: self.root.after_idle(self.label_b.destroy))
+        mem = self._rebuild_without_errors()
+        self.assertIn(id(self.frame_a), mem)
+        self.assertNotIn(id(self.label_b), mem)
+
 
 # ---------------------------------------------------------------------------
 # delete_tree and rebuild
