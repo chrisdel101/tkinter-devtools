@@ -442,7 +442,7 @@ class ConfigListboxOpsMixin(ConfigListboxUtilsMixin):
         self.activate(index)
 
     def listbox_in_parent_y_coord(self) -> int:
-        try: 
+        try:
             # pos of listbox within the parent win - used to positions combo/option box
             lisbox_in_parent_coord = self.winfo_y()
             return  lisbox_in_parent_coord

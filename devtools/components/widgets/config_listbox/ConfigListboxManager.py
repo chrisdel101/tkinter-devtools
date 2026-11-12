@@ -353,7 +353,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
 
         value_combo_box.pack(fill='x')
         self.value_box_wrapper.place(
-            relx=0.5, y=self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
+            relx=0.5, in_=self, y=0, relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.value_box_wrapper)
         # set focus to value box
         value_combo_box.focus_set()
@@ -490,7 +490,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
             )
             value_combo_box.pack(fill='x')
             self.value_box_wrapper.place(
-                relx=0.45, y=y_coord + self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
+                relx=0.45, in_=self, y=y_coord, relwidth=0.5, width=-1)
             self._store.add_existing_store_wrapper(self.value_box_wrapper)
             value_combo_box.focus_set()
         else:
@@ -524,7 +524,7 @@ class ConfigListboxManager(tk.Listbox, ConfigListboxOpsMixin):
         )
         build_combo_box.pack(fill='x')
         self.key_box_wrapper.place(
-            relx=0, y=self.listbox_in_parent_y_coord(), relwidth=0.5, width=-1)
+            relx=0, in_=self, y=0, relwidth=0.5, width=-1)
         self._store.add_existing_store_wrapper(self.key_box_wrapper)
         # move focus to key combo
         build_combo_box.focus_set()
