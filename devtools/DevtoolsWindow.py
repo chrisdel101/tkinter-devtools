@@ -5,7 +5,7 @@ import tkinter as tk
 from typing import TypedDict, Unpack
 from devtools.components.observable import Observable, Action
 from devtools.components.store import Store
-from devtools.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_SENTINEL, ActionType, CustomLogLevel, ListBoxEntryInputAction
+from devtools.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_SENTINEL, ActionType, ListBoxEntryInputAction
 from devtools.decorators.decorators import class_fn_try_except_catcher
 from devtools.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -18,6 +18,11 @@ class DevtoolsWindowKwargs(TypedDict, total=False):
     show_unmapped_widgets: bool
     devtools_title: str
     skip_runtime_checks: bool
+    width: int
+    height: int
+    x_coord: int
+    y_coord: int
+    logging_level: int
 
 class DevtoolsWindow(tk.Toplevel):
     def __init__(self, 
@@ -33,9 +38,9 @@ class DevtoolsWindow(tk.Toplevel):
         # run runtime checks of tcl bridge
         not kwargs.get('skip_runtime_checks') and TclRunTimeUtility.runtime_checks(master)
         # add styles for window size
-        window_geometry = Style.devtools_window["geometry"]
+        window_geometry = self._build_window_geometry(**kwargs)
         # set logging level
-        LoggingUtils.set_logging_level(CustomLogLevel.TRACE.value)
+        LoggingUtils.set_logging_level(kwargs.get("logging_level", logging.ERROR))
         self.title(kwargs.get("devtools_title"))
         self.master = master
         # apply app styles
@@ -64,6 +69,16 @@ class DevtoolsWindow(tk.Toplevel):
         self.bind("<Deactivate>", self.on_focus_out)
         self.bind("<FocusIn>", self.on_focus_in)
         self.wm_geometry(window_geometry)
+
+    # devtools window size and position from kwargs or style defaults
+    @staticmethod
+    def _build_window_geometry(**kwargs: Unpack[DevtoolsWindowKwargs]) -> str:
+        defaults = Style.devtools_window
+        width = kwargs.get("width", defaults["default_width"])
+        height = kwargs.get("height", defaults["default_height"])
+        x_coord = kwargs.get("x_coord", defaults["default_x_coord"])
+        y_coord = kwargs.get("y_coord", defaults["default_y_coord"])
+        return f"{width}x{height}+{x_coord}+{y_coord}"
 
     @class_fn_try_except_catcher
     def on_focus_out(self, _):

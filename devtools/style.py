@@ -24,7 +24,10 @@ class Style:
         "highlightthickness": 2,
     }
     devtools_window = {
-        'geometry': '700x500+700+0',
+        'default_width': 700,
+        'default_height': 500,
+        'default_x_coord': 700,
+        'default_y_coord': 0
     }
     config_listbox_manager = {
         'listbox': {
