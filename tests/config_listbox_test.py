@@ -3,13 +3,13 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from devtools.DevtoolsWindow import DevtoolsWindowKwargs
-from devtools.components.observable import Action
-from devtools.components.observable import Observable
-from devtools.components.store import Store
-from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
-from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
-from devtools.constants import ActionType, CommonGeometryOption, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, PackGeometryOptionName, TreeStateKey
+from app.DevtoolsWindow import DevtoolsWindowKwargs
+from app.components.observable import Action
+from app.components.observable import Observable
+from app.components.store import Store
+from app.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+from app.components.widgets.windows.RightWindowFrame import RightWindowFrame
+from app.constants import ActionType, CommonGeometryOption, ListBoxEntryInputAction, ListboxItemState, ListboxPageTemplateEnum, PackGeometryOptionName, TreeStateKey
 from tests import treeview_test
 
 
@@ -315,7 +315,7 @@ class RightWindowTabTests(unittest.TestCase):
         self.store = Store(observable=self.observable, **TEST_RUNTIME_SETTINGS)
         self.parent = tk.Frame(self.root)
         self.parent.pack()
-        from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+        from app.components.widgets.windows.RightWindowFrame import RightWindowFrame
         self.rw = RightWindowFrame(
             parent=self.parent,
             observable=self.observable,
@@ -326,14 +326,14 @@ class RightWindowTabTests(unittest.TestCase):
         self.root.destroy()
 
     def test_options_tab_active_by_default(self):
-        from devtools.constants import ListboxPageTemplateEnum
+        from app.constants import ListboxPageTemplateEnum
         self.assertEqual(
             self.store.current_listbox_template._listbox_page_template_insert_enum,
             ListboxPageTemplateEnum.OPTIONS,
         )
 
     def test_switching_to_geometry_tab_updates_current_template(self):
-        from devtools.constants import ListboxPageTemplateEnum
+        from app.constants import ListboxPageTemplateEnum
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
         self.assertEqual(
             self.store.current_listbox_template._listbox_page_template_insert_enum,
@@ -341,7 +341,7 @@ class RightWindowTabTests(unittest.TestCase):
         )
 
     def test_switching_to_options_tab_updates_current_template(self):
-        from devtools.constants import ListboxPageTemplateEnum
+        from app.constants import ListboxPageTemplateEnum
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.OPTIONS)
         self.assertEqual(
@@ -350,18 +350,18 @@ class RightWindowTabTests(unittest.TestCase):
         )
 
     def test_geometry_tab_sets_row_shift_false(self):
-        from devtools.constants import ListboxPageTemplateEnum
+        from app.constants import ListboxPageTemplateEnum
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
         self.assertFalse(self.store.row_shift)
 
     def test_options_tab_sets_row_shift_true(self):
-        from devtools.constants import ListboxPageTemplateEnum
+        from app.constants import ListboxPageTemplateEnum
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.GEOMETRY)
         self.rw.pack_listbox_page_insert(ListboxPageTemplateEnum.OPTIONS)
         self.assertTrue(self.store.row_shift)
     # test that clicking the tab already open does not pack it again    
     def test_handle_pack_click_same_tab_is_noop(self):
-        from devtools.constants import ListboxPageTemplateEnum
+        from app.constants import ListboxPageTemplateEnum
         # records calls to the pack function - a re-pack sets the same template, so only the call shows it ran
         with patch.object(self.rw, "pack_listbox_page_insert") as pack_insert:
             self.rw.handle_pack_listbox_page_insert_click(ListboxPageTemplateEnum.OPTIONS)
@@ -386,7 +386,7 @@ class RightWindowSubtractTests(unittest.TestCase):
         self.store = Store(observable=self.observable, **TEST_RUNTIME_SETTINGS)
         self.parent = tk.Frame(self.root)
         self.parent.pack()
-        from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+        from app.components.widgets.windows.RightWindowFrame import RightWindowFrame
         self.rw = RightWindowFrame(
             parent=self.parent,
             observable=self.observable,
@@ -520,7 +520,7 @@ class RightWindowErrorTests(unittest.TestCase):
         self.store = Store(observable=self.observable, **TEST_RUNTIME_SETTINGS)
         self.parent = tk.Frame(self.root)
         self.parent.pack()
-        from devtools.components.widgets.windows.RightWindowFrame import RightWindowFrame
+        from app.components.widgets.windows.RightWindowFrame import RightWindowFrame
         self.rw = RightWindowFrame(
             parent=self.parent,
             observable=self.observable,
@@ -547,7 +547,7 @@ class AlertTests(unittest.TestCase):
     def setUp(self):
         self.root = tk.Tk()
         self.root.withdraw()
-        from devtools.components.widgets.Alert import Alert
+        from app.components.widgets.Alert import Alert
         self.parent = tk.Frame(self.root)
         self.parent.pack()
         self.alert = Alert(self.parent)

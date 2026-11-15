@@ -2,7 +2,7 @@ import unittest
 import tkinter as tk
 from unittest.mock import patch
 
-from devtools.tcl_runtime_utils import TclRunTimeUtility
+from app.tcl_runtime_utils import TclRunTimeUtility
 
 
 class TclRuntimeUtilsTests(unittest.TestCase):

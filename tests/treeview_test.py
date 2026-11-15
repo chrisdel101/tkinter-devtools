@@ -3,12 +3,12 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from devtools.DevtoolsWindow import DevtoolsWindowKwargs
-from devtools.components.observable import Observable
-from devtools.components.store import Store
-from devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
-from devtools.components.widgets.treeview.TreeView import TreeView
-from devtools.constants import GeometryType, IS_DEVTOOLS_SENTINEL, ListboxPageTemplateEnum, TreeStateKey
+from app.DevtoolsWindow import DevtoolsWindowKwargs
+from app.components.observable import Observable
+from app.components.store import Store
+from app.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+from app.components.widgets.treeview.TreeView import TreeView
+from app.constants import GeometryType, IS_DEVTOOLS_SENTINEL, ListboxPageTemplateEnum, TreeStateKey
 
 _TEST_SETTINGS: DevtoolsWindowKwargs = {
     "show_unmapped_widgets": True,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import tkinter as tk
-from devtools.style import Style
+from app.style import Style
 
 
 class Alert(tk.Frame):

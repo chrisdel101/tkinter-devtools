@@ -2,8 +2,8 @@ import tkinter as tk
 import unittest
 from unittest.mock import patch
 
-from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
-from devtools.constants import GeometryType
+from app.components.widgets.treeview.TreeViewUtils import TreeViewUtils
+from app.constants import GeometryType
 
 
 class SafeIntTests(unittest.TestCase):

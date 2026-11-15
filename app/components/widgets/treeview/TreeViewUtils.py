@@ -1,9 +1,9 @@
 from __future__ import annotations
 import tkinter as tk
 
-from devtools.constants import GeometryType
-from devtools.decorators.decorators import static_fn_try_except_catcher
-from devtools.utils import Utils
+from app.constants import GeometryType
+from app.decorators.decorators import static_fn_try_except_catcher
+from app.utils import Utils
 
 
 class TreeViewUtils:

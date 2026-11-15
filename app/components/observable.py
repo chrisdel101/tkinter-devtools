@@ -2,7 +2,7 @@
 from typing import Any
 from dataclasses import dataclass
 
-from devtools.constants import ActionType
+from app.constants import ActionType
 
 @dataclass(frozen=True)
 class Action:

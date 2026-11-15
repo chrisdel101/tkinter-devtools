@@ -1,15 +1,15 @@
 from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
-from devtools.logging_utils import logger
-from devtools.decorators.decorators import class_fn_try_except_catcher
-from devtools.components.observable import Action
-from devtools.constants import IS_DEVTOOLS_SENTINEL, ActionType, CommonGeometryOption, GeometryType, ListboxPageTemplateEnum, TreeStateKey
-from devtools.geometry_info import GeometryManagerInfo
-from devtools.maps import CONFIG_OPTION_SETTINGS
-from devtools.components.widgets.treeview.TreeViewUtils import TreeViewUtils
-from devtools.components.widgets.treeview.TreeViewHighlighter import TreeViewHighlighter
-from devtools.utils import Utils
+from app.logging_utils import logger
+from app.decorators.decorators import class_fn_try_except_catcher
+from app.components.observable import Action
+from app.constants import IS_DEVTOOLS_SENTINEL, ActionType, CommonGeometryOption, GeometryType, ListboxPageTemplateEnum, TreeStateKey
+from app.geometry_info import GeometryManagerInfo
+from app.maps import CONFIG_OPTION_SETTINGS
+from app.components.widgets.treeview.TreeViewUtils import TreeViewUtils
+from app.components.widgets.treeview.TreeViewHighlighter import TreeViewHighlighter
+from app.utils import Utils
 
 
 class TreeView(ttk.Treeview):

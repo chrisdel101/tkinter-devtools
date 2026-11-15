@@ -1,7 +1,7 @@
 import unittest
 
-from devtools.DevtoolsWindow import DevtoolsWindow
-from devtools.style import Style
+from app.DevtoolsWindow import DevtoolsWindow
+from app.style import Style
 
 _DEFAULTS = Style.devtools_window
 
