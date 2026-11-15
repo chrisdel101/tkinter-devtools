@@ -378,42 +378,33 @@ class StoreLookupTests(_TreeFixture):
 class HighlightTests(_TreeFixture):
 
     def test_apply_sets_highlighted_widget(self):
-        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
-            self.tree._highlighter.apply_highlight(self.frame_a)
-            self.root.update_idletasks()
+        self.tree._highlighter.apply_highlight(self.frame_a)
+        self.root.update_idletasks()
         self.assertIs(self.store.tree_highlighted_widget, self.frame_a)
 
-    def test_apply_saves_config(self):
-        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
-            self.tree._highlighter.apply_highlight(self.frame_a)
+    def test_apply_leaves_widget_options_unchanged(self):
+        before = self.frame_a.configure()
+        self.tree._highlighter.apply_highlight(self.frame_a)
+        self.root.update_idletasks()
+        self.assertEqual(self.frame_a.configure(), before)
+
+    # ttk widgets have no highlightbackground option, and a never-shown widget reports 1x1
+    def test_apply_on_no_size_ttk_widget_outlines_without_error(self):
+        from tkinter import ttk
+        no_size = ttk.Frame(self.root)
+        with self.assertNoLogs("devtools", level="ERROR"):
+            self.tree._highlighter.apply_highlight(no_size)
             self.root.update_idletasks()
-        self.assertIsNotNone(self.store.tree_highlight_saved_config)
+        self.assertIs(self.store.tree_highlighted_widget, no_size)
 
     def test_remove_clears_highlighted_widget(self):
-        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
-            self.tree._highlighter.apply_highlight(self.frame_a)
-            self.root.update_idletasks()
+        self.tree._highlighter.apply_highlight(self.frame_a)
+        self.root.update_idletasks()
         self.tree._highlighter._remove_highlight()
         self.assertIsNone(self.store.tree_highlighted_widget)
 
-    def test_remove_clears_saved_config(self):
-        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
-            self.tree._highlighter.apply_highlight(self.frame_a)
-            self.root.update_idletasks()
-        self.tree._highlighter._remove_highlight()
-        self.assertIsNone(self.store.tree_highlight_saved_config)
-
-    def test_config_strategy_restores_original_highlightthickness(self):
-        original = self.frame_a.cget("highlightthickness")
-        with patch.object(self.tree._highlighter, "_show_highlight_overlay", return_value=False):
-            self.tree._highlighter.apply_highlight(self.frame_a)
-            self.root.update_idletasks()
-        self.tree._highlighter._remove_highlight()
-        self.assertEqual(self.frame_a.cget("highlightthickness"), original)
-
     def test_remove_with_nothing_highlighted_does_not_raise(self):
         self.store.tree_highlighted_widget = None
-        self.store.tree_highlight_saved_config = None
         # the decorator catches errors and logs them, so a logged error is the failure
         with self.assertNoLogs("devtools", level="ERROR"):
             self.tree._highlighter._remove_highlight()

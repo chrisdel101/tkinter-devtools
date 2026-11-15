@@ -1,7 +1,6 @@
 from __future__ import annotations
 import tkinter as tk
 from devtools.decorators.decorators import class_fn_try_except_catcher
-from devtools.logging_utils import logger
 from devtools.style import Style
 
 
@@ -15,46 +14,20 @@ class TreeViewHighlighter:
         self._store = store
 
     @class_fn_try_except_catcher
-    # Highlight the selected widget using an overlay frame or a direct config fallback.
+    # outline the selected widget with border edges so the app's own widget options are never changed
     def apply_highlight(self, widget: tk.Widget):
         self._store.is_tree_applying_highlight = True
         self._remove_highlight()
-        try:
-            if self._show_highlight_overlay(widget):
-                self._store.tree_highlight_saved_config = {'strategy': 'overlay'}
-                self._store.tree_highlighted_widget = widget
-            else:
-                # Fallback to direct widget config only if overlay cannot be placed.
-                self._store.tree_highlight_saved_config = {
-                    'strategy': 'config',
-                    'config': {
-                        'highlightbackground': widget.cget('highlightbackground'),
-                        'highlightthickness': widget.cget('highlightthickness'),
-                    },
-                }
-                widget.configure(
-                    highlightbackground=Style.treeview['highlightbackground'],
-                    highlightthickness=Style.treeview['highlightthickness'],
-                )
-                self._store.tree_highlighted_widget = widget
-        # caught here, not by the decorator: a highlight error must not reach the user, and must not skip the flag clear below or the tree stops refreshing
-        except tk.TclError:
-            logger.error("Highlight failed - widget left unhighlighted.", exc_info=True)
-            self._store.tree_highlight_saved_config = None
-        # Clear flag after_idle so queued Tk events from configure fire while flag is still True
+        if self._show_highlight_overlay(widget):
+            self._store.tree_highlighted_widget = widget
+        # Clear flag after_idle so Tk events queued by the highlight fire while flag is still True
         self._tree.after_idle(self._clear_applying_highlight)
 
     @class_fn_try_except_catcher
-    # Remove the highlight from the previously highlighted widget.
+    # hide the border edges and forget the widget so a new select or devtools close starts clean
     def _remove_highlight(self):
-        if self._store.tree_highlighted_widget and self._store.tree_highlight_saved_config:
-            strategy = self._store.tree_highlight_saved_config.get('strategy')
-            # skip the restore when the app already destroyed the widget (e.g. window close) - nothing left to restore
-            if strategy == 'config' and self._store.tree_highlighted_widget.winfo_exists():
-                self._store.tree_highlighted_widget.configure(**self._store.tree_highlight_saved_config.get('config', {}))
         self._hide_highlight_overlay()
         self._store.tree_highlighted_widget = None
-        self._store.tree_highlight_saved_config = None
 
     @class_fn_try_except_catcher
     # Place four thin Frame edges around the widget to draw a highlight border overlay.
@@ -62,11 +35,8 @@ class TreeViewHighlighter:
         if not widget.winfo_exists():
             return False
         overlay_parent = widget.winfo_toplevel()
+        # if no top level window do not valid to highlight
         if overlay_parent is None:
-            return False
-
-        widget.update_idletasks()
-        if widget.winfo_width() <= 1 or widget.winfo_height() <= 1:
             return False
 
         if (
@@ -74,7 +44,8 @@ class TreeViewHighlighter:
             or any(not edge.winfo_exists() for edge in self._store.tree_highlight_overlay_edges)
             or self._store.tree_highlight_overlay_parent is not overlay_parent
         ):
-            self._hide_highlight_overlay()
+            # destroy, not hide - hidden edges pile up in the old window
+            self.destroy_highlight_overlay()
             self._store.tree_highlight_overlay_parent = overlay_parent
             self._store.tree_highlight_overlay_edges = [
                 tk.Frame(overlay_parent, bg=Style.treeview['highlightbackground'], bd=0, highlightthickness=0)
@@ -112,7 +83,7 @@ class TreeViewHighlighter:
                 edge.place_forget()
 
     @class_fn_try_except_catcher
-    # Restore the highlighted widget and destroy the edges - they live in the app toplevel so closing devtools leaves them
+    # destroy the edges on devtools close or window switch - they live in the app's windows, so nothing else removes them
     def destroy_highlight_overlay(self):
         self._remove_highlight()
         for edge in self._store.tree_highlight_overlay_edges:

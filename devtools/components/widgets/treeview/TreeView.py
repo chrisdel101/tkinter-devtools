@@ -287,8 +287,8 @@ class TreeView(ttk.Treeview):
             # skip the devtools window branch
             if getattr(child, "devtools_marker", None) == IS_DEVTOOLS_SENTINEL:
                 continue
-            # hide unmapped widgets - optional
-            if not self._store.show_unmapped_widgets and not child.winfo_ismapped():
+            # off screen: hidden by a parent that is on screen (other tab) always; never managed only when the option is off
+            if not child.winfo_ismapped() and (child.winfo_manager() and parent_widget.winfo_ismapped() or not self._store.show_unmapped_widgets):
                 continue
             child_memory_id = id(child)
             # ID of place in tree - insert returns tree insert ID

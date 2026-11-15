@@ -56,7 +56,6 @@ class Store:
         self.show_geometry_button = False # hides geometry button when widget has none
         self.row_shift = True # guard to toggle when row shift is applied
         self.tree_highlighted_widget: tk.Widget | None = None # track highlighted to remove highlight on next highlight or deselect
-        self.tree_highlight_saved_config: dict | None = None # store original config to restore after highlight
         self.tree_highlight_overlay_edges: list[tk.Frame] = [] # overlay on top of widget to show highlight - stored to remove after
         self.tree_highlight_overlay_parent: tk.Misc | None = None # parent of overlay to lift after highlight
         self.is_tree_applying_highlight: bool = False # guard to block multiple highlight at once
@@ -274,14 +273,6 @@ class Store:
     @tree_highlighted_widget.setter
     def tree_highlighted_widget(self, value):
         self._tree_highlighted_widget = value
-
-    @property
-    def tree_highlight_saved_config(self):
-        return self._tree_highlight_saved_config
-
-    @tree_highlight_saved_config.setter
-    def tree_highlight_saved_config(self, value):
-        self._tree_highlight_saved_config = value
 
     @property
     def tree_highlight_overlay_edges(self):
