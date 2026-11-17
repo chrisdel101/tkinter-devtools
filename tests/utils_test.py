@@ -3,9 +3,9 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from app.constants import GeometryType
-from app.geometry_info import GeometryManagerInfo
-from app.utils import Utils
+from src.constants import GeometryType
+from src.geometry_info import GeometryManagerInfo
+from src.utils import Utils
 
 
 class UtilsTests(unittest.TestCase):

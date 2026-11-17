@@ -6,3 +6,7 @@ test:
 	python3 -m unittest discover -s tests -p "$(P)"
 start: 
 	python3 -m main
+stress-start:
+	python -m stress_app.main
+build:
+	rm -rf build && rm -rf dist && rm -rf tkinter_devtools.egg-info && python -m build

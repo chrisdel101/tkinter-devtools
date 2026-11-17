@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.constants import CommonGeometryOption
+from src.constants import CommonGeometryOption
 
 
 class ConfigListboxUtilsMixin:

@@ -1,5 +1,5 @@
 [project]
-name = "tk-devtools"
+name = "tkinter-devtools"
 version = "0.1.0"
 description = "Your Tkinter devtools package"
 readme = "README.md"
@@ -16,5 +16,5 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["devtools*"]
+include = ["src*"]
 exclude = ["tests*", "main*"]

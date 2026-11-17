@@ -1,6 +1,6 @@
 from __future__ import annotations
 import tkinter as tk
-from app.components.widgets.treeview.TreeView import TreeView
+from src.components.widgets.treeview.TreeView import TreeView
 
 class LeftWindowFrame(tk.Frame):
     def __init__(self,

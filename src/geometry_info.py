@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from app.constants import GeometryType
+from src.constants import GeometryType
 
 # stores the winfo_manager 
 @dataclass(frozen=True)

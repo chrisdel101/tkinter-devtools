@@ -1,5 +1,5 @@
-from app.constants import ActionType, AliasRename, ConfigOptionKeyName, ConfigOptionValueTypeEnum, CommonGeometryOption, GeometryType, GridGeometryOption, ListboxItemState, PackGeometryOptionName, PlaceGeometryOption
-from app.constants import ConfigOptionMapSetting
+from src.constants import ActionType, AliasRename, ConfigOptionKeyName, ConfigOptionValueTypeEnum, CommonGeometryOption, GeometryType, GridGeometryOption, ListboxItemState, PackGeometryOptionName, PlaceGeometryOption
+from src.constants import ConfigOptionMapSetting
 
 PACK_GEOMETRY_CONFIG_SETTING_VALUES: dict[str, ConfigOptionMapSetting] = {
     PackGeometryOptionName.GEOMETRY_TYPE: {

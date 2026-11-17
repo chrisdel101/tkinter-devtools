@@ -1,7 +1,7 @@
 from __future__ import annotations
 import tkinter as tk
-from app.decorators.decorators import class_fn_try_except_catcher
-from app.style import Style
+from src.decorators.decorators import class_fn_try_except_catcher
+from src.style import Style
 
 
 class TreeViewHighlighter:

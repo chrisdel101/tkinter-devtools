@@ -1,15 +1,15 @@
 from __future__ import annotations
 from ast import Store
 from copy import copy
-from app.logging_utils import logger
+from src.logging_utils import logger
 import tkinter as tk
 from tkinter import ttk
 
-from app.components.observable import Action
-from app.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionKeyName, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
-from app.decorators.decorators import static_fn_try_except_catcher
-from app.geometry_info import GeometryManagerInfo
-from app.maps import (
+from src.components.observable import Action
+from src.constants import COMBOBOX_ARROW_OFFSET, GeometryType, ConfigOptionKeyName, GridGeometryOption, ListboxItemPair, PackGeometryOptionName, PlaceGeometryOption
+from src.decorators.decorators import static_fn_try_except_catcher
+from src.geometry_info import GeometryManagerInfo
+from src.maps import (
     ACTION_REGISTRY,
     BI_DIRECTIONAL_ALIASES,
     OPTION_TO_TYPE_ALIASES,
@@ -290,7 +290,7 @@ class Utils:
             logger.trace(f"show_widget: Widget {widget} has no stored hidden state.")
             return
         if not geometry_options and geo_type in (GeometryType.GRID, GeometryType.PACK, GeometryType.PLACE):
-            from app.components.widgets.treeview.TreeViewUtils import TreeViewUtils
+            from src.components.widgets.treeview.TreeViewUtils import TreeViewUtils
             geometry_options = TreeViewUtils.infer_geometry_options(widget, geo_type)
         match geo_type:
             case GeometryType.PACK:
