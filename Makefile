@@ -10,3 +10,8 @@ stress-start:
 	python -m stress_app.main
 build:
 	rm -rf build && rm -rf dist && rm -rf tkinter_devtools.egg-info && python -m build
+deploy-test:
+	python -m twine \
+  	upload \
+  	-r testpypi \
+  	dist/*

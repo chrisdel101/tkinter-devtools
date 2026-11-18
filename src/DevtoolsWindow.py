@@ -5,7 +5,7 @@ import tkinter as tk
 from typing import TypedDict, Unpack
 from src.components.observable import Observable, Action
 from src.components.store import Store
-from src.constants import DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_SENTINEL, ActionType, ListBoxEntryInputAction
+from src.constants import DEVTOOLS_DEFAULT_TITLE, DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_SENTINEL, ActionType, ListBoxEntryInputAction
 from src.decorators.decorators import class_fn_try_except_catcher
 from src.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
 from src.components.widgets.windows.RightWindowFrame import RightWindowFrame
@@ -15,7 +15,7 @@ from src.tcl_runtime_utils import TclRunTimeUtility
 
 
 class DevtoolsWindowKwargs(TypedDict, total=False):
-    show_unmapped_widgets: bool
+    show_unmapped_widgets: bool 
     devtools_title: str
     skip_runtime_checks: bool
     width: int
@@ -41,7 +41,7 @@ class DevtoolsWindow(tk.Toplevel):
         window_geometry = self._build_window_geometry(**kwargs)
         # set logging level
         LoggingUtils.set_logging_level(kwargs.get("logging_level", logging.ERROR))
-        self.title(kwargs.get("devtools_title"))
+        self.title(kwargs.get("devtools_title") or DEVTOOLS_DEFAULT_TITLE)
         self.master = master
         # apply app styles
         self.style = Style(master=master)

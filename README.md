@@ -1,53 +1,24 @@
-IN DEVELOPMENT - beta release shortly
+**Beta Release**
 
-# Tk-DevTools
+# Tkinter-devtools
 
-# Browser-like devtools but for Tkinter
+## Browser-like devtools but for Tkinter
 
 Tired of restarting your tkinter app just to see the effect of every little change?
 
-Inspired by browser devtools, Tk-DevTools is a runtime inspector/editor for Tkinter apps. 100% python standard library.
+Inspired by browser devtools, Tkinter-devtools is a runtime inspector/editor for Tkinter apps that opens a developer window next to your running app so you can make live changes.
 
-It lets you open a developer window next to your running app and make live changes.
+100% Python standard library. ZERO dependencies.
+
 
 - Inspect the live widget tree structure 
 - Switch between widget option editing and geometry editing
-- Add/update/remove widget configurations settings
-- Highlights the currently selected widgets as you navigate
+- Add/update/remove widget configuration settings
+- Highlight the currently selected widgets as you navigate
 
 ## Install
 
     pip install tkinter-devtools
-
-## Build from source
-
-### Installing package builder
-
-Windows
-
-    py -m pip install --upgrade pip
-    py -m pip install --upgrade build
-    py -m build
-
-Mac
-
-    python3 -m pip install --upgrade pip && 
-    python3 -m pip install --upgrade build &&
-    python3 -m build
-
-### Building the wheel
-
-Packaging in source
-
-    rm -rf build && rm -rf dist && rm -rf tkinter_devtools.egg-info && python -m build
-
-Importing in local target
-
-    pip uninstall /Users/chrisdielschnieder/code_work/python/tkinter_devtools/dist/tkinter_devtools-0.1.0-py3-none-any.whl && pip install /Users/chrisdielschnieder/code_work/python/tkinter_devtools/dist/tkinter_devtools-0.1.0-py3-none-any.whl
-
-Pip install requirements from another project
-
-    python -m pip install -r /Users/chrisdielschnieder/code_work/lytehorse/LyteHorse_Dyno/requirements.mac.txt
 
 ## Quick Start
 
@@ -79,26 +50,37 @@ root = tk.Tk()
 app = TestApp(root)
 app.pack(side=tk.TOP, fill="both", expand=True)
 
-DevtoolsWindow(
-    root,
-    devtools_title="Devtools",
-    show_unmapped_widgets=False,
-)
+DevtoolsWindow(app)
 
 root.mainloop()
 ```
 
+## Options
+
+`DevtoolsWindow(master, **options)` takes these optional keyword arguments.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `devtools_title` | `str` | `'Tkinter-devtools'` | Title of the devtools window. |
+| `show_unmapped_widgets` | `bool` | `True` | Show widgets in the tree that are not on screen, i.e. not packed. |
+| `skip_runtime_checks` | `bool` | `None` | Skip the Tcl/Tk bridge checks on startup. See [Runtime Safety Checks](#runtime-safety-checks). |
+| `logging_level` | `int` | `logging.ERROR` | Log level for devtools messages, e.g. `logging.DEBUG`. |
+| `width` | `int` | `700` | Width of the devtools window in pixels. |
+| `height` | `int` | `500` | Height of the devtools window in pixels. |
+| `x_coord` | `int` | `700` | Distance of the window from the left of the screen in pixels. |
+| `y_coord` | `int` | `0` | Distance of the window from the top of the screen in pixels. |
+
 ## Runtime Safety Checks
 
-Tk-Devtools requies an stable tk-tlc bridge. On some systems this means `tk.TclVersion <= 8.6`. The devtools will not work without a stable bridge.
+Tkinter-devtools requires a stable Tcl/Tk bridge. On some systems this means `tk.TclVersion <= 8.6`. Modern Python upgraded to `9.0` and this will not work on some systems.
 
-On startup a few test run to verify this bridge is working, else the window will close.
+On startup, tests verify that the bridge is working. If it is not, the window will close and the devtools cannot run. You will need to patch your tcl version to `8.6` or another working version.
 
 You can disable these checks with `skip_runtime_checks=True`.
 
-To check your TclVersion
+To check your TclVersion:
 
-```python
+```bash
 python - <<'EOF'        
 import tkinter as tk
 print("TclVersion:", tk.TclVersion)
@@ -107,8 +89,32 @@ print("Tcl library:", tk._tkinter.__file__)
 EOF
 ```
 
-## Run Tests
+## Build from source
 
-```python
-python3 -m unittest discover -s tests -p "*_test.py"
+```bash
+git clone https://github.com/chrisdel101/tkinter-devtools.git
 ```
+
+### Installing package builder
+
+Windows
+
+    py -m pip install --upgrade pip
+    py -m pip install --upgrade build
+    py -m build
+
+Mac
+
+    python3 -m pip install --upgrade pip && 
+    python3 -m pip install --upgrade build &&
+    python3 -m build
+
+### Building the wheel
+
+Packaging in source - run this in the tkinter-devtools directory. Removes any previous builds.
+
+    rm -rf build && rm -rf dist && rm -rf tkinter_devtools.egg-info && python -m build
+
+Importing in local target - run this in the target application directory. Uninstalls previous first.
+
+    pip uninstall /path/to/package/tkinter_devtools/dist/tkinter_devtools-<current-version>-py3-none-any.whl && pip install /path/to/package/tkinter_devtools/dist/tkinter_devtools-<current-version>-py3-none-any.whl

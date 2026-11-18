@@ -1,15 +1,16 @@
 [project]
 name = "tkinter-devtools"
-version = "0.1.0"
+version = "0.0.1-beta"
 description = "Your Tkinter devtools package"
 readme = "README.md"
 requires-python = ">=3.11.8,!=3.12.0,!=3.12.1"
 authors = [
-  { name="Chris", email="chrisdel.tech9@email.com" }
+  { name="Chris Del", email="chrisdel.tech9@email.com" }
 ]
 
 dependencies = []
-
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"

@@ -4,7 +4,7 @@ import tkinter as tk
 from typing import Any
 
 from src.components.observable import Action
-from src.constants import ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeState, TreeStateKey
+from src.constants import DEFAULT_SHOW_UNMAPPED_WIDGETS, ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
 from src.decorators.decorators import class_fn_try_except_catcher
@@ -26,7 +26,7 @@ class Store:
         self.tree_rebuild_requested: bool = False # queue one extra rebuild when requested mid-rebuild
         self.key_combobox_popdown_open: bool = False # track when open to apply focus out destroy logic
         self.value_combobox_popdown_open: bool = False # track when open to apply focus out destroy logic
-        self.show_unmapped_widgets = kwargs.get("show_unmapped_widgets", True) # toggle to omit unmappeed default shows anything in the code
+        self.show_unmapped_widgets = kwargs.get("show_unmapped_widgets", DEFAULT_SHOW_UNMAPPED_WIDGETS) # toggle to omit unmappeed default shows anything in the code
         self.listbox_entry_input_action:   ListBoxEntryInputAction | None = None # sets type of input as create or update
         self.allow_input_focus_out_logic: bool = True # guard to allow subract/cancel focus out
         self.tree_state: TreeState = {

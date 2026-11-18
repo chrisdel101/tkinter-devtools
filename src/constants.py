@@ -2,6 +2,8 @@ from enum import Enum, auto
 import tkinter as tk
 from typing import Any, NotRequired, TypedDict
 
+DEFAULT_SHOW_UNMAPPED_WIDGETS = True
+DEVTOOLS_DEFAULT_TITLE = 'Tkinter-devtools'
 DEVTOOLS_TOP_LEVEL_NAME = "tk_devtools_window"
 IS_DEVTOOLS_SENTINEL = "IS_DEVTOOLS_SENTINEL"  # attach to identify if parent widget is devtools window
 COMBOBOX_ARROW_OFFSET = 25  # pixels to account for combobox arrow area
