@@ -3,10 +3,10 @@ Tests for Store — state management, property setters, observer notifications.
 """
 import unittest
 
-from src.DevtoolsWindow import DevtoolsWindowKwargs
-from src.components.observable import Action, Observable
-from src.components.store import Store
-from src.constants import (
+from tkinter_devtools.DevtoolsWindow import DevtoolsWindowKwargs
+from tkinter_devtools.components.observable import Action, Observable
+from tkinter_devtools.components.store import Store
+from tkinter_devtools.constants import (
     ActionType,
     ListboxPageTemplateEnum,
     ListboxTemplateNotifyStateKey,
@@ -130,7 +130,7 @@ class StorePropertyNotificationsTests(unittest.TestCase):
 class StoreListboxStateTests(unittest.TestCase):
     def setUp(self):
         import tkinter as tk
-        from src.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+        from tkinter_devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
         self.root = tk.Tk()
         self.root.withdraw()
         self.observable = Observable()

@@ -1,13 +1,13 @@
 from __future__ import annotations
-from src.logging_utils import logger
+from ....logging_utils import logger
 from tkinter import ttk
-from src.components.observable import Action
-from src.constants import ActionType, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, TreeStateKey
-from src.decorators.decorators import class_fn_try_except_catcher
-from src.style import Style
-from src.utils import Utils
-from src.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
-from src.components.widgets.Alert import Alert
+from ...observable import Action
+from ....constants import ActionType, ListboxPageTemplateEnum, ListboxTemplateNotifyStateKey, TreeStateKey
+from ....decorators.decorators import class_fn_try_except_catcher
+from ....style import Style
+from ....utils import Utils
+from ..config_listbox.ConfigListboxManager import ConfigListboxManager
+from ..Alert import Alert
 import tkinter as tk
 
 class RightWindowFrame(tk.Frame):

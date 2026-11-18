@@ -1,7 +1,7 @@
 import logging
 from functools import partial
 
-from src.constants import CustomLogLevel
+from .constants import CustomLogLevel
 
 # named logger - its level and handler don't change the app's logging
 logger = logging.getLogger("devtools")

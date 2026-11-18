@@ -26,7 +26,7 @@ Just pass your app or root window to the DevtoolsWindow constructor.
 
 ```python
 import tkinter as tk
-from src.DevtoolsWindow import DevtoolsWindow
+from tkinter_devtools import DevtoolsWindow
 
 # random set of test widgets
 class TestApp(tk.Frame):
@@ -113,7 +113,7 @@ Mac
 
 Packaging in source - run this in the tkinter-devtools directory. Removes any previous builds.
 
-    rm -rf build && rm -rf dist && rm -rf tkinter_devtools.egg-info && python -m build
+    rm -rf build && rm -rf dist && rm -rf src/tkinter_devtools.egg-info && python -m build
 
 Importing in local target - run this in the target application directory. Uninstalls previous first.
 

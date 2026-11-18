@@ -1,17 +1,17 @@
 from __future__ import annotations
 import logging
-from src.logging_utils import logger
+from .logging_utils import logger
 import tkinter as tk
 from typing import TypedDict, Unpack
-from src.components.observable import Observable, Action
-from src.components.store import Store
-from src.constants import DEVTOOLS_DEFAULT_TITLE, DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_SENTINEL, ActionType, ListBoxEntryInputAction
-from src.decorators.decorators import class_fn_try_except_catcher
-from src.components.widgets.windows.LeftWindowFrame import LeftWindowFrame
-from src.components.widgets.windows.RightWindowFrame import RightWindowFrame
-from src.logging_utils import LoggingUtils
-from src.style import Style
-from src.tcl_runtime_utils import TclRunTimeUtility
+from .components.observable import Observable, Action
+from .components.store import Store
+from .constants import DEVTOOLS_DEFAULT_TITLE, DEVTOOLS_TOP_LEVEL_NAME, IS_DEVTOOLS_SENTINEL, ActionType, ListBoxEntryInputAction
+from .decorators.decorators import class_fn_try_except_catcher
+from .components.widgets.windows.LeftWindowFrame import LeftWindowFrame
+from .components.widgets.windows.RightWindowFrame import RightWindowFrame
+from .logging_utils import LoggingUtils
+from .style import Style
+from .tcl_runtime_utils import TclRunTimeUtility
 
 
 class DevtoolsWindowKwargs(TypedDict, total=False):

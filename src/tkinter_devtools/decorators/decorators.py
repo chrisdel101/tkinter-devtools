@@ -1,9 +1,9 @@
 
 from functools import wraps
-from src.logging_utils import logger
+from ..logging_utils import logger
 import tkinter as tk
-from src.components.observable import Action
-from src.constants import ActionType
+from ..components.observable import Action
+from ..constants import ActionType
 
 
 def _display_error_alert(instance, message: str):

@@ -3,9 +3,9 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from src.constants import GeometryType
-from src.geometry_info import GeometryManagerInfo
-from src.utils import Utils
+from tkinter_devtools.constants import GeometryType
+from tkinter_devtools.geometry_info import GeometryManagerInfo
+from tkinter_devtools.utils import Utils
 
 
 class UtilsTests(unittest.TestCase):

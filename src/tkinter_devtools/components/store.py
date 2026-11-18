@@ -1,17 +1,17 @@
 from __future__ import annotations
-from src.logging_utils import logger
+from ..logging_utils import logger
 import tkinter as tk
 from typing import Any
 
-from src.components.observable import Action
-from src.constants import DEFAULT_SHOW_UNMAPPED_WIDGETS, ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeState, TreeStateKey
+from .observable import Action
+from ..constants import DEFAULT_SHOW_UNMAPPED_WIDGETS, ActionType, ListBoxEntryInputAction, ListboxManagerState, ListboxTemplateNotifyStateKey, ListboxPageTemplateEnum, TreeState, TreeStateKey
 from typing import TYPE_CHECKING
 
-from src.decorators.decorators import class_fn_try_except_catcher
+from ..decorators.decorators import class_fn_try_except_catcher
 
 if TYPE_CHECKING:
     # ONLY for type checkers
-    from src.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+    from .widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
 
 
 class Store:

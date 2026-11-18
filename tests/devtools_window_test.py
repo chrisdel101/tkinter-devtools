@@ -1,7 +1,7 @@
 import unittest
 
-from src.DevtoolsWindow import DevtoolsWindow
-from src.style import Style
+from tkinter_devtools.DevtoolsWindow import DevtoolsWindow
+from tkinter_devtools.style import Style
 
 _DEFAULTS = Style.devtools_window
 

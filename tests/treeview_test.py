@@ -3,12 +3,12 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from src.DevtoolsWindow import DevtoolsWindowKwargs
-from src.components.observable import Observable
-from src.components.store import Store
-from src.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
-from src.components.widgets.treeview.TreeView import TreeView
-from src.constants import GeometryType, IS_DEVTOOLS_SENTINEL, ListboxPageTemplateEnum, TreeStateKey
+from tkinter_devtools.DevtoolsWindow import DevtoolsWindowKwargs
+from tkinter_devtools.components.observable import Observable
+from tkinter_devtools.components.store import Store
+from tkinter_devtools.components.widgets.config_listbox.ConfigListboxManager import ConfigListboxManager
+from tkinter_devtools.components.widgets.treeview.TreeView import TreeView
+from tkinter_devtools.constants import GeometryType, IS_DEVTOOLS_SENTINEL, ListboxPageTemplateEnum, TreeStateKey
 
 _TEST_SETTINGS: DevtoolsWindowKwargs = {
     "show_unmapped_widgets": True,
@@ -112,7 +112,7 @@ class TreeViewTests(unittest.TestCase):
         tree = TreeView.__new__(TreeView)
         geo_info = SimpleNamespace(geometry_type=GeometryType.GRID)
 
-        with patch("devtools.components.widgets.treeview.TreeView.Utils.build_widget_geometry_manager_info", return_value=geo_info):
+        with patch("tkinter_devtools.components.widgets.treeview.TreeView.Utils.build_widget_geometry_manager_info", return_value=geo_info):
             key = tree._tree_order_key(child=child, children=[child], pack_order={})
 
         self.assertEqual(key, (1, 2, 3, 0))
@@ -122,7 +122,7 @@ class TreeViewTests(unittest.TestCase):
         tree = TreeView.__new__(TreeView)
         geo_info = SimpleNamespace(geometry_type=GeometryType.PACK)
 
-        with patch("devtools.components.widgets.treeview.TreeView.Utils.build_widget_geometry_manager_info", return_value=geo_info):
+        with patch("tkinter_devtools.components.widgets.treeview.TreeView.Utils.build_widget_geometry_manager_info", return_value=geo_info):
             key = tree._tree_order_key(child=child, children=[child], pack_order={child: 7})
 
         self.assertEqual(key, (1, 7, 0))
