@@ -430,19 +430,20 @@ class HighlightTests(_TreeFixture):
 
 class TreeDestroyTests(_TreeFixture):
 
-    def _app_window_script(self, sequence):
+    # get app window bindings so destroy tests can check the tree removed only its own
+    def _get_app_window_bindings_by_sequence(self, sequence):
         return self.root.tk.call("bind", str(self.root.winfo_toplevel()), sequence)
 
     def test_destroy_removes_tree_bindings_from_app_window(self):
-        self.assertIn("_handle_tcl_event_emit", self._app_window_script("<Map>"))
+        self.assertIn("_handle_tcl_event_emit", self._get_app_window_bindings_by_sequence("<Map>"))
         self.tree.destroy()
         for sequence in ("<Map>", "<Unmap>", "<Destroy>"):
-            self.assertNotIn("_handle_tcl_event_emit", self._app_window_script(sequence))
+            self.assertNotIn("_handle_tcl_event_emit", self._get_app_window_bindings_by_sequence(sequence))
 
     def test_destroy_keeps_app_own_bindings(self):
         app_funcid = self.root.bind("<Map>", lambda e: None, add=True)
         self.tree.destroy()
-        self.assertIn(app_funcid, self._app_window_script("<Map>"))
+        self.assertIn(app_funcid, self._get_app_window_bindings_by_sequence("<Map>"))
 
     def test_destroy_removes_highlight_edges(self):
         edges = [tk.Frame(self.root) for _ in range(4)]
