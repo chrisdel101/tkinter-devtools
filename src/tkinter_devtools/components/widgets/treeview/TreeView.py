@@ -32,16 +32,18 @@ class TreeView(ttk.Treeview):
         self._bind_tree_change_events()
         # tree destroyed - cancel its queued rebuild and remove its bindings and border from the app
         self.bind("<Destroy>", self._cleanup_on_tree_destroy, add=True)
+        # put the tree's own tag last so its destroy cleanup runs after "all" has called _handle_tcl_event_emit, not before it
+        own_tag, *other_tags = self.bindtags()
+        self.bindtags((*other_tags, own_tag))
         # select the first tree item - trigger the listbox build
         self.selection_set(self.get_children()[0])
 
     @class_fn_try_except_catcher
-    # Bind Map, Unmap, and Destroy on the app window to watch for widget tree change - like when pages are changed
+    # Bind Map, Unmap, and Destroy for every app window to watch for widget tree change - like when pages change or windows open and close
     def _bind_tree_change_events(self):
-        self._app_window = self._app.winfo_toplevel()
-        # keep each bind id - unbind(sequence, funcid) removes only ours and keeps the app's own handlers
+        # keep each bind id - unbinding by id removes only ours and keeps the app's own "all" handlers
         self._app_bind_ids = {
-            sequence: self._app_window.bind(sequence, self._handle_tcl_event_emit, add=True)
+            sequence: self.bind_all(sequence, self._handle_tcl_event_emit, add=True)
             for sequence in ("<Map>", "<Unmap>", "<Destroy>")
         }
 
@@ -53,7 +55,8 @@ class TreeView(ttk.Treeview):
             self.after_cancel(self._store.tree_refresh_job)
             self._store.tree_refresh_job = None
         for sequence, funcid in self._app_bind_ids.items():
-            self._app_window.unbind(sequence, funcid)
+            # remove only our handler by its id so the app's own "all" handlers keep working
+            self._root()._unbind(("bind", "all", sequence), funcid)
         self._highlighter.destroy_highlight_overlay()
 
     @class_fn_try_except_catcher
