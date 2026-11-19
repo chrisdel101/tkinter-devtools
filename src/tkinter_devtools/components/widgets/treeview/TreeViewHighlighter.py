@@ -1,5 +1,6 @@
 from __future__ import annotations
 import tkinter as tk
+from ....constants import IS_DEVTOOLS_SENTINEL
 from ....decorators.decorators import class_fn_try_except_catcher
 from ....style import Style
 
@@ -51,6 +52,9 @@ class TreeViewHighlighter:
                 tk.Frame(overlay_parent, bg=Style.treeview['highlightbackground'], bd=0, highlightthickness=0)
                 for _ in range(4)
             ]
+            # edges live in the app's window - mark them as devtools so the tree never lists or selects them
+            for edge in self._store.tree_highlight_overlay_edges:
+                edge.devtools_marker = IS_DEVTOOLS_SENTINEL
 
         border_size = Style.treeview['highlightthickness']
         top_edge, right_edge, bottom_edge, left_edge = self._store.tree_highlight_overlay_edges
