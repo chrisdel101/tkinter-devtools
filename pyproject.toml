@@ -1,6 +1,6 @@
 [project]
 name = "tkinter-devtools"
-version = "0.0.1-beta2"
+version = "0.0.1-beta1"
 description = "Your Tkinter devtools package"
 readme = "README.md"
 requires-python = ">=3.11.8,!=3.12.0,!=3.12.1"
